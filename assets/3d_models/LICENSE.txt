@@ -1,0 +1,4 @@
+Model: mannequin.glb (GDQuest Godot 3D Mannequin, v0.3.0)
+Source: https://github.com/GDQuest/godot-3d-mannequin
+License: MIT - free for commercial use, no attribution required.
+Animation names used: idle, run, dash, fight_punch
