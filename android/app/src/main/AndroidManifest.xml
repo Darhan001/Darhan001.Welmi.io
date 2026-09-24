@@ -78,11 +78,17 @@
     <!-- Разрешения для интернета и камеры -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    
+
+    <!-- Разрешение для голосовых сообщений в AI-чате -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- РАЗРЕШЕНИЕ ДЛЯ БИОМЕТРИИ -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     
-    <!-- Разрешения для УВЕДОМЛЕНИЙ -->
+    <!-- Разрешения для ЛОКАЛЬНЫХ УВЕДОМЛЕНИЙ (flutter_local_notifications):
+         POST_NOTIFICATIONS — показ уведомлений (Android 13+, запрашивается в рантайме);
+         RECEIVE_BOOT_COMPLETED — восстановление расписания после перезагрузки;
+         VIBRATE и WAKE_LOCK — вибрация и пробуждение устройства для показа. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />

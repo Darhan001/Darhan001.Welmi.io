@@ -568,6 +568,96 @@ abstract class AppLocalizations {
   /// **'Notifications disabled'**
   String get notificationsDisabled;
 
+  /// No description provided for @notifMasterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Water, meals, activity'**
+  String get notifMasterSubtitle;
+
+  /// No description provided for @notifReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifReminders;
+
+  /// No description provided for @notifEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening reminder'**
+  String get notifEvening;
+
+  /// No description provided for @notifWaterInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder interval'**
+  String get notifWaterInterval;
+
+  /// No description provided for @notifPickTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose time'**
+  String get notifPickTime;
+
+  /// No description provided for @notifEvery30Min.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 30 min'**
+  String get notifEvery30Min;
+
+  /// No description provided for @notifEvery1h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 1 hour'**
+  String get notifEvery1h;
+
+  /// No description provided for @notifEvery90Min.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 1.5 hours'**
+  String get notifEvery90Min;
+
+  /// No description provided for @notifEvery2h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 2 hours'**
+  String get notifEvery2h;
+
+  /// No description provided for @notifEvery3h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 hours'**
+  String get notifEvery3h;
+
+  /// No description provided for @notifTestButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test notification'**
+  String get notifTestButton;
+
+  /// No description provided for @notifTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Test notification sent!'**
+  String get notifTestSent;
+
+  /// No description provided for @notifPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied'**
+  String get notifPermissionDenied;
+
+  /// No description provided for @notifPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission granted!'**
+  String get notifPermissionGranted;
+
+  /// No description provided for @notifPermissionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to allow notifications — otherwise reminders won\'t appear'**
+  String get notifPermissionBanner;
+
   /// No description provided for @biometricEnabled.
   ///
   /// In en, this message translates to:
@@ -801,6 +891,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min ago'**
   String aiMinutesAgo(Object minutes);
+
+  /// No description provided for @voiceMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceMessageLabel;
+
+  /// No description provided for @voiceSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send voice message'**
+  String get voiceSend;
+
+  /// No description provided for @voiceRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get voiceRecording;
+
+  /// No description provided for @voiceTranscribing.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognizing speech…'**
+  String get voiceTranscribing;
+
+  /// No description provided for @voiceCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get voiceCancel;
+
+  /// No description provided for @voiceErrorPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access to send voice messages.'**
+  String get voiceErrorPermission;
+
+  /// No description provided for @voiceErrorTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not recognize speech. Please try again.'**
+  String get voiceErrorTranscribe;
 
   /// No description provided for @mealPlanTitle.
   ///

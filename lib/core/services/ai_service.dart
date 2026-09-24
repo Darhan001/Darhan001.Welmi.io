@@ -1992,6 +1992,155 @@ $countryInstruction
     return 'AI недоступен. Проверьте интернет или попробуйте позже.';
   }
 
+  // --- ГОЛОСОВЫЕ СООБЩЕНИЯ (РАСПОЗНАВАНИЕ РЕЧИ) ---
+
+  /// Распознаёт голосовое сообщение в текст (speech-to-text).
+  ///
+  /// Уровни отказоустойчивости — как у сканера еды:
+  ///   1) OpenRouter `/audio/transcriptions` (Whisper) — основной путь;
+  ///   2) Gemini REST напрямую с `inline_data` (аудио) — запасной путь.
+  ///
+  /// [format] — формат записи без точки (`m4a`, `wav`, `mp3`, `ogg`).
+  /// [language] — подсказка языка по ISO-639-1 (`ru`, `en`);
+  ///   если null, провайдер определяет язык сам.
+  /// Возвращает null, если распознать не удалось (тогда UI покажет ошибку).
+  Future<String?> transcribeAudio(
+    Uint8List audioBytes, {
+    String format = 'm4a',
+    String? language,
+  }) async {
+    if (audioBytes.isEmpty) return null;
+    final base64Audio = base64Encode(audioBytes);
+
+    // 1) OpenRouter Speech-to-Text. Принимает только ключи вида sk-or-…
+    const sttModels = ['openai/whisper-1', 'openai/whisper-large-v3'];
+    final orKeys = <String?>[_openRouterKey, _scannerApiKey]
+        .whereType<String>()
+        .where((k) => k.startsWith('sk-or-'))
+        .toList();
+
+    for (final key in orKeys) {
+      for (final model in sttModels) {
+        try {
+          final response = await http
+              .post(
+                Uri.parse('https://openrouter.ai/api/v1/audio/transcriptions'),
+                headers: {
+                  'Authorization': 'Bearer $key',
+                  'Content-Type': 'application/json',
+                  'HTTP-Referer': 'https://welmi.app',
+                },
+                body: jsonEncode({
+                  'model': model,
+                  'input_audio': {'data': base64Audio, 'format': format},
+                  if (language != null) 'language': language,
+                }),
+              )
+              .timeout(const Duration(seconds: 45));
+
+          if (response.statusCode == 200) {
+            final text = (jsonDecode(response.body) as Map)['text'] as String?;
+            if (text != null && text.trim().isNotEmpty) return text.trim();
+          } else {
+            debugPrint('⚠️ STT HTTP ${response.statusCode} ($model)');
+          }
+        } catch (e) {
+          debugPrint('⚠️ STT error with $model: $e');
+        }
+      }
+    }
+
+    // 2) Gemini REST напрямую: аудио передаётся как inline_data
+    final geminiKeys = <String?>[_scannerApiKey, _openRouterKey]
+        .whereType<String>()
+        .where((k) => !k.startsWith('sk-or-'))
+        .toList();
+    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    const sttPrompt =
+        'Распознай речь в этом аудио и верни ТОЛЬКО текст без пояснений. '
+        'Сохрани исходный язык говорящего и знаки препинания.';
+
+    for (final key in geminiKeys) {
+      final encodedKey = Uri.encodeQueryComponent(key);
+      for (final model in geminiModels) {
+        try {
+          final response = await http
+              .post(
+                Uri.parse(
+                    'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$encodedKey'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'contents': [
+                    {
+                      'parts': [
+                        {'text': sttPrompt},
+                        {
+                          'inline_data': {
+                            'mime_type': _audioMimeType(format),
+                            'data': base64Audio,
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  'generationConfig': {'maxOutputTokens': 1000},
+                }),
+              )
+              .timeout(const Duration(seconds: 45));
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body) as Map<String, dynamic>;
+            final candidates = data['candidates'] as List?;
+            if (candidates != null && candidates.isNotEmpty) {
+              final content =
+                  (candidates[0] as Map<String, dynamic>?)?['content']
+                      as Map<String, dynamic>?;
+              final parts = content?['parts'] as List?;
+              if (parts != null) {
+                final buffer = StringBuffer();
+                for (final part in parts) {
+                  final text = (part as Map<String, dynamic>?)?['text'] as String?;
+                  if (text != null) buffer.write(text);
+                }
+                final result = buffer.toString().trim();
+                if (result.isNotEmpty) return result;
+              }
+            }
+          } else {
+            debugPrint('⚠️ STT Gemini HTTP ${response.statusCode} ($model)');
+          }
+        } catch (e) {
+          debugPrint('⚠️ STT Gemini error with $model: $e');
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// MIME-тип аудио для Gemini REST (m4a — это контейнер с AAC внутри).
+  static String _audioMimeType(String format) {
+    switch (format.toLowerCase()) {
+      case 'wav':
+        return 'audio/wav';
+      case 'mp3':
+        return 'audio/mp3';
+      case 'ogg':
+      case 'opus':
+        return 'audio/ogg';
+      case 'flac':
+        return 'audio/flac';
+      case 'webm':
+        return 'audio/webm';
+      case 'aac':
+      case 'm4a':
+      case 'mp4':
+        return 'audio/aac';
+      default:
+        return 'audio/wav';
+    }
+  }
+
   // --- СКАНЕР ---
   Future<FoodAnalysisResult?> analyzeFoodImage(Uint8List imageBytes) async {
     const prompt = '''Проанализируй фото еды. Определи название, вес порции (г), калории, белки, жиры, углеводы. 

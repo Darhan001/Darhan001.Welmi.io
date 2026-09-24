@@ -256,6 +256,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsDisabled => 'Notifications disabled';
 
   @override
+  String get notifMasterSubtitle => 'Water, meals, activity';
+
+  @override
+  String get notifReminders => 'Reminders';
+
+  @override
+  String get notifEvening => 'Evening reminder';
+
+  @override
+  String get notifWaterInterval => 'Reminder interval';
+
+  @override
+  String get notifPickTime => 'Choose time';
+
+  @override
+  String get notifEvery30Min => 'Every 30 min';
+
+  @override
+  String get notifEvery1h => 'Every 1 hour';
+
+  @override
+  String get notifEvery90Min => 'Every 1.5 hours';
+
+  @override
+  String get notifEvery2h => 'Every 2 hours';
+
+  @override
+  String get notifEvery3h => 'Every 3 hours';
+
+  @override
+  String get notifTestButton => 'Send test notification';
+
+  @override
+  String get notifTestSent => 'Test notification sent!';
+
+  @override
+  String get notifPermissionDenied => 'Notification permission denied';
+
+  @override
+  String get notifPermissionGranted => 'Permission granted!';
+
+  @override
+  String get notifPermissionBanner =>
+      'Tap to allow notifications — otherwise reminders won\'t appear';
+
+  @override
   String get biometricEnabled => 'Biometric enabled';
 
   @override
@@ -382,6 +428,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String aiMinutesAgo(Object minutes) {
     return '$minutes min ago';
   }
+
+  @override
+  String get voiceMessageLabel => 'Voice message';
+
+  @override
+  String get voiceSend => 'Send voice message';
+
+  @override
+  String get voiceRecording => 'Recording…';
+
+  @override
+  String get voiceTranscribing => 'Recognizing speech…';
+
+  @override
+  String get voiceCancel => 'Cancel';
+
+  @override
+  String get voiceErrorPermission =>
+      'Allow microphone access to send voice messages.';
+
+  @override
+  String get voiceErrorTranscribe =>
+      'Could not recognize speech. Please try again.';
 
   @override
   String get mealPlanTitle => 'Meal Plan';

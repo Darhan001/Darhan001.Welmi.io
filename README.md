@@ -5,9 +5,20 @@ Flutter-приложение для трекинга питания, воды, �
 ## 🔑 Запуск с секретами (обязательно)
 
 Все ключи/секреты читаются из переменных окружения через `--dart-define-from-file`.
-Сами ключи **не хранятся в коде** и не коммитятся (`env.json` в `.gitignore`).
+Сами ключи **не хранятся в коде** и не коммитятся (`env.json` и `.env` в `.gitignore`).
 
-1. Скопируйте/создайте файл `env.json` в корне проекта:
+**Обязательные** (без них приложение не запустится — покажет экран с инструкцией):
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+**Необязательные** (приложение запустится и без них, часть функций просто отключится):
+
+- `GEMINI_NUTRITION_API_KEY`, `OPENROUTER_API_KEY`, `SCANNER_API_KEY` — AI-функции
+  переключатся на локальные формулы-fallback;
+- `SENTRY_DSN` — без него краш-репорты не отправляются.
+
+1. Скопируйте/создайте файл `env.json` в корне проекта (рядом с `pubspec.yaml`):
 
 ```json
 {
@@ -33,13 +44,49 @@ flutter build apk --dart-define-from-file=env.json
 flutter build ipa --dart-define-from-file=env.json
 ```
 
-3. Если запустить без `env.json` — приложение покажет экран с инструкцией вместо тихого падения.
+3. Если запустить **без** обязательной конфигурации Supabase — приложение покажет
+   экран с инструкцией вместо тихого падения. Если не хватает только необязательных
+   ключей (AI/Sentry) — приложение запустится и будет работать.
+
+### Запуск на телефоне для тестирования
+
+```bash
+# 1. Подключи телефон по USB (включи "Отладку по USB" в настройках разработчика)
+#    или запусти эмулятор. Список устройств:
+flutter devices
+
+# 2. Запусти на телефоне (ключи подставятся из env.json автоматически):
+flutter run --dart-define-from-file=env.json
+
+# 3. Выбери устройство, если их несколько — Flutter спросит номер из списка.
+#    Чтобы указать сразу: flutter run -d <id устройства> --dart-define-from-file=env.json
+
+# 4. Release-APK для установки на телефон:
+flutter build apk --release --dart-define-from-file=env.json
+#    Готовый файл: build/app/outputs/flutter-apk/app-release.apk
+```
+
+Или проще — готовый скрипт (проверяет env.json и запускает с ключами):
+
+```bash
+bash scripts/run.sh          # запуск на телефоне/эмуляторе
+bash scripts/run.sh devices  # список устройств
+bash scripts/run.sh release  # сборка APK
+```
+
+В Android Studio/IntelliJ конфигурация запуска **`main.dart`** (`.idea/runConfigurations/main_dart.xml`)
+уже содержит флаг `--dart-define-from-file=env.json`, так что запуск кнопкой ▶ подставляет
+ключи из `env.json` автоматически — отдельно ничего настраивать не нужно.
+
+> 💡 В DevicePreview (в debug-сборке) можно переключать разные модели телефонов
+> (iPhone, Pixel и т.д.) без реальных устройств — удобно для проверки интерфейса.
 
 ### Где лежат ключи и как их посмотреть
 
 - Все секреты — в одном файле **`env.json`** в корне проекта (он в `.gitignore`).
 - Посмотреть: `cat env.json` (или открыть файл в редакторе).
-- В коде ключей нет — `lib/main.dart` читает их через `String.fromEnvironment(...)`.
+- В коде ключей нет — `lib/core/config/app_config.dart` читает их через `String.fromEnvironment(...)`.
+  Там же описано, какие переменные обязательные, а какие необязательные.
 - В git попадает только README и структура, сами значения — нет.
 - Есть скрипты: `scripts/hide_keys_from_code.py` (убрать ключи из кода) и
   `scripts/restore_keys_to_code.py` (вернуть их из `env.json` в код).
@@ -49,7 +96,8 @@ flutter build ipa --dart-define-from-file=env.json
 
 ## 📦 Структура
 
-- `lib/core/` — сервисы, модели, тема, общие виджеты
+- `lib/core/` — сервисы, модели, конфигурация, тема, общие виджеты
+- `lib/core/config/app_config.dart` — чтение ключей и обязательные/необязательные параметры
 - `lib/features/` — фичи по вертикальным срезам (presentation)
 - `env.json` — секреты (gitignored)
 

@@ -32,6 +32,8 @@
 	<string>Welmi использует данные о здоровье (шаги, калории, сон), чтобы автоматически вести дневник активности.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Welmi записывает данные об активности в Apple Health.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Welmi использует микрофон, чтобы отправлять голосовые сообщения AI-помощнику.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Welmi использует библиотеку фото для загрузки изображений блюд.</string>
 	<key>UIApplicationSceneManifest</key>

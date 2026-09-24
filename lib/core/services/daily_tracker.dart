@@ -6,6 +6,7 @@ import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/models/supabase_models.dart';
 import 'package:lumina/core/services/user_data_service.dart';
+import 'package:lumina/services/notification_service.dart';
 
 /// Типизированный снимок дневных данных — используется для оффлайн-кэша,
 /// чтобы избежать опечаток в ключах и упростить сериализацию.
@@ -271,6 +272,9 @@ class DailyTracker extends ChangeNotifier {
     await _updateStreak();
     _isLoading = false;
     notifyListeners();
+
+    // После загрузки данных дня синхронизируем напоминания о воде с целью.
+    await _updateWaterReminders();
   }
 
   /// Метод для обновления шагов напрямую (вызывается после синхронизации Health Connect)
@@ -316,6 +320,23 @@ class DailyTracker extends ChangeNotifier {
         'date': _today.toIso8601String(),
       });
       await _saveCache();
+    }
+    // После добавления воды пересматриваем необходимость следующего
+    // напоминания: если дневная цель достигнута — напоминаем до завтра.
+    await _updateWaterReminders();
+  }
+
+  /// Синхронизация напоминаний о воде с дневной целью:
+  ///  - цель достигнута → напоминания отменяются до следующего дня;
+  ///  - иначе → убеждаемся, что напоминание запланировано
+  ///    (стабильный id перезаписывает прежнее, дубликатов нет).
+  Future<void> _updateWaterReminders() async {
+    if (kIsWeb) return;
+    try {
+      final reached = _goalWaterMl > 0 && _totalWaterMl >= _goalWaterMl;
+      await NotificationService().scheduleWater(waterGoalReached: reached);
+    } catch (e) {
+      debugPrint('⚠️ Water reminders sync error: $e');
     }
   }
 

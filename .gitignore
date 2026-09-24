@@ -11,12 +11,18 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+android/.kotlin/
 
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
-.idea/
+# .idea/ игнорируем целиком, но конфигурации запуска (runConfigurations)
+# коммитим, чтобы запуск с --dart-define-from-file=env.json был готов
+# сразу после клонирования.
+.idea/*
+!.idea/runConfigurations/
+!.idea/runConfigurations/**
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -48,4 +54,7 @@ app.*.map.json
 
 # Секреты (не коммитить!)
 env.json
+.env
 *.env
+.env.*
+!.env.example

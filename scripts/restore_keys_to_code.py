@@ -1,8 +1,9 @@
-"""Restore API keys from env.json into lib/main.dart as defaultValue.
+"""Restore API keys from env.json into app_config.dart as defaultValue.
 
 Reads env.json and rewrites the String.fromEnvironment(...) constants in
-lib/main.dart to include a defaultValue with the real key value, so the app
-works without --dart-define-from-file. Values are never printed.
+lib/core/config/app_config.dart to include a defaultValue with the real key
+value, so the app works without --dart-define-from-file. Values are never
+printed.
 """
 import json
 import re
@@ -33,7 +34,7 @@ def esc(s: str) -> str:
 def main() -> None:
     data = json.load(open("env.json", encoding="utf-8"))
 
-    path = "lib/main.dart"
+    path = "lib/core/config/app_config.dart"
     src = open(path, "rb").read().decode("utf-8")
 
     keys = [

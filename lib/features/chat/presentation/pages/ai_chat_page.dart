@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:record/record.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/ai_service.dart';
@@ -36,6 +39,14 @@ class _AiChatPageState extends State<AiChatPage> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Голосовые сообщения (запись → распознавание речи → текст в чат)
+  final AudioRecorder _recorder = AudioRecorder();
+  bool _isRecording = false;
+  bool _isTranscribing = false;
+  Duration _recordDuration = Duration.zero;
+  Timer? _recordTicker;
+  String? _recordingPath;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +55,9 @@ class _AiChatPageState extends State<AiChatPage> {
 
   @override
   void dispose() {
+    _recordTicker?.cancel();
+    if (_isRecording) _recorder.cancel();
+    _recorder.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -81,7 +95,7 @@ class _AiChatPageState extends State<AiChatPage> {
     });
   }
 
-  Future<void> _sendMessage({String? text}) async {
+  Future<void> _sendMessage({String? text, bool isVoice = false}) async {
     final message = text ?? _messageController.text.trim();
     if (message.isEmpty || _isLoading) return;
 
@@ -90,7 +104,11 @@ class _AiChatPageState extends State<AiChatPage> {
     _focusNode.unfocus();
 
     setState(() {
-      _messages.add(_ChatBubble(text: message, isUser: true));
+      _messages.add(_ChatBubble(
+        text: message,
+        isUser: true,
+        isVoice: isVoice,
+      ));
       _isLoading = true;
       _errorMessage = null;
     });
@@ -117,6 +135,145 @@ class _AiChatPageState extends State<AiChatPage> {
         _scrollToBottom();
       }
     }
+  }
+
+  // ─── Голосовые сообщения: запись и распознавание ───────────
+
+  /// Максимум 60 секунд: более длинные записи провайдеры STT
+  /// завершают по таймауту, а короткие реплики точнее распознаются.
+  static const int _maxVoiceSeconds = 60;
+
+  /// Начинает запись голосового сообщения.
+  Future<void> _startRecording() async {
+    if (kIsWeb || _isRecording || _isTranscribing) return;
+    final loc = AppLocalizations.of(context)!;
+    HapticFeedback.mediumImpact();
+
+    try {
+      // Запрашивает разрешение микрофона у системы.
+      final allowed = await _recorder.hasPermission();
+      if (!mounted) return;
+      if (!allowed) {
+        _showVoiceError(loc.voiceErrorPermission);
+        return;
+      }
+
+      final path =
+          '${Directory.systemTemp.path}/welmi_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _recorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc, // контейнер m4a, сжатие AAC
+          bitRate: 64000,
+          sampleRate: 16000, // 16 кГц — оптимум для распознавания речи
+          numChannels: 1, // моно для голоса достаточно
+        ),
+        path: path,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _isRecording = true;
+        _recordingPath = path;
+        _recordDuration = Duration.zero;
+      });
+
+      _recordTicker?.cancel();
+      _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() => _recordDuration += const Duration(seconds: 1));
+        if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
+          _finishRecording(send: true);
+        }
+      });
+    } catch (e) {
+      debugPrint('⚠️ Voice record error: $e');
+      if (mounted) _showVoiceError(loc.voiceErrorTranscribe);
+    }
+  }
+
+  /// Останавливает запись. [send] = false — просто удалить запись.
+  Future<void> _finishRecording({required bool send}) async {
+    if (!_isRecording) return;
+    _recordTicker?.cancel();
+    _recordTicker = null;
+    HapticFeedback.lightImpact();
+    if (mounted) setState(() => _isRecording = false);
+
+    Uint8List? bytes;
+    try {
+      final stoppedPath = await _recorder.stop();
+      final filePath = stoppedPath ?? _recordingPath;
+      if (filePath != null) {
+        final file = File(filePath);
+        if (await file.exists()) {
+          if (send) bytes = await file.readAsBytes();
+          await file.delete(); // временный файл распознаванию больше не нужен
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Voice stop error: $e');
+    }
+    _recordingPath = null;
+
+    if (!send) return;
+    if (bytes == null || bytes.isEmpty) {
+      if (mounted) {
+        _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
+      }
+      return;
+    }
+    await _transcribeAndSend(bytes);
+  }
+
+  /// Распознаёт аудио и отправляет полученный текст в чат от имени пользователя.
+  Future<void> _transcribeAndSend(Uint8List bytes) async {
+    setState(() => _isTranscribing = true);
+    String? text;
+    try {
+      text = await _aiService.transcribeAudio(
+        bytes,
+        format: 'm4a',
+        language: _speechLanguageHint,
+      );
+    } catch (e) {
+      debugPrint('⚠️ Voice transcribe error: $e');
+    }
+    if (!mounted) return;
+    setState(() => _isTranscribing = false);
+
+    if (text == null || text.trim().isEmpty) {
+      _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
+      return;
+    }
+    await _sendMessage(text: text, isVoice: true);
+  }
+
+  /// Подсказка языка для STT: для ru/en заметно точнее,
+  /// для остальных локалей оставляем автоопределение провайдеру.
+  String? get _speechLanguageHint {
+    final code = Localizations.localeOf(context).languageCode;
+    return (code == 'ru' || code == 'en') ? code : null;
+  }
+
+  void _showVoiceError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _Design.textPrimary,
+          ),
+        ),
+        backgroundColor: _Design.card,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_Design.radiusMd)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   void _startNewChat() {
@@ -450,6 +607,27 @@ class _AiChatPageState extends State<AiChatPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (message.isVoice) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.mic_rounded,
+                            size: 13,
+                            color: _Design.lime.withValues(alpha: 0.7)),
+                        const SizedBox(width: 4),
+                        Text(
+                          AppLocalizations.of(context)!.voiceMessageLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            letterSpacing: 0.4,
+                            fontWeight: FontWeight.w700,
+                            color: _Design.lime.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   _buildMessageText(message.text, isUser),
                   const SizedBox(height: 4),
                   Row(
@@ -623,7 +801,11 @@ class _AiChatPageState extends State<AiChatPage> {
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: _Design.cardBorder),
           ),
-          child: Row(
+          child: _isTranscribing
+              ? _buildTranscribingRow()
+              : _isRecording
+                  ? _buildRecordingRow()
+                  : Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const SizedBox(width: 4),
@@ -668,6 +850,24 @@ class _AiChatPageState extends State<AiChatPage> {
                   ),
                 ),
               ),
+              // Mic button — голосовое сообщение
+              if (!kIsWeb)
+                Tooltip(
+                  message: AppLocalizations.of(context)!.voiceSend,
+                  child: GestureDetector(
+                    onTap: _isLoading ? null : _startRecording,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.mic_none_rounded,
+                        size: 22,
+                        color: _isLoading
+                            ? _Design.textMuted
+                            : _Design.lime.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ),
               // Send button
               GestureDetector(
                 onTap: _isLoading ? null : () => _sendMessage(),
@@ -696,6 +896,101 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
+  // ─── Ряд записи голосового ────────────────────────────────
+
+  Widget _buildRecordingRow() {
+    final loc = AppLocalizations.of(context)!;
+    return Row(
+      children: [
+        const SizedBox(width: 4),
+        Tooltip(
+          message: loc.voiceCancel,
+          child: GestureDetector(
+            onTap: () => _finishRecording(send: false),
+            child: const Padding(
+              padding: EdgeInsets.all(10),
+              child: Icon(Icons.close_rounded,
+                  size: 22, color: _Design.textSecondary),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              const _PulsingDot(),
+              const SizedBox(width: 10),
+              Text(
+                _formatDuration(_recordDuration),
+                style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _Design.textPrimary),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  loc.voiceRecording,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _Design.textMuted),
+                ),
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _finishRecording(send: true),
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+                color: _Design.lime, shape: BoxShape.circle),
+            child: const Icon(Icons.arrow_upward_rounded,
+                color: Colors.black, size: 20),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Состояние «распознаю речь» — вместо поля ввода.
+  Widget _buildTranscribingRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: _Design.lime),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.voiceTranscribing,
+              style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _Design.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds =
+        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
@@ -708,11 +1003,13 @@ class _AiChatPageState extends State<AiChatPage> {
 class _ChatBubble {
   final String text;
   final bool isUser;
+  final bool isVoice;
   final DateTime timestamp;
 
   _ChatBubble({
     required this.text,
     required this.isUser,
+    this.isVoice = false,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 }
@@ -777,6 +1074,46 @@ class _TypingDotsState extends State<_TypingDots>
         decoration: BoxDecoration(
           color: widget.dotColor.withValues(alpha: 0.3),
           shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+/// Пульсирующая красная точка — индикатор идущей записи
+class _PulsingDot extends StatefulWidget {
+  const _PulsingDot();
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Opacity(
+        opacity: 0.35 + 0.65 * _controller.value,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: const BoxDecoration(
+            color: Color(0xFFFF5252),
+            shape: BoxShape.circle,
+          ),
         ),
       ),
     );

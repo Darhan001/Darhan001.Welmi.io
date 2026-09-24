@@ -257,6 +257,52 @@ class AppLocalizationsKy extends AppLocalizations {
   String get notificationsDisabled => 'Эскертүүлөр өчүрүлдү';
 
   @override
+  String get notifMasterSubtitle => 'Суу, тамак-аш, активдүүлүк';
+
+  @override
+  String get notifReminders => 'Эскертүүлөр';
+
+  @override
+  String get notifEvening => 'Кечки эскертүү';
+
+  @override
+  String get notifWaterInterval => 'Эскертүү аралыгы';
+
+  @override
+  String get notifPickTime => 'Убакытты тандa';
+
+  @override
+  String get notifEvery30Min => 'Ар 30 мүнөт сайын';
+
+  @override
+  String get notifEvery1h => 'Ар саат сайын';
+
+  @override
+  String get notifEvery90Min => 'Ар 1,5 саат сайын';
+
+  @override
+  String get notifEvery2h => 'Ар 2 саат сайын';
+
+  @override
+  String get notifEvery3h => 'Ар 3 саат сайын';
+
+  @override
+  String get notifTestButton => 'Сыноо эскертүү жөнөтүү';
+
+  @override
+  String get notifTestSent => 'Сыноо эскертүү жөнөтүлдү!';
+
+  @override
+  String get notifPermissionDenied => 'Эскертүүлөргө уруксат берилген жок';
+
+  @override
+  String get notifPermissionGranted => 'Уруксат алынды!';
+
+  @override
+  String get notifPermissionBanner =>
+      'Эскертүүлөргө уруксат бер — болбосо эскертүүлөр көрүнбөйт';
+
+  @override
   String get biometricEnabled => 'Биометрия ишке киргизилди';
 
   @override
@@ -384,6 +430,29 @@ class AppLocalizationsKy extends AppLocalizations {
   String aiMinutesAgo(Object minutes) {
     return '$minutes мүн мурун';
   }
+
+  @override
+  String get voiceMessageLabel => 'Үн билдирүү';
+
+  @override
+  String get voiceSend => 'Үн билдирүү жөнөтүү';
+
+  @override
+  String get voiceRecording => 'Жазылып жатат…';
+
+  @override
+  String get voiceTranscribing => 'Сүйлөө таанылып жатат…';
+
+  @override
+  String get voiceCancel => 'Жокко чыгаруу';
+
+  @override
+  String get voiceErrorPermission =>
+      'Үн билдирүү жөнөтүү үчүн микрофонго уруксат бериңиз.';
+
+  @override
+  String get voiceErrorTranscribe =>
+      'Сүйлөөнү таануу мүмкүн болгон жок. Кайра аракет кылыңыз.';
 
   @override
   String get mealPlanTitle => 'Тамак-аш планы';

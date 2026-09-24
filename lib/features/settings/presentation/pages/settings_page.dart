@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lumina/core/services/notification_service.dart';
+import 'package:lumina/features/notifications/presentation/pages/notification_settings_page.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/biometric_service.dart'; // Добавлено
 import 'package:lumina/core/services/health_sync_service.dart';
@@ -23,19 +23,14 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final NotificationService _notif = NotificationService();
-  final BiometricService _biometric = BiometricService(); // Добавлено
-  
-  bool _notificationsEnabled = true;
-  bool _waterReminders = true;
-  bool _mealReminders = true;
-  bool _biometricEnabled = false; // Добавлено
-  bool _isBiometricSupported = false; // Добавлено
+  final BiometricService _biometric = BiometricService();
+
+  bool _biometricEnabled = false;
+  bool _isBiometricSupported = false;
   bool _healthConnected = false;
   bool _healthSyncing = false;
   
   String _units = 'metric';
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -51,9 +46,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (!mounted) return;
     setState(() {
-      _notificationsEnabled = _notif.waterRemindersEnabled || _notif.mealRemindersEnabled;
-      _waterReminders = _notif.waterRemindersEnabled;
-      _mealReminders = _notif.mealRemindersEnabled;
       _biometricEnabled = bioEnabled;
       _isBiometricSupported = bioSupported;
       _healthConnected = healthOk;
@@ -79,47 +71,6 @@ class _SettingsPageState extends State<SettingsPage> {
       value ? AppLocalizations.of(context)!.biometricEnabled : AppLocalizations.of(context)!.biometricDisabled,
       icon: Icons.security,
     );
-  }
-
-  Future<void> _toggleNotifications(bool value) async {
-    setState(() => _isLoading = true);
-    await _notif.updateSettings(
-      waterReminders: value ? _waterReminders : false,
-      mealReminders: value ? _mealReminders : false,
-    );
-    if (mounted) {
-      setState(() {
-        _notificationsEnabled = value;
-        _isLoading = false;
-      });
-      showWelmiSnackbar(
-        context,
-        value ? AppLocalizations.of(context)!.notificationsEnabled : AppLocalizations.of(context)!.notificationsDisabled,
-        icon: value ? Icons.notifications_active : Icons.notifications_off,
-      );
-    }
-  }
-
-  Future<void> _toggleWaterReminders(bool value) async {
-    setState(() => _isLoading = true);
-    await _notif.updateSettings(waterReminders: value);
-    if (mounted) {
-      setState(() {
-        _waterReminders = value;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _toggleMealReminders(bool value) async {
-    setState(() => _isLoading = true);
-    await _notif.updateSettings(mealReminders: value);
-    if (mounted) {
-      setState(() {
-        _mealReminders = value;
-        _isLoading = false;
-      });
-    }
   }
 
   /// Подключить Google Fit / Apple Health (запрос разрешений)
@@ -398,37 +349,65 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 28),
 
-                  // 🔔 Уведомления
+                  // 🔔 Уведомления (локальные — см. NotificationService)
                   _buildSectionTitle(AppLocalizations.of(context)!.notificationsTitle.toUpperCase(), isDark),
                   const SizedBox(height: 12),
-                  _buildSwitchTile(
-                    Icons.notifications_outlined,
-                    AppLocalizations.of(context)!.pushNotifications,
-                    _notificationsEnabled,
-                    _isLoading ? null : _toggleNotifications,
-                    subtitle: AppLocalizations.of(context)!.pushNotificationsSubtitle,
-                    isDark: isDark,
+                  GestureDetector(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      await Navigator.push(
+                        context,
+                        smoothPageRoute(const NotificationSettingsPage()),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F3E5),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.notifications_outlined,
+                                size: 22, color: Color(0xFF75A47F)),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(AppLocalizations.of(context)!.notificationsTitle,
+                                    style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                        color: isDark ? Colors.white : Colors.black)),
+                                const SizedBox(height: 2),
+                                Text(AppLocalizations.of(context)!.pushNotificationsSubtitle,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? Colors.white38 : Colors.black38,
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.white10 : Colors.black12),
+                        ],
+                      ),
+                    ),
                   ),
-                  if (_notificationsEnabled) ...[
-                    _buildSwitchTile(
-                      Icons.local_drink_outlined,
-                      AppLocalizations.of(context)!.waterReminders,
-                      _waterReminders,
-                      _isLoading ? null : _toggleWaterReminders,
-                      subtitle: AppLocalizations.of(context)!.waterRemindersSubtitle,
-                      indent: true,
-                      isDark: isDark,
-                    ),
-                    _buildSwitchTile(
-                      Icons.restaurant_outlined,
-                      AppLocalizations.of(context)!.mealReminders,
-                      _mealReminders,
-                      _isLoading ? null : _toggleMealReminders,
-                      subtitle: AppLocalizations.of(context)!.mealRemindersSubtitle,
-                      indent: true,
-                      isDark: isDark,
-                    ),
-                  ],
                   const SizedBox(height: 28),
 
                   // 🌍 Язык
@@ -591,13 +570,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            if (_isLoading)
-              Container(
-                color: Colors.black12,
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.black),
-                ),
-              ),
           ],
         ),
       ),

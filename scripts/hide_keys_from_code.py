@@ -1,6 +1,6 @@
 """Убрать ключи из исходного кода (обратная операция к restore_keys_to_code.py).
 
-Переводит константы в lib/main.dart в вид:
+Переводит константы в lib/core/config/app_config.dart в вид:
 
     const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
@@ -35,7 +35,7 @@ ENV_KEYS = [
 
 
 def main() -> None:
-    path = "lib/main.dart"
+    path = "lib/core/config/app_config.dart"
     src = open(path, "rb").read().decode("utf-8")
     removed = 0
 

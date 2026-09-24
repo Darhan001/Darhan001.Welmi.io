@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/models/onboarding_data.dart';
 import 'package:lumina/core/services/auth_service.dart';
-import 'package:lumina/core/services/notification_service.dart';
+import 'package:lumina/services/notification_service.dart';
 import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
@@ -52,8 +52,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Future<void> _requestNotifications() async {
     try {
-      await NotificationService().requestPermissions();
-      await NotificationService().startAllNotifications();
+      final notifications = NotificationService();
+      await notifications.initialize();
+      final granted = await notifications.requestPermissions();
+      if (granted) await notifications.rescheduleAll();
     } catch (_) {}
   }
 

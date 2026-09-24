@@ -1,19 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:lumina/core/config/app_config.dart';
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
-import 'package:lumina/core/services/notification_service.dart';
+import 'package:lumina/services/notification_service.dart';
 import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/services/biometric_service.dart';
 import 'package:lumina/core/services/widget_service.dart';
@@ -30,22 +30,9 @@ import 'package:lumina/features/diary/presentation/pages/diary_page.dart';
 import 'package:lumina/features/progress/presentation/pages/progress_page.dart';
 import 'package:lumina/features/weight/presentation/pages/weight_page.dart';
 
-// ═══════════════════════════════════════════════════════════
-// 🚀 КОНФИГУРАЦИЯ
-// ═══════════════════════════════════════════════════════════
-
-// Ключи НЕ хранятся в коде. Они читаются из окружения, которое задаётся
-// файлом env.json (он в .gitignore) через флаг --dart-define-from-file.
-// Локально: значения лежат в env.json в корне проекта (открыть: `cat env.json`).
-const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-const String geminiNutritionApiKey =
-    String.fromEnvironment('GEMINI_NUTRITION_API_KEY');
-const String openRouterApiKey = String.fromEnvironment('OPENROUTER_API_KEY');
-const String scannerApiKey = String.fromEnvironment('SCANNER_API_KEY');
-const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
-
-// ═══════════════════════════════════════════════════════════
+// Конфигурация приложения (ключи из env.json) вынесена в
+// `lib/core/config/app_config.dart`. Ключи в коде не хранятся,
+// а подставляются флагом --dart-define-from-file=env.json.
 
 /// Global locale provider singleton
 final localeProvider = LocaleProvider();
@@ -54,10 +41,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
 
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    runApp(const _ConfigErrorApp());
+  // Обязательна только конфигурация Supabase. Отсутствие AI/Sentry-ключей
+  // запуск НЕ блокирует — приложение работает с fallback-логикой.
+  if (!isSupabaseConfigured) {
+    debugPrint('❌ Конфигурация Supabase не задана: '
+        '${missingRequiredEnvKeys.join(', ')}. Запустите с '
+        '--dart-define-from-file=env.json');
+    runApp(_ConfigErrorApp(missingKeys: missingRequiredEnvKeys));
     return;
   }
+
+  debugPrint('✅ Конфигурация: ${configDiagnostics()}');
 
   final useSentry = !kIsWeb && sentryDsn.isNotEmpty && sentryDsn.startsWith('https://');
   if (useSentry) {
@@ -92,7 +86,13 @@ Future<void> _bootstrapApp() async {
     try {
       final notifications = NotificationService();
       await notifications.initialize();
-      if (!kIsWeb) await notifications.requestPermissions();
+      if (!kIsWeb) {
+        // Разрешение — только по требованию пользователя (настройки/онбординг).
+        // Если разрешение уже выдано — восстанавливаем расписание
+        // (стабильные id перезаписывают прежние, дубликаты не создаются).
+        final granted = await notifications.checkPermissions();
+        if (granted) await notifications.rescheduleAll();
+      }
     } catch (e) {
       debugPrint('❌ Notification Error: $e');
     }
@@ -115,41 +115,57 @@ Future<void> _bootstrapApp() async {
   }
 }
 
-/// Экран, показываемый если приложение запущено без --dart-define-from-file
+/// Экран, показываемый если обязательная конфигурация (Supabase) не передана.
+/// Показывается только когда отсутствует SUPABASE_URL / SUPABASE_ANON_KEY —
+/// отсутствие необязательных ключей (AI, Sentry) приложение не блокирует.
 class _ConfigErrorApp extends StatelessWidget {
-  const _ConfigErrorApp();
+  const _ConfigErrorApp({required this.missingKeys});
+
+  /// Имена отсутствующих обязательных переменных окружения.
+  final List<String> missingKeys;
 
   @override
   Widget build(BuildContext context) {
+    final missing = missingKeys.isEmpty
+        ? kRequiredEnvKeys.join(', ')
+        : missingKeys.join(', ');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Welmi',
       theme: AppTheme.lightTheme,
-      home: const Scaffold(
+      home: Scaffold(
         body: Center(
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.settings_remote_rounded,
+                const Icon(Icons.settings_remote_rounded,
                     size: 72, color: Color(0xFF4A8C5C)),
-                SizedBox(height: 24),
-                Text(
+                const SizedBox(height: 24),
+                const Text(
                   'Не передана конфигурация',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
-                  'Запустите приложение с параметром:\\n\\n'
-                  'flutter run --dart-define-from-file=env.json\\n\\n'
-                  'Файл env.json должен лежать в корне проекта\\n'
-                  'и содержать SUPABASE_URL, SUPABASE_ANON_KEY,\\n'
-                  'GEMINI_NUTRITION_API_KEY, OPENROUTER_API_KEY,\\n'
-                  'SCANNER_API_KEY, SENTRY_DSN.',
+                  'Не заданы обязательные параметры:\n\n$missing\n\n'
+                  'Запустите приложение с параметром:\n\n'
+                  'flutter run --dart-define-from-file=env.json\n\n'
+                  'Файл env.json должен лежать в корне проекта рядом с pubspec.yaml.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, height: 1.6, color: Colors.black54),
+                  style: const TextStyle(
+                      fontSize: 14, height: 1.6, color: Colors.black54),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Остальные ключи (Gemini, OpenRouter, сканер, Sentry) — '
+                  'необязательные: без них приложение запустится, но часть '
+                  'AI-функций будет недоступна.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 12, height: 1.5, color: Colors.black38),
                 ),
               ],
             ),

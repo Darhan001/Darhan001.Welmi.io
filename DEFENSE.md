@@ -217,7 +217,7 @@ TDEE = BMR × коэффициент активности (1,2 / 1,375 / 1,55 / 
 
 ### 6.1. «Почему ключи API лежат в коде?» — вопрос закрыт ✅
 
-**Как сейчас.** В коде ключей нет. В `lib/main.dart` они читаются из окружения:
+**Как сейчас.** В коде ключей нет. В `lib/core/config/app_config.dart` они читаются из окружения:
 
 ```dart
 const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');

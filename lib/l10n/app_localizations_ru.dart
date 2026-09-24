@@ -255,6 +255,52 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsDisabled => 'Уведомления выключены';
 
   @override
+  String get notifMasterSubtitle => 'Вода, питание, активность';
+
+  @override
+  String get notifReminders => 'Напоминания';
+
+  @override
+  String get notifEvening => 'Вечернее напоминание';
+
+  @override
+  String get notifWaterInterval => 'Интервал напоминаний';
+
+  @override
+  String get notifPickTime => 'Выбери время';
+
+  @override
+  String get notifEvery30Min => 'Каждые 30 минут';
+
+  @override
+  String get notifEvery1h => 'Каждый час';
+
+  @override
+  String get notifEvery90Min => 'Каждые 1,5 часа';
+
+  @override
+  String get notifEvery2h => 'Каждые 2 часа';
+
+  @override
+  String get notifEvery3h => 'Каждые 3 часа';
+
+  @override
+  String get notifTestButton => 'Отправить тестовое уведомление';
+
+  @override
+  String get notifTestSent => 'Тестовое уведомление отправлено!';
+
+  @override
+  String get notifPermissionDenied => 'Разрешение на уведомления не выдано';
+
+  @override
+  String get notifPermissionGranted => 'Разрешение получено!';
+
+  @override
+  String get notifPermissionBanner =>
+      'Нажми, чтобы разрешить уведомления — иначе напоминания не появятся';
+
+  @override
   String get biometricEnabled => 'Биометрия включена';
 
   @override
@@ -382,6 +428,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String aiMinutesAgo(Object minutes) {
     return '$minutes мин назад';
   }
+
+  @override
+  String get voiceMessageLabel => 'Голосовое сообщение';
+
+  @override
+  String get voiceSend => 'Отправить голосовое';
+
+  @override
+  String get voiceRecording => 'Идёт запись…';
+
+  @override
+  String get voiceTranscribing => 'Распознаю речь…';
+
+  @override
+  String get voiceCancel => 'Отмена';
+
+  @override
+  String get voiceErrorPermission =>
+      'Разреши доступ к микрофону, чтобы отправлять голосовые.';
+
+  @override
+  String get voiceErrorTranscribe =>
+      'Не удалось распознать речь. Попробуй ещё раз.';
 
   @override
   String get mealPlanTitle => 'План питания';
