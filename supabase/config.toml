@@ -1,0 +1,5 @@
+[functions.send-feedback]
+# The function validates the project's public API key itself and verifies
+# authenticated user access tokens with Supabase Auth. This preserves guest flow
+# for projects whose client key uses the newer publishable-key format.
+verify_jwt = false

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/services/biometric_service.dart';
 import 'package:lumina/core/services/widget_service.dart';
 import 'package:lumina/core/services/health_sync_service.dart';
+import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/core/theme/app_theme.dart';
 import 'package:lumina/core/theme/theme_provider.dart';
 import 'package:lumina/core/theme/locale_provider.dart';
@@ -77,6 +79,7 @@ Future<void> _bootstrapApp() async {
   try {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
     await SupabaseService().initialize();
+    unawaited(SubscriptionService.instance.initialize());
     AiService().initialize(
       nutritionApiKey: geminiNutritionApiKey,
       chatApiKey: openRouterApiKey,

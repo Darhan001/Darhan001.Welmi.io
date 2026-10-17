@@ -105,7 +105,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get drawerMyGoals => 'Мои цели';
 
   @override
-  String get drawerMealPlan => 'План питания';
+  String get drawerMealPlan => 'Рецепты';
 
   @override
   String get drawerActivityHistory => 'История активности';
@@ -453,7 +453,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось распознать речь. Попробуй ещё раз.';
 
   @override
-  String get mealPlanTitle => 'План питания';
+  String get mealPlanTitle => 'Рецепты';
 
   @override
   String get whereDoYouLive => 'Где ты живёшь?';
@@ -1695,4 +1695,43 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get securityTitle => 'Безопасность';
+
+  @override
+  String get feedbackEmptyMessage => 'Напиши сообщение перед отправкой.';
+
+  @override
+  String get feedbackMessageTooLong =>
+      'Сообщение слишком длинное. Максимум 3000 символов.';
+
+  @override
+  String get feedbackSessionError =>
+      'Не удалось подтвердить сессию. Перезапусти приложение и попробуй снова.';
+
+  @override
+  String get feedbackRateLimitError =>
+      'Слишком много запросов. Подожди немного и попробуй снова.';
+
+  @override
+  String get feedbackSendError =>
+      'Не удалось отправить сообщение. Проверь интернет и попробуй ещё раз.';
+
+  @override
+  String get feedbackFunctionMissing =>
+      'Сервис обратной связи ещё не опубликован. Попробуй позже.';
+
+  @override
+  String get feedbackSecretsMissing =>
+      'Сервис обратной связи не настроен. Попробуй позже.';
+
+  @override
+  String get feedbackTelegramError =>
+      'Telegram временно не доставил сообщение. Попробуй ещё раз позже.';
+
+  @override
+  String get feedbackFunctionError =>
+      'Сервис обратной связи временно недоступен. Попробуй позже.';
+
+  @override
+  String get feedbackNetworkError =>
+      'Нет соединения с сервисом. Проверь интернет и попробуй снова.';
 }

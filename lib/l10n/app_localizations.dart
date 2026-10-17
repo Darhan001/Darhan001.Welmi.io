@@ -283,7 +283,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMealPlan.
   ///
   /// In en, this message translates to:
-  /// **'Meal Plan'**
+  /// **'Recipes'**
   String get drawerMealPlan;
 
   /// No description provided for @drawerActivityHistory.
@@ -937,7 +937,7 @@ abstract class AppLocalizations {
   /// No description provided for @mealPlanTitle.
   ///
   /// In en, this message translates to:
-  /// **'Meal Plan'**
+  /// **'Recipes'**
   String get mealPlanTitle;
 
   /// No description provided for @whereDoYouLive.
@@ -3195,6 +3195,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Security'**
   String get securityTitle;
+
+  /// No description provided for @feedbackEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a message before sending.'**
+  String get feedbackEmptyMessage;
+
+  /// No description provided for @feedbackMessageTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The message is too long. Maximum length is 3000 characters.'**
+  String get feedbackMessageTooLong;
+
+  /// No description provided for @feedbackSessionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify your session. Restart the app and try again.'**
+  String get feedbackSessionError;
+
+  /// No description provided for @feedbackRateLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Wait a moment and try again.'**
+  String get feedbackRateLimitError;
+
+  /// No description provided for @feedbackSendError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send your message. Check your connection and try again.'**
+  String get feedbackSendError;
+
+  /// No description provided for @feedbackFunctionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The feedback service is not deployed yet. Please try again later.'**
+  String get feedbackFunctionMissing;
+
+  /// No description provided for @feedbackSecretsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The feedback service is not configured. Please try again later.'**
+  String get feedbackSecretsMissing;
+
+  /// No description provided for @feedbackTelegramError.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram could not deliver the message. Please try again later.'**
+  String get feedbackTelegramError;
+
+  /// No description provided for @feedbackFunctionError.
+  ///
+  /// In en, this message translates to:
+  /// **'The feedback service is temporarily unavailable. Please try again later.'**
+  String get feedbackFunctionError;
+
+  /// No description provided for @feedbackNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the feedback service. Check your connection and try again.'**
+  String get feedbackNetworkError;
 }
 
 class _AppLocalizationsDelegate

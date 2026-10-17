@@ -45,8 +45,10 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       extendBody: true,
       body: _currentIndex == 2
-          // Сканер — вкладка. После добавления в дневник возвращаемся
-          // на вкладку «Дневник» (index 1) через колбэк, а не Navigator.pop.
+          // Сканер — вкладка. Пока Premium тестируется, сканер еды открыт
+          // без подписки (PremiumAccessGate вернём, когда подписка заработает).
+          // После добавления в дневник возвращаемся на вкладку «Дневник»
+          // (index 1) через колбэк, а не Navigator.pop.
           ? ScannerPage(onAddToDiary: () => _onTap(1))
           : IndexedStack(
               index: _currentIndex < 2 ? _currentIndex : _currentIndex - 1,

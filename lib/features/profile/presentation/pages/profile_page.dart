@@ -7,6 +7,7 @@ import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:lumina/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:lumina/features/profile/presentation/pages/subscription_page.dart';
+import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/features/settings/presentation/pages/settings_page.dart';
 import 'package:lumina/features/support/presentation/pages/support_page.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
@@ -222,12 +223,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     }),
                     _buildProfileItem(Icons.straighten_outlined, 'Единицы измерения', tc,
                         onTap: () => _showUnitsSettings(context)),
-                    _buildProfileItem(Icons.star_outline, 'Подписка', tc,
-                        trailing: 'PRO', onTap: () {
-                      hapticTap();
-                      Navigator.push(
-                          context, smoothPageRoute(const SubscriptionPage()));
-                    }),
+                    AnimatedBuilder(
+                      animation: SubscriptionService.instance,
+                      builder: (context, _) => _buildProfileItem(
+                        Icons.star_outline,
+                        'Подписка',
+                        tc,
+                        trailing: SubscriptionService.instance.state.isPremium
+                            ? 'Активна'
+                            : 'Выбрать',
+                        onTap: () {
+                          hapticTap();
+                          Navigator.push(context,
+                              smoothPageRoute(const SubscriptionPage()));
+                        },
+                      ),
+                    ),
                     _buildProfileItem(Icons.help_outline, 'Поддержка', tc,
                         onTap: () {
                           hapticTap();

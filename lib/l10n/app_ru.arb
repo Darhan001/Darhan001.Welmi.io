@@ -37,7 +37,7 @@
   
   "drawerWorkouts": "Тренировки",
   "drawerMyGoals": "Мои цели",
-  "drawerMealPlan": "План питания",
+  "drawerMealPlan": "Рецепты",
   "drawerActivityHistory": "История активности",
   "drawerSettings": "Настройки",
   "drawerSupport": "Поддержка",
@@ -150,7 +150,7 @@
   "voiceErrorPermission": "Разреши доступ к микрофону, чтобы отправлять голосовые.",
   "voiceErrorTranscribe": "Не удалось распознать речь. Попробуй ещё раз.",
   
-  "mealPlanTitle": "План питания",
+  "mealPlanTitle": "Рецепты",
   "whereDoYouLive": "Где ты живёшь?",
   "mealPlanCountrySubtitle": "AI подберёт блюда местной кухни",
   "generateMealPlan": "Генерируем план питания...",
@@ -543,5 +543,15 @@
   "termsChangesContent": "Мы можем изменять эти Условия в любое время. Обновлённые условия будут опубликованы в приложении. Продолжение использования приложения после изменений означает.acceptance новых условий.",
   "termsLastUpdated": "Последнее обновление: август 2026",
   "termsContactContent": "По вопросам настоящих Условий использования свяжитесь с нами:\n\n• Telegram: @welmi_support\n• Email: support@welmi.app",
-  "securityTitle": "Безопасность"
+  "securityTitle": "Безопасность",
+  "feedbackEmptyMessage": "Напиши сообщение перед отправкой.",
+  "feedbackMessageTooLong": "Сообщение слишком длинное. Максимум 3000 символов.",
+  "feedbackSessionError": "Не удалось подтвердить сессию. Перезапусти приложение и попробуй снова.",
+  "feedbackRateLimitError": "Слишком много запросов. Подожди немного и попробуй снова.",
+  "feedbackSendError": "Не удалось отправить сообщение. Проверь интернет и попробуй ещё раз.",
+  "feedbackFunctionMissing": "Сервис обратной связи ещё не опубликован. Попробуй позже.",
+  "feedbackSecretsMissing": "Сервис обратной связи не настроен. Попробуй позже.",
+  "feedbackTelegramError": "Telegram временно не доставил сообщение. Попробуй ещё раз позже.",
+  "feedbackFunctionError": "Сервис обратной связи временно недоступен. Попробуй позже.",
+  "feedbackNetworkError": "Нет соединения с сервисом. Проверь интернет и попробуй снова."
 }

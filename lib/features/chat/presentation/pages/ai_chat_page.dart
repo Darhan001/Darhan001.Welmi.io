@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,7 +24,8 @@ class _Design {
 }
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  const AiChatPage({super.key, this.initialPrompt});
+  final String? initialPrompt;
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -50,7 +52,20 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _bootstrap();
+  }
+
+  /// Сначала восстанавливаем историю, и только потом отправляем стартовый
+  /// вопрос (кнопка «Спросить» на экране рецепта). Пока это шло параллельно,
+  /// история успевала загрузиться после отправки и добавляла тот же вопрос
+  /// вторым сообщением.
+  Future<void> _bootstrap() async {
+    await _loadHistory();
+    if (!mounted) return;
+    final prompt = widget.initialPrompt;
+    if (prompt != null && prompt.isNotEmpty) {
+      await _sendMessage(text: prompt);
+    }
   }
 
   @override
@@ -69,14 +84,18 @@ class _AiChatPageState extends State<AiChatPage> {
     if (!mounted) return;
 
     final saved = _aiService.chatHistory;
-    if (saved.isNotEmpty) {
+    // Не перезаписываем уже показанную переписку: иначе загруженная история
+    // может задвоить сообщения, отправленные до её окончания.
+    if (saved.isNotEmpty && _messages.isEmpty) {
       setState(() {
         _messages.addAll(
-          saved.map((m) => _ChatBubble(
-            text: m.text,
-            isUser: m.role == 'user',
-            timestamp: m.timestamp,
-          )),
+          saved.map(
+            (m) => _ChatBubble(
+              text: m.text,
+              isUser: m.role == 'user',
+              timestamp: m.timestamp,
+            ),
+          ),
         );
       });
       _scrollToBottom();
@@ -104,11 +123,7 @@ class _AiChatPageState extends State<AiChatPage> {
     _focusNode.unfocus();
 
     setState(() {
-      _messages.add(_ChatBubble(
-        text: message,
-        isUser: true,
-        isVoice: isVoice,
-      ));
+      _messages.add(_ChatBubble(text: message, isUser: true, isVoice: isVoice));
       _isLoading = true;
       _errorMessage = null;
     });
@@ -126,10 +141,13 @@ class _AiChatPageState extends State<AiChatPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _messages.add(_ChatBubble(
-            text: '❌ **Ошибка соединения**\n\n${AppLocalizations.of(context)!.aiErrorConnection}',
-            isUser: false,
-          ));
+          _messages.add(
+            _ChatBubble(
+              text:
+                  '❌ **Ошибка соединения**\n\n${AppLocalizations.of(context)!.aiErrorConnection}',
+              isUser: false,
+            ),
+          );
           _isLoading = false;
         });
         _scrollToBottom();
@@ -145,12 +163,12 @@ class _AiChatPageState extends State<AiChatPage> {
 
   /// Начинает запись голосового сообщения.
   Future<void> _startRecording() async {
-    if (kIsWeb || _isRecording || _isTranscribing) return;
+    if (_isRecording || _isTranscribing) return;
     final loc = AppLocalizations.of(context)!;
     HapticFeedback.mediumImpact();
 
     try {
-      // Запрашивает разрешение микрофона у системы.
+      // Запрашивает разрешение микрофона у системы / браузера.
       final allowed = await _recorder.hasPermission();
       if (!mounted) return;
       if (!allowed) {
@@ -158,22 +176,35 @@ class _AiChatPageState extends State<AiChatPage> {
         return;
       }
 
-      final path =
-          '${Directory.systemTemp.path}/welmi_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc, // контейнер m4a, сжатие AAC
-          bitRate: 64000,
-          sampleRate: 16000, // 16 кГц — оптимум для распознавания речи
-          numChannels: 1, // моно для голоса достаточно
-        ),
-        path: path,
-      );
+      if (kIsWeb) {
+        // Для Web record поддерживает запись напрямую без пути или через webm/opus
+        await _recorder.start(
+          const RecordConfig(
+            encoder: AudioEncoder.opus,
+            bitRate: 64000,
+            sampleRate: 16000,
+            numChannels: 1,
+          ),
+          path: '',
+        );
+      } else {
+        final path =
+            '${Directory.systemTemp.path}/welmi_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _recorder.start(
+          const RecordConfig(
+            encoder: AudioEncoder.aacLc, // контейнер m4a, сжатие AAC
+            bitRate: 64000,
+            sampleRate: 16000, // 16 кГц — оптимум для распознавания речи
+            numChannels: 1, // моно для голоса достаточно
+          ),
+          path: path,
+        );
+        _recordingPath = path;
+      }
       if (!mounted) return;
 
       setState(() {
         _isRecording = true;
-        _recordingPath = path;
         _recordDuration = Duration.zero;
       });
 
@@ -202,12 +233,27 @@ class _AiChatPageState extends State<AiChatPage> {
     Uint8List? bytes;
     try {
       final stoppedPath = await _recorder.stop();
-      final filePath = stoppedPath ?? _recordingPath;
-      if (filePath != null) {
-        final file = File(filePath);
-        if (await file.exists()) {
-          if (send) bytes = await file.readAsBytes();
-          await file.delete(); // временный файл распознаванию больше не нужен
+      if (kIsWeb) {
+        if (stoppedPath != null && stoppedPath.isNotEmpty) {
+          // В Web stop() возвращает blob URL или data url, загружаем байты по HTTP/URI
+          try {
+            final uri = Uri.parse(stoppedPath);
+            final res = await http.get(uri);
+            if (res.statusCode == 200) {
+              bytes = res.bodyBytes;
+            }
+          } catch (e) {
+            debugPrint('⚠️ Web voice fetch error: $e');
+          }
+        }
+      } else {
+        final filePath = stoppedPath ?? _recordingPath;
+        if (filePath != null) {
+          final file = File(filePath);
+          if (await file.exists()) {
+            if (send) bytes = await file.readAsBytes();
+            await file.delete(); // временный файл распознаванию больше не нужен
+          }
         }
       }
     } catch (e) {
@@ -232,7 +278,7 @@ class _AiChatPageState extends State<AiChatPage> {
     try {
       text = await _aiService.transcribeAudio(
         bytes,
-        format: 'm4a',
+        format: kIsWeb ? 'webm' : 'm4a',
         language: _speechLanguageHint,
       );
     } catch (e) {
@@ -270,7 +316,8 @@ class _AiChatPageState extends State<AiChatPage> {
         backgroundColor: _Design.card,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_Design.radiusMd)),
+          borderRadius: BorderRadius.circular(_Design.radiusMd),
+        ),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -282,18 +329,30 @@ class _AiChatPageState extends State<AiChatPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_Design.radiusLg)),
-        backgroundColor: _Design.card,         title: Text(AppLocalizations.of(context)!.aiNewChat,
-            style: GoogleFonts.inter(
-                fontWeight: FontWeight.w800,
-                color: _Design.textPrimary)),         content: Text(AppLocalizations.of(context)!.aiNewChatConfirm,
-            style: GoogleFonts.inter(color: _Design.textSecondary)),
+          borderRadius: BorderRadius.circular(_Design.radiusLg),
+        ),
+        backgroundColor: _Design.card,
+        title: Text(
+          AppLocalizations.of(context)!.aiNewChat,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            color: _Design.textPrimary,
+          ),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.aiNewChatConfirm,
+          style: GoogleFonts.inter(color: _Design.textSecondary),
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),             child: Text(AppLocalizations.of(context)!.drawerCancel,
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: _Design.textSecondary)),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              AppLocalizations.of(context)!.drawerCancel,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _Design.textSecondary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -304,9 +363,14 @@ class _AiChatPageState extends State<AiChatPage> {
                 _errorMessage = null;
               });
               _aiService.startNewChat();
-            },             child: Text(AppLocalizations.of(context)!.aiStart,
-                style: GoogleFonts.inter(
-                    color: _Design.lime, fontWeight: FontWeight.w800)),
+            },
+            child: Text(
+              AppLocalizations.of(context)!.aiStart,
+              style: GoogleFonts.inter(
+                color: _Design.lime,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -329,7 +393,11 @@ class _AiChatPageState extends State<AiChatPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.arrow_back_ios_new_rounded, color: _Design.textPrimary, size: 20),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: _Design.textPrimary,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -359,7 +427,8 @@ class _AiChatPageState extends State<AiChatPage> {
                   _buildGlowAvatar(),
                   const SizedBox(height: 24),
                   // Capsule label
-                  Text(                     AppLocalizations.of(context)!.gymtoneTrainer,
+                  Text(
+                    AppLocalizations.of(context)!.gymtoneTrainer,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -369,7 +438,8 @@ class _AiChatPageState extends State<AiChatPage> {
                   ),
                   const SizedBox(height: 14),
                   // Greeting
-                  Text(                     AppLocalizations.of(context)!.aiWelcomeGreeting,
+                  Text(
+                    AppLocalizations.of(context)!.aiWelcomeGreeting,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 22,
@@ -380,8 +450,10 @@ class _AiChatPageState extends State<AiChatPage> {
                   ),
                   const SizedBox(height: 36),
                   // Suggestion pills                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion1),
-                  const SizedBox(height: 10),                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion2),
-                  const SizedBox(height: 10),                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion3),
+                  const SizedBox(height: 10),
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion2),
+                  const SizedBox(height: 10),
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion3),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -423,15 +495,20 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, size: 16, color: Colors.redAccent),
+                const Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _errorMessage!,
                     style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.w600),
+                      fontSize: 12,
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -466,7 +543,10 @@ class _AiChatPageState extends State<AiChatPage> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _Design.lime.withValues(alpha: 0.1),
-            border: Border.all(color: _Design.lime.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(
+              color: _Design.lime.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
           child: Center(
             child: Container(
@@ -514,10 +594,7 @@ class _AiChatPageState extends State<AiChatPage> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              _Design.card,
-              const Color(0xFF222222),
-            ],
+            colors: [_Design.card, const Color(0xFF222222)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -560,8 +637,9 @@ class _AiChatPageState extends State<AiChatPage> {
         bottom: 6,
       ),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
@@ -577,7 +655,11 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 14,
+              ),
             ),
           ],
           Flexible(
@@ -611,9 +693,11 @@ class _AiChatPageState extends State<AiChatPage> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.mic_rounded,
-                            size: 13,
-                            color: _Design.lime.withValues(alpha: 0.7)),
+                        Icon(
+                          Icons.mic_rounded,
+                          size: 13,
+                          color: _Design.lime.withValues(alpha: 0.7),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           AppLocalizations.of(context)!.voiceMessageLabel,
@@ -643,8 +727,11 @@ class _AiChatPageState extends State<AiChatPage> {
                       ),
                       if (isUser) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.done_all_rounded,
-                            size: 12, color: _Design.lime.withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.done_all_rounded,
+                          size: 12,
+                          color: _Design.lime.withValues(alpha: 0.5),
+                        ),
                       ],
                     ],
                   ),
@@ -674,9 +761,7 @@ class _AiChatPageState extends State<AiChatPage> {
           )
         : Text(
             text,
-            style: theme.copyWith(
-              fontFamily: GoogleFonts.inter().fontFamily,
-            ),
+            style: theme.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
           );
   }
 
@@ -692,52 +777,60 @@ class _AiChatPageState extends State<AiChatPage> {
 
     for (final match in regex.allMatches(text)) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: baseColor,
-            fontWeight: FontWeight.w500,
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: baseColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ));
+        );
       }
 
       if (match.group(1)?.startsWith('**') == true) {
-        spans.add(TextSpan(
-          text: match.group(2),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: baseColor,
-            fontWeight: FontWeight.w800,
+        spans.add(
+          TextSpan(
+            text: match.group(2),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: baseColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-        ));
+        );
       } else {
-        spans.add(TextSpan(
-          text: match.group(3),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: italicColor,
-            fontStyle: FontStyle.italic,
+        spans.add(
+          TextSpan(
+            text: match.group(3),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: italicColor,
+              fontStyle: FontStyle.italic,
+            ),
           ),
-        ));
+        );
       }
 
       lastEnd = match.end;
     }
 
     if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-        style: GoogleFonts.inter(
-          fontSize: 15,
-          height: 1.5,
-          color: baseColor,
-          fontWeight: FontWeight.w500,
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            height: 1.5,
+            color: baseColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ));
+      );
     }
 
     return TextSpan(children: spans);
@@ -762,7 +855,11 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.white,
+              size: 14,
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -790,7 +887,10 @@ class _AiChatPageState extends State<AiChatPage> {
       decoration: BoxDecoration(
         color: _Design.bg,
         border: Border(
-          top: BorderSide(color: _Design.cardBorder.withValues(alpha: 0.3), width: 1),
+          top: BorderSide(
+            color: _Design.cardBorder.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: SafeArea(
@@ -804,93 +904,98 @@ class _AiChatPageState extends State<AiChatPage> {
           child: _isTranscribing
               ? _buildTranscribingRow()
               : _isRecording
-                  ? _buildRecordingRow()
-                  : Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const SizedBox(width: 4),
-              // New chat button
-              GestureDetector(
-                onTap: _startNewChat,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 20,
-                    color: _Design.lime.withValues(alpha: 0.6),
-                  ),
-                ),
-              ),
-              // Text field
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  focusNode: _focusNode,
-                  textInputAction: TextInputAction.send,
-                  maxLines: 5,
-                  minLines: 1,
-                  textCapitalization: TextCapitalization.sentences,
-                  enabled: !_isLoading,
-                  onSubmitted: (_) => _sendMessage(),
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: _Design.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _isLoading ? AppLocalizations.of(context)!.aiHintLoading : AppLocalizations.of(context)!.aiHintInput,
-                    hintStyle: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: _Design.textMuted,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
-                  ),
-                ),
-              ),
-              // Mic button — голосовое сообщение
-              if (!kIsWeb)
-                Tooltip(
-                  message: AppLocalizations.of(context)!.voiceSend,
-                  child: GestureDetector(
-                    onTap: _isLoading ? null : _startRecording,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.mic_none_rounded,
-                        size: 22,
-                        color: _isLoading
-                            ? _Design.textMuted
-                            : _Design.lime.withValues(alpha: 0.8),
+              ? _buildRecordingRow()
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const SizedBox(width: 4),
+                    // New chat button
+                    GestureDetector(
+                      onTap: _startNewChat,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.auto_awesome_outlined,
+                          size: 20,
+                          color: _Design.lime.withValues(alpha: 0.6),
+                        ),
                       ),
                     ),
-                  ),
+                    // Text field
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _focusNode,
+                        textInputAction: TextInputAction.send,
+                        maxLines: 5,
+                        minLines: 1,
+                        textCapitalization: TextCapitalization.sentences,
+                        enabled: !_isLoading,
+                        onSubmitted: (_) => _sendMessage(),
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: _Design.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: _isLoading
+                              ? AppLocalizations.of(context)!.aiHintLoading
+                              : AppLocalizations.of(context)!.aiHintInput,
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: _Design.textMuted,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Mic button — голосовое сообщение
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.voiceSend,
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _startRecording,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.mic_none_rounded,
+                            size: 22,
+                            color: _isLoading
+                                ? _Design.textMuted
+                                : _Design.lime.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Send button
+                    GestureDetector(
+                      onTap: _isLoading ? null : () => _sendMessage(),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.all(4),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _isLoading
+                              ? _Design.textMuted.withValues(alpha: 0.3)
+                              : _Design.lime,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isLoading
+                              ? Icons.hourglass_empty
+                              : Icons.arrow_upward_rounded,
+                          color: _isLoading ? _Design.textMuted : Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              // Send button
-              GestureDetector(
-                onTap: _isLoading ? null : () => _sendMessage(),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.all(4),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: _isLoading
-                        ? _Design.textMuted.withValues(alpha: 0.3)
-                        : _Design.lime,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isLoading ? Icons.hourglass_empty : Icons.arrow_upward_rounded,
-                    color: _isLoading ? _Design.textMuted : Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -909,8 +1014,11 @@ class _AiChatPageState extends State<AiChatPage> {
             onTap: () => _finishRecording(send: false),
             child: const Padding(
               padding: EdgeInsets.all(10),
-              child: Icon(Icons.close_rounded,
-                  size: 22, color: _Design.textSecondary),
+              child: Icon(
+                Icons.close_rounded,
+                size: 22,
+                color: _Design.textSecondary,
+              ),
             ),
           ),
         ),
@@ -922,9 +1030,10 @@ class _AiChatPageState extends State<AiChatPage> {
               Text(
                 _formatDuration(_recordDuration),
                 style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _Design.textPrimary),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: _Design.textPrimary,
+                ),
               ),
               const SizedBox(width: 10),
               Flexible(
@@ -933,9 +1042,10 @@ class _AiChatPageState extends State<AiChatPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _Design.textMuted),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _Design.textMuted,
+                  ),
                 ),
               ),
             ],
@@ -948,9 +1058,14 @@ class _AiChatPageState extends State<AiChatPage> {
             width: 44,
             height: 44,
             decoration: const BoxDecoration(
-                color: _Design.lime, shape: BoxShape.circle),
-            child: const Icon(Icons.arrow_upward_rounded,
-                color: Colors.black, size: 20),
+              color: _Design.lime,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_upward_rounded,
+              color: Colors.black,
+              size: 20,
+            ),
           ),
         ),
       ],
@@ -967,16 +1082,19 @@ class _AiChatPageState extends State<AiChatPage> {
             width: 16,
             height: 16,
             child: CircularProgressIndicator(
-                strokeWidth: 2, color: _Design.lime),
+              strokeWidth: 2,
+              color: _Design.lime,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppLocalizations.of(context)!.voiceTranscribing,
               style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: _Design.textSecondary),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _Design.textSecondary,
+              ),
             ),
           ),
         ],
@@ -986,8 +1104,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
-    final seconds =
-        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
 
@@ -995,7 +1112,8 @@ class _AiChatPageState extends State<AiChatPage> {
     final now = DateTime.now();
     final diff = now.difference(time);
     if (diff.inMinutes < 1) return AppLocalizations.of(context)!.aiJustNow;
-    if (diff.inMinutes < 60) return AppLocalizations.of(context)!.aiMinutesAgo(diff.inMinutes);
+    if (diff.inMinutes < 60)
+      return AppLocalizations.of(context)!.aiMinutesAgo(diff.inMinutes);
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }
@@ -1052,11 +1170,7 @@ class _TypingDotsState extends State<_TypingDots>
           width: 50,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _dot(0.0),
-              _dot(0.2),
-              _dot(0.4),
-            ],
+            children: [_dot(0.0), _dot(0.2), _dot(0.4)],
           ),
         );
       },

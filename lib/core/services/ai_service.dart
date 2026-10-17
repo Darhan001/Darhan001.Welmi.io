@@ -51,6 +51,97 @@ class FoodAnalysisResult {
   }
 }
 
+/// Отдельный продукт в распознанном голосовом сообщении
+class VoiceFoodItem {
+  final String name;
+  final String portion; // например "2 шт.", "200 г", "1 тарелка"
+  final int calories;
+  final double proteinGrams;
+  final double fatGrams;
+  final double carbsGrams;
+
+  VoiceFoodItem({
+    required this.name,
+    required this.portion,
+    required this.calories,
+    required this.proteinGrams,
+    required this.fatGrams,
+    required this.carbsGrams,
+  });
+
+  factory VoiceFoodItem.fromJson(Map<String, dynamic> json) {
+    double toDouble(dynamic val) {
+      if (val == null) return 0.0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0.0;
+    }
+    return VoiceFoodItem(
+      name: json['name']?.toString() ?? 'Продукт',
+      portion: json['portion']?.toString() ?? json['amount']?.toString() ?? '1 порция',
+      calories: toDouble(json['calories'] ?? json['kcal']).toInt(),
+      proteinGrams: toDouble(json['protein_grams'] ?? json['protein']),
+      fatGrams: toDouble(json['fat_grams'] ?? json['fat']),
+      carbsGrams: toDouble(json['carbs_grams'] ?? json['carbs']),
+    );
+  }
+}
+
+/// Результат AI-анализа голосового сообщения о съеденной пище
+class VoiceFoodAnalysisResult {
+  final List<VoiceFoodItem> items;
+  final int totalCalories;
+  final double totalProtein;
+  final double totalFat;
+  final double totalCarbs;
+  final String? clarificationNeeded; // если AI не уверен в количестве
+
+  VoiceFoodAnalysisResult({
+    required this.items,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalFat,
+    required this.totalCarbs,
+    this.clarificationNeeded,
+  });
+
+  factory VoiceFoodAnalysisResult.fromJson(Map<String, dynamic> json) {
+    double toDouble(dynamic val) {
+      if (val == null) return 0.0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0.0;
+    }
+
+    final rawItems = json['items'] as List? ?? [];
+    final items = rawItems
+        .map((e) => VoiceFoodItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+
+    int totalCalories = toDouble(json['total_calories'] ?? json['total_kcal']).toInt();
+    double totalProtein = toDouble(json['total_protein']);
+    double totalFat = toDouble(json['total_fat']);
+    double totalCarbs = toDouble(json['total_carbs']);
+
+    // Если AI вернул нули в сумме, считаем из отдельных продуктов
+    if (totalCalories == 0 && items.isNotEmpty) {
+      for (final item in items) {
+        totalCalories += item.calories;
+        totalProtein += item.proteinGrams;
+        totalFat += item.fatGrams;
+        totalCarbs += item.carbsGrams;
+      }
+    }
+
+    return VoiceFoodAnalysisResult(
+      items: items,
+      totalCalories: totalCalories,
+      totalProtein: totalProtein,
+      totalFat: totalFat,
+      totalCarbs: totalCarbs,
+      clarificationNeeded: json['clarification_needed']?.toString(),
+    );
+  }
+}
+
 /// Результат расчёта AI — персональный план питания
 class AiNutritionPlan {
   final int dailyCalories;
@@ -119,13 +210,30 @@ class AiService {
   String? _scannerApiKey; // отдельный ключ только для сканера еды
   final List<AiChatMessage> _chatHistory = [];
 
+  /// Последняя причина, по которой AI-провайдер отказал. Нужна, чтобы вместо
+  /// общего «проверьте интернет» показать пользователю реальную причину.
+  String? _lastAiIssue;
+
+  void _noteStatus(int status) {
+    _lastAiIssue = switch (status) {
+      401 || 403 => 'ключ AI-провайдера не принят',
+      402 => 'закончились кредиты AI-провайдера (OpenRouter)',
+      429 => 'AI-провайдер временно ограничил запросы (429)',
+      >= 500 => 'AI-провайдер временно недоступен ($status)',
+      _ => 'ошибка AI-провайдера (HTTP $status)',
+    };
+  }
+
   void initialize({
     required String nutritionApiKey,
     String? chatApiKey,
     String? scannerApiKey,
   }) {
     if (nutritionApiKey.startsWith('AIza')) {
-      _nutritionModel = GenerativeModel(model: 'gemini-1.5-flash', apiKey: nutritionApiKey);
+      _nutritionModel = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: nutritionApiKey,
+      );
     }
     _openRouterKey = chatApiKey ?? (nutritionApiKey.startsWith('sk-or-') ? nutritionApiKey : null);
     _scannerApiKey = scannerApiKey;
@@ -1867,8 +1975,14 @@ $countryInstruction
     // гарантированные 401 и переходим к рабочему ключу быстрее.
     final orKeys = keys.where((k) => k.startsWith('sk-or-')).toList();
 
-    // 1) OpenRouter — все валидные ключи и актуальные модели
-    const orModels = ['google/gemini-2.5-flash', 'google/gemini-2.5-flash-lite'];
+    // 1) OpenRouter — все валидные ключи и актуальные модели.
+    //    Последняя модель бесплатная: даже с нулевым балансом чат отвечает,
+    //    когда платные модели вернули 402 (не хватает кредитов).
+    const orModels = [
+      'google/gemini-2.5-flash',
+      'google/gemini-2.5-flash-lite',
+      'nvidia/nemotron-3-super-120b-a12b:free',
+    ];
     for (final key in orKeys) {
       for (final model in orModels) {
         try {
@@ -1895,10 +2009,13 @@ $countryInstruction
             final data = jsonDecode(response.body);
             final text = data['choices']?[0]?['message']?['content'] as String?;
             if (text != null && text.isNotEmpty) return text;
+            _lastAiIssue = 'AI-провайдер вернул пустой ответ';
           } else {
+            _noteStatus(response.statusCode);
             debugPrint('⚠️ AI HTTP ${response.statusCode} ($model)');
           }
         } catch (e) {
+          _lastAiIssue = 'нет связи с AI-провайдером';
           debugPrint('⚠️ AI error with $model: $e');
         }
       }
@@ -1962,6 +2079,7 @@ $countryInstruction
 
   // --- ЧАТ ---
   Future<String> sendChatMessage(String message) async {
+    _lastAiIssue = null;
     // Добавляем сообщение пользователя в историю
     _chatHistory.add(AiChatMessage(role: 'user', text: message));
     // Ограничиваем историю 10 последними сообщениями, чтобы запрос
@@ -1981,15 +2099,17 @@ $countryInstruction
         history: historyMessages
             .map((m) => {'role': m.role, 'content': m.text})
             .toList(),
-      ).timeout(const Duration(seconds: 50));
+      ).timeout(const Duration(seconds: 75));
       if (text != null && text.isNotEmpty) {
         _chatHistory.add(AiChatMessage(role: 'assistant', text: text));
         return text;
       }
     } catch (e) {
       debugPrint('❌ Chat Error: $e');
+      _lastAiIssue = 'нет ответа от AI-провайдера';
     }
-    return 'AI недоступен. Проверьте интернет или попробуйте позже.';
+    final reason = _lastAiIssue ?? 'AI не настроен: добавьте ключ провайдера';
+    return 'AI недоступен: $reason. Попробуйте позже.';
   }
 
   // --- ГОЛОСОВЫЕ СООБЩЕНИЯ (РАСПОЗНАВАНИЕ РЕЧИ) ---
@@ -2155,22 +2275,25 @@ $countryInstruction
   "description": "краткое описание"
 }''';
     final base64Image = base64Encode(imageBytes);
-    // Актуальные vision-модели (старые ':free' удалены с OpenRouter)
+    // Актуальные vision-модели. Последняя — бесплатная: сканер продолжает
+    // работать, когда у платных моделей закончились кредиты (HTTP 402).
     const models = [
       'google/gemini-2.5-flash',
       'google/gemini-2.5-flash-lite',
+      'nvidia/nemotron-3.5-super-vl:free',
     ];
 
     // 1) Сначала основной (рабочий) ключ, затем отдельный ключ сканера.
-    //    Пока ключ сканера не подтверждён — сканер работает через основной.
+    //    OpenRouter принимает только ключи sk-or-; остальные не тратят время
+    //    на гарантированный 401.
     for (final key in [_openRouterKey, _scannerApiKey]) {
-      if (key == null) continue;
+      if (key == null || !key.startsWith('sk-or-')) continue;
       final res = await _tryOpenRouterScan(key, prompt, base64Image, models);
       if (res != null) return res;
     }
 
     // 2) Если ключ не работает через OpenRouter — пробуем Gemini REST напрямую
-    if (_scannerApiKey != null) {
+    if (_scannerApiKey != null && _scannerApiKey!.startsWith('AIza')) {
       final res =
           await _tryGeminiRestScan(_scannerApiKey!, prompt, base64Image);
       if (res != null) return res;
@@ -2187,6 +2310,9 @@ $countryInstruction
   ) async {
     for (final model in models) {
       try {
+        // Бесплатная reasoning-модель тратит токены на размышления, ей нужен
+        // больший лимит, иначе JSON-ответ обрезается.
+        final budget = model.endsWith(':free') ? 1800 : 500;
         final response = await http.post(
           Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
           headers: {
@@ -2196,7 +2322,7 @@ $countryInstruction
           },
           body: jsonEncode({
             'model': model,
-            'max_tokens': 500,
+            'max_tokens': budget,
             'messages': [
               {
                 'role': 'user',
@@ -2210,17 +2336,35 @@ $countryInstruction
               }
             ]
           }),
-        ).timeout(const Duration(seconds: 35));
+        ).timeout(
+          Duration(seconds: model.endsWith(':free') ? 75 : 35),
+        );
 
         if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final text = data['choices'][0]['message']['content'] as String;
-          final res = _parseJson(text);
-          if (res != null) return res;
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final choices = data['choices'];
+          String? text;
+          if (choices is List && choices.isNotEmpty) {
+            final first = choices.first;
+            if (first is Map) {
+              final message = first['message'];
+              if (message is Map) {
+                final content = message['content'];
+                // У reasoning-моделей content может быть null — не падаем.
+                if (content is String) text = content;
+              }
+            }
+          }
+          if (text != null) {
+            final res = _parseJson(text);
+            if (res != null) return res;
+          }
         } else {
+          _noteStatus(response.statusCode);
           debugPrint('❌ Scanner HTTP ${response.statusCode} ($model)');
         }
       } catch (e) {
+        _lastAiIssue = 'нет связи с AI-провайдером';
         debugPrint('❌ Scanner Error with $model: $e');
       }
     }
@@ -2294,6 +2438,64 @@ $countryInstruction
       if (start == -1 || end == -1) return null;
       return FoodAnalysisResult.fromJson(jsonDecode(text.substring(start, end + 1)));
     } catch (_) { return null; }
+  }
+
+  /// AI-анализ распознанного текста о съеденной пище (для голосового ввода в дневник)
+  Future<VoiceFoodAnalysisResult?> analyzeFoodText(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+
+    const systemPrompt = '''
+Ты — опытный нутрициолог в приложении Welmi.
+Пользователь диктует голосом, что он съел.
+Твоя задача:
+1. Выделить каждый продукт и его количество/порцию.
+2. Дать ПРИМЕРНУЮ оценку калорий (ккал), белков (г), жиров (г) и углеводов (г) для каждого продукта и суммарно.
+3. Если количество продукта не указано или слишком расплывчато (например "немного курицы", "поел салат"), НЕ выдумывай точный вес, а в поле "clarification_needed" вежливо спроси уточнение (например: "Примерно сколько грамм курицы?"). Если же указано понятно (например "два яйца", "200г риса", "банан"), оставь "clarification_needed": null.
+4. Ответь СТРОГО в формате валидного JSON без markdown и пояснений.
+
+Формат ответа:
+{
+  "items": [
+    {
+      "name": "Яйца",
+      "portion": "2 шт.",
+      "calories": 140,
+      "protein_grams": 12,
+      "fat_grams": 10,
+      "carbs_grams": 1
+    }
+  ],
+  "total_calories": 140,
+  "total_protein": 12,
+  "total_fat": 10,
+  "total_carbs": 1,
+  "clarification_needed": null
+}
+''';
+
+    final userPrompt = 'Пользователь сказал: "$trimmed"';
+
+    try {
+      final responseText = await _tryAiCompletion(
+        systemPrompt: systemPrompt,
+        userPrompt: userPrompt,
+        maxTokens: 800,
+      );
+
+      if (responseText != null && responseText.isNotEmpty) {
+        final start = responseText.indexOf('{');
+        final end = responseText.lastIndexOf('}');
+        if (start != -1 && end != -1) {
+          final jsonMap = jsonDecode(responseText.substring(start, end + 1)) as Map<String, dynamic>;
+          return VoiceFoodAnalysisResult.fromJson(jsonMap);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Voice food analysis error: $e');
+    }
+
+    return null;
   }
 
   List<AiChatMessage> get chatHistory => List.unmodifiable(_chatHistory);

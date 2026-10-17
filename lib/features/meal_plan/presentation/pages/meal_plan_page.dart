@@ -1,28 +1,21 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lumina/core/services/user_data_service.dart';
-import 'package:lumina/core/services/ai_service.dart';
+import 'package:lumina/core/models/supabase_models.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
+import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
+import 'package:lumina/features/chat/presentation/pages/ai_chat_page.dart';
+import 'package:lumina/features/meal_plan/data/recipe_repository.dart';
+import 'package:lumina/features/meal_plan/data/recipes_seed_data.dart';
+import 'package:lumina/features/meal_plan/domain/models/recipe_model.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 const _green = Color(0xFF75A47F);
-const _greenDark = Color(0xFF4A8C5C);
-const _greenSoft = Color(0xFFE8F3E5);
 
-const _countries = [
-  'Кыргызстан',
-  'Россия',
-  'Казахстан',
-  'Узбекистан',
-  'США',
-  'Другая страна',
-];
-
+/// The former meal-plan screen is now the recipe catalog.
 class MealPlanPage extends StatefulWidget {
   const MealPlanPage({super.key});
 
@@ -31,144 +24,96 @@ class MealPlanPage extends StatefulWidget {
 }
 
 class _MealPlanPageState extends State<MealPlanPage> {
-  final UserDataService _userData = UserDataService();
-  final AiService _ai = AiService();
-  final DailyTracker _tracker = DailyTracker();
-
-  int _selectedDay = 0;
-  bool _isLoading = true;
-  bool _isFallback = false;
-  String _country = '';
-  List<Map<String, dynamic>> _weekPlan = [];
-
-  String get _storageKey =>
-      'meal_plan_${AuthService().userId ?? 'anon'}';
+  final _search = TextEditingController();
+  final _repository = RecipeRepository();
+  List<Recipe> _recipes = buildSeedRecipes();
+  Set<String> _favorites = {};
+  String? _category;
+  bool _loading = true;
+  int? _maxCalories;
+  int? _minProtein;
+  int? _maxMinutes;
+  String? _diet;
 
   @override
   void initState() {
     super.initState();
-    final today = DateTime.now();
-    _selectedDay = today.weekday - 1; // 0=ПН
-    _loadCountryAndPlan();
+    _search.addListener(_refresh);
+    _load();
   }
 
-  Future<void> _loadCountryAndPlan() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCountry = prefs.getString('meal_plan_country') ?? '';
-    if (mounted && savedCountry != _country) {
-      setState(() => _country = savedCountry);
-    }
-    await _loadPlan();
+  @override
+  void dispose() {
+    _search.removeListener(_refresh);
+    _search.dispose();
+    super.dispose();
   }
 
-  bool _isCurrentWeek(DateTime d) {
-    final now = DateTime.now();
-    DateTime monday(DateTime x) => x.subtract(Duration(days: x.weekday - 1));
-    final a = monday(d);
-    final b = monday(now);
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  Future<void> _loadPlan({bool force = false}) async {
-    setState(() => _isLoading = true);
-
-    await Future.wait([
-      _userData.loadAll(),
-      _tracker.loadToday(),
+  Future<void> _load() async {
+    final values = await Future.wait([
+      _repository.loadRecipes(),
+      _repository.loadFavoriteIds(),
     ]);
-
-    final prefs = await SharedPreferences.getInstance();
-
-    // 1) Показываем сохранённый план, если он за текущую неделю и ту же страну
-    if (!force) {
-      final raw = prefs.getString(_storageKey);
-      if (raw != null) {
-        try {
-          final data = jsonDecode(raw) as Map<String, dynamic>;
-          final generatedFor = DateTime.tryParse(data['generated_for'] ?? '');
-          final cachedCountry = data['country'] ?? '';
-          if (generatedFor != null &&
-              _isCurrentWeek(generatedFor) &&
-              cachedCountry == _country) {
-            final days = (data['days'] as List)
-                .map((e) => Map<String, dynamic>.from(e as Map))
-                .toList();
-            if (mounted) {
-              setState(() {
-                _weekPlan = days;
-                _isFallback = data['fallback'] == true;
-                _isLoading = false;
-              });
-            }
-            return;
-          }
-        } catch (_) {
-          // повреждённый кэш — перегенерируем
-        }
-      }
-    }
-
-    // 2) Иначе — генерируем новый план (AI с учётом страны)
-    final profile = _userData.profile;
-    final dailyCalories = profile?.dailyCalories ?? _tracker.goalCalories;
-    final currentWeight =
-        _userData.latestWeight ?? profile?.currentWeightKg ?? 70;
-    final targetWeight =
-        _userData.goalWeight ?? profile?.targetWeightKg ?? 65;
-    final goal = profile?.goal?.name ?? 'loseWeight';
-    final proteinGrams = profile?.proteinGrams ?? _tracker.goalProtein;
-
-    final result = await _ai.generateMealPlan(
-      currentWeightKg: currentWeight,
-      targetWeightKg: targetWeight,
-      dailyCalories: dailyCalories,
-      goal: goal,
-      proteinGrams: proteinGrams,
-      country: _country,
-    );
-    final plan = result.days;
-
-    try {
-      await prefs.setString(
-        _storageKey,
-        jsonEncode({
-          'generated_for': DateTime.now().toIso8601String(),
-          'country': _country,
-          'fallback': result.isFallback,
-          'days': plan,
-        }),
-      );
-    } catch (e) {
-      debugPrint('⚠️ Meal plan cache save error: $e');
-    }
-
-    if (mounted) {
-      setState(() {
-        _weekPlan = plan;
-        _isFallback = result.isFallback;
-        _isLoading = false;
-      });
-    }
+    if (!mounted) return;
+    setState(() {
+      _recipes = values[0] as List<Recipe>;
+      _favorites = values[1] as Set<String>;
+      _loading = false;
+    });
   }
 
-  void _selectCountry() {
+  void _refresh() => setState(() {});
+
+  /// Фильтр категории применяется к самой записи рецепта (её поля), а не к
+  /// позиции в списке — поэтому фото всегда остаётся фото этого блюда.
+  static bool _matchesCategory(Recipe r, String id) => switch (id) {
+    'Быстрое' => r.isQuick,
+    'Вегетарианское' => r.isVegetarian,
+    'Высокобелковое' => r.isHighProtein,
+    'Низкокалорийное' => r.isLowCalorie,
+    _ => r.category.toLowerCase() == id.toLowerCase(),
+  };
+
+  List<Recipe> get _filtered {
+    final query = _search.text.trim().toLowerCase();
+    return _recipes.where((r) {
+      final searchable = [
+        r.title,
+        r.category,
+        ...r.tags,
+        ...r.ingredients.map((e) => e.name),
+        if (r.isHighProtein) 'белок протеин высокобелковый',
+      ].join(' ').toLowerCase();
+      if (query.isNotEmpty && !searchable.contains(query)) return false;
+      if (_category != null && !_matchesCategory(r, _category!)) return false;
+      if (_maxCalories != null && r.calories > _maxCalories!) return false;
+      if (_minProtein != null && r.proteinGrams < _minProtein!) return false;
+      if (_maxMinutes != null && r.cookingTimeMinutes > _maxMinutes!) {
+        return false;
+      }
+      if (_diet == 'Вегетарианские' && !r.isVegetarian) return false;
+      if (_diet == 'Без сахара' && r.sugarGrams > 2) return false;
+      return true;
+    }).toList();
+  }
+
+  Future<void> _showFilters() async {
+    var calories = _maxCalories;
+    var protein = _minProtein;
+    var minutes = _maxMinutes;
+    var diet = _diet;
     final tc = ThemeColors.of(context);
-    showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: tc.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: SingleChildScrollView(
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheet) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,64 +123,69 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: tc.divider.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(2),
+                      color: tc.divider,
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),                 Text(AppLocalizations.of(context)!.whereDoYouLive,
-                    style: GoogleFonts.notoSerif(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: tc.text)),
-                const SizedBox(height: 4),                 Text(AppLocalizations.of(context)!.mealPlanCountrySubtitle,
-                    style: TextStyle(fontSize: 13, color: tc.textSecondary)),
-                const SizedBox(height: 16),
-                ..._countries.map(
-                  (c) => GestureDetector(
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString('meal_plan_country', c);
-                      if (mounted) {
-                        setState(() => _country = c);
-                        hapticTap();
-                        _loadPlan(force: true);
-                      }
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: c == _country ? _greenSoft : tc.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: c == _country
-                              ? _green
-                              : tc.divider.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.public_rounded,
-                              size: 18, color: _greenDark),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(c,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                    color: c == _country
-                                        ? _greenDark
-                                        : tc.text)),
-                          ),
-                          if (c == _country)
-                            const Icon(Icons.check_circle_rounded,
-                                size: 18, color: _greenDark),
-                        ],
-                      ),
-                    ),
+                const SizedBox(height: 20),
+                Text(
+                  'Фильтры',
+                  style: GoogleFonts.notoSerif(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: tc.text,
                   ),
+                ),
+                const SizedBox(height: 12),
+                _filterChoice<int>('Калории', calories, const [
+                  300,
+                  500,
+                  700,
+                ], (v) => setSheet(() => calories = v)),
+                _filterChoice<int>('Белок от', protein, const [
+                  20,
+                  30,
+                  40,
+                ], (v) => setSheet(() => protein = v)),
+                _filterChoice<int>('Время до', minutes, const [
+                  20,
+                  30,
+                  45,
+                ], (v) => setSheet(() => minutes = v)),
+                _filterChoice<String>('Питание', diet, const [
+                  'Вегетарианские',
+                  'Без сахара',
+                ], (v) => setSheet(() => diet = v)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _maxCalories = null;
+                          _minProtein = null;
+                          _maxMinutes = null;
+                          _diet = null;
+                        });
+                        Navigator.pop(sheetContext);
+                      },
+                      child: const Text('Сбросить'),
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () {
+                        setState(() {
+                          _maxCalories = calories;
+                          _minProtein = protein;
+                          _maxMinutes = minutes;
+                          _diet = diet;
+                        });
+                        Navigator.pop(sheetContext);
+                      },
+                      child: const Text('Показать'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -245,368 +195,1058 @@ class _MealPlanPageState extends State<MealPlanPage> {
     );
   }
 
+  Widget _filterChoice<T>(
+    String title,
+    T? selected,
+    List<T> values,
+    ValueChanged<T?> onSelect,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('Любое'),
+                selected: selected == null,
+                onSelected: (_) => onSelect(null),
+              ),
+              ...values.map(
+                (value) => ChoiceChip(
+                  label: Text(
+                    value is int
+                        ? (title == 'Калории'
+                              ? 'До $value ккал'
+                              : title == 'Белок от'
+                              ? 'От $value г'
+                              : 'До $value мин')
+                        : value.toString(),
+                  ),
+                  selected: selected == value,
+                  onSelected: (_) => onSelect(selected == value ? null : value),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(Recipe recipe) async {
+    final wasFavorite = _favorites.contains(recipe.id);
+    setState(
+      () => wasFavorite
+          ? _favorites.remove(recipe.id)
+          : _favorites.add(recipe.id),
+    );
+    final key = 'recipe_favorites_${AuthService().userId ?? 'anon'}';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(key, _favorites.toList());
+    try {
+      await _repository.setFavorite(recipe.id, !wasFavorite);
+    } catch (_) {
+      // Local per-account cache remains available until Supabase setup is run.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
-
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: tc.background,
-        body: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: tc.primary),
-                const SizedBox(height: 16),                 Text(AppLocalizations.of(context)!.generateMealPlan,
-                    style: TextStyle(
-                        color: tc.textSecondary, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Text(
-                  _country.isEmpty
-                      ? 'Welmi AI подбирает идеальное меню'
-                      : '🍜 Местная кухня: $_country',
-                  style: TextStyle(
-                      color: tc.textHint,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (_weekPlan.isEmpty) {
-      return Scaffold(
-        backgroundColor: tc.background,
-        body: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.restaurant_menu, size: 64, color: tc.textHint),
-                const SizedBox(height: 16),                 Text(AppLocalizations.of(context)!.mealPlanFailed,
-                    style: TextStyle(
-                        color: tc.textSecondary, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => _loadPlan(force: true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tc.primary,
-                    foregroundColor: tc.textOnPrimary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),                   child: Text(AppLocalizations.of(context)!.mealPlanRetry),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Гарантируем, что выбранный день в пределах плана
-    if (_selectedDay >= _weekPlan.length) {
-      _selectedDay = 0;
-    }
-
-    final dayData = _weekPlan[_selectedDay];
-    final meals = dayData['meals'] as List;
-    final dayCalories = dayData['calories'] != null
-        ? (dayData['calories'] as num).toInt()
-        : meals.fold<int>(
-            0, (sum, m) => sum + ((m['kcal'] as num?)?.toInt() ?? 0));
-    final goalCalories = _tracker.goalCalories;
-
+    final recipes = _filtered;
     return Scaffold(
       backgroundColor: tc.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: tc.card,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.arrow_back, size: 22, color: tc.text),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.maybePop(context),
+                          icon: Icon(Icons.arrow_back_rounded, color: tc.text),
+                        ),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.mealPlanTitle,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.notoSerif(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: tc.text,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _showFilters,
+                          icon: Icon(Icons.tune_rounded, color: tc.text),
+                        ),
+                      ],
                     ),
-                  ),                   Text(AppLocalizations.of(context)!.mealPlanTitle,
-                      style: GoogleFonts.notoSerif(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18,
-                          color: tc.text)),
-                  GestureDetector(
-                    onTap: () => _loadPlan(force: true),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _search,
+                            decoration: InputDecoration(
+                              hintText: 'Найти блюдо или ингредиент',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              filled: true,
+                              fillColor: tc.card,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: tc.card,
+                          borderRadius: BorderRadius.circular(16),
+                          child: IconButton(
+                            onPressed: _showFilters,
+                            icon: Icon(
+                              Icons.filter_list_rounded,
+                              color: tc.text,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    SizedBox(
+                      height: 116,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: seedRecipeCategories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final category = seedRecipeCategories[index];
+                          final selected = _category == category.id;
+                          return GestureDetector(
+                            onTap: () => setState(
+                              () => _category = selected ? null : category.id,
+                            ),
+                            child: SizedBox(
+                              width: 98,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(18),
+                                      child: _RecipeImage(
+                                        imageUrl: category.imageUrl,
+                                        imagePath: category.imagePath,
+                                        label: category.name,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    category.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: selected ? _green : tc.text,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _search.text.isEmpty && _category == null
+                                ? 'Популярные'
+                                : 'Результаты · ${recipes.length}',
+                            style: GoogleFonts.notoSerif(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                              color: tc.text,
+                            ),
+                          ),
+                        ),
+                        if (_category != null ||
+                            _maxCalories != null ||
+                            _minProtein != null ||
+                            _maxMinutes != null ||
+                            _diet != null)
+                          TextButton(
+                            onPressed: () => setState(() {
+                              _category = null;
+                              _maxCalories = null;
+                              _minProtein = null;
+                              _maxMinutes = null;
+                              _diet = null;
+                            }),
+                            child: const Text('Сбросить'),
+                          ),
+                      ],
+                    ),
+                    if (_loading) const LinearProgressIndicator(minHeight: 2),
+                  ],
+                ),
+              ),
+            ),
+            if (recipes.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptyRecipes(
+                  hasFilters:
+                      _search.text.trim().isNotEmpty ||
+                      _category != null ||
+                      _maxCalories != null ||
+                      _minProtein != null ||
+                      _maxMinutes != null ||
+                      _diet != null,
+                  onReset: () => setState(() {
+                    _search.clear();
+                    _category = null;
+                    _maxCalories = null;
+                    _minProtein = null;
+                    _maxMinutes = null;
+                    _diet = null;
+                  }),
+                ),
+              )
+            else
+              // Одинаковые квадратные фото на всех размерах экрана.
+              SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 14.0;
+                  final width = constraints.crossAxisExtent - 40;
+                  final columns = width >= 880
+                      ? 4
+                      : width >= 620
+                      ? 3
+                      : 2;
+                  final tile = (width - spacing * (columns - 1)) / columns;
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                    sliver: SliverGrid.builder(
+                      itemCount: recipes.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        mainAxisSpacing: spacing,
+                        crossAxisSpacing: spacing,
+                        // Квадратное изображение + блок текста фиксированной
+                        // высоты: карточки и кадры одинаковые при любом числе
+                        // колонок и разной длине названия.
+                        mainAxisExtent: tile + 74,
+                      ),
+                      itemBuilder: (context, index) => _RecipeCard(
+                        recipe: recipes[index],
+                        favorite: _favorites.contains(recipes[index].id),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RecipeDetailPage(
+                              recipe: recipes[index],
+                              favorite: _favorites.contains(recipes[index].id),
+                              onFavorite: () => _toggleFavorite(recipes[index]),
+                            ),
+                          ),
+                        ),
+                        onFavorite: () => _toggleFavorite(recipes[index]),
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeCard extends StatelessWidget {
+  const _RecipeCard({
+    required this.recipe,
+    required this.favorite,
+    required this.onTap,
+    required this.onFavorite,
+  });
+  final Recipe recipe;
+  final bool favorite;
+  final VoidCallback onTap;
+  final VoidCallback onFavorite;
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
+    final meta = recipe.servingWeightGrams > 0
+        ? '${recipe.cookingTimeMinutes} мин · ${recipe.servingWeightGrams} г'
+        : '${recipe.cookingTimeMinutes} мин · Б ${recipe.proteinGrams.round()} г';
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: tc.card,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: tc.shadow(.06),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Hero(
+                    tag: 'recipe-image-${recipe.id}',
+                    child: _RecipeImage(
+                      imageUrl: recipe.imageUrl,
+                      imagePath: recipe.imagePath,
+                      label: recipe.title,
+                    ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Material(
+                      color: Colors.white.withValues(alpha: .9),
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        visualDensity: VisualDensity.compact,
+                        onPressed: onFavorite,
+                        icon: Icon(
+                          favorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: favorite
+                              ? Colors.redAccent
+                              : const Color(0xFF333333),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 8,
+                    bottom: 8,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
-                        color: tc.primary,
+                        color: Colors.black.withValues(alpha: .56),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.refresh_rounded,
-                          size: 18, color: tc.textOnPrimary),
+                      child: Text(
+                        '${recipe.calories} ккал',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // ── Выбор страны (местная кухня) ──
-              GestureDetector(
-                onTap: _selectCountry,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _greenSoft,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: _green.withValues(alpha: 0.3)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 10, 11, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recipe.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.15,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  const SizedBox(height: 5),
+                  Row(
                     children: [
-                      const Icon(Icons.public_rounded,
-                          size: 16, color: _greenDark),
-                      const SizedBox(width: 6),
-                      Text(                         _country.isEmpty ? AppLocalizations.of(context)!.selectCountry : AppLocalizations.of(context)!.cuisineOf(_country),
-                        style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: _greenDark),
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 12,
+                        color: tc.textSecondary,
                       ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.expand_more,
-                          size: 16, color: _greenDark.withValues(alpha: 0.7)),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: tc.textSecondary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class RecipeDetailPage extends StatefulWidget {
+  const RecipeDetailPage({
+    super.key,
+    required this.recipe,
+    required this.favorite,
+    required this.onFavorite,
+  });
+  final Recipe recipe;
+  final bool favorite;
+  final VoidCallback onFavorite;
+  @override
+  State<RecipeDetailPage> createState() => _RecipeDetailPageState();
+}
+
+class _RecipeDetailPageState extends State<RecipeDetailPage> {
+  final _supabase = SupabaseService();
+  bool _favorite = false;
+  bool _cooking = false;
+  int _cookingStep = 0;
+  @override
+  void initState() {
+    super.initState();
+    _favorite = widget.favorite;
+  }
+
+  Future<void> _addToDiary() async {
+    final meal = await showModalBottomSheet<MealType>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'Добавить в приём пищи',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+            ),
+            for (final type in MealType.values)
+              ListTile(
+                title: Text(_mealName(type)),
+                onTap: () => Navigator.pop(ctx, type),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (meal == null || !mounted) return;
+    final userId = AuthService().userId;
+    if (userId == null) {
+      showWelmiSnackbar(context, 'Войдите, чтобы добавить блюдо в дневник');
+      return;
+    }
+    try {
+      final entry = await _supabase.addFoodEntry(
+        FoodEntry(
+          userId: userId,
+          mealType: meal,
+          date: DateTime.now(),
+          totalCalories: widget.recipe.calories,
+        ),
+      );
+      await _supabase.addMealItem(
+        MealItem(
+          foodEntryId: entry.id,
+          name: widget.recipe.title,
+          calories: widget.recipe.calories,
+          proteinGrams: widget.recipe.proteinGrams,
+          fatGrams: widget.recipe.fatGrams,
+          carbsGrams: widget.recipe.carbsGrams,
+          info: '1 порция · рецепт Welmi',
+        ),
+      );
+      await DailyTracker().addCalories(
+        widget.recipe.calories,
+        protein: widget.recipe.proteinGrams.round(),
+        fat: widget.recipe.fatGrams.round(),
+        carbs: widget.recipe.carbsGrams.round(),
+        mealType: meal,
+      );
+      if (mounted) {
+        showWelmiSnackbar(
+          context,
+          'Рецепт добавлен в «${_mealName(meal)}»',
+          icon: Icons.check_circle_outline,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showWelmiSnackbar(
+          context,
+          'Не удалось добавить рецепт. Проверьте подключение.',
+          icon: Icons.error_outline,
+        );
+      }
+    }
+  }
+
+  String _mealName(MealType meal) => switch (meal) {
+    MealType.breakfast => 'Завтрак',
+    MealType.lunch => 'Обед',
+    MealType.dinner => 'Ужин',
+    MealType.snack => 'Перекус',
+  };
+
+  void _advanceCooking() {
+    if (_cookingStep + 1 >= widget.recipe.steps.length) {
+      setState(() {
+        _cooking = false;
+        _cookingStep = 0;
+      });
+      showWelmiSnackbar(context, 'Приятного аппетита!');
+      return;
+    }
+    setState(() => _cookingStep++);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
+    final r = widget.recipe;
+    return Scaffold(
+      backgroundColor: tc.background,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: tc.background,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.arrow_back, color: Colors.black),
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Hero(
+                tag: 'recipe-image-${r.id}',
+                child: _RecipeImage(
+                  imageUrl: r.imageUrl,
+                  imagePath: r.imagePath,
+                  label: r.title,
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // ── Дни недели (реальные даты) ──
-              SizedBox(
-                height: 84,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _weekPlan.length,
-                  itemBuilder: (context, index) {
-                    final d = _weekPlan[index];
-                    final isSelected = index == _selectedDay;
-                    final isToday = index == DateTime.now().weekday - 1;
-                    const shortDays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-
-                    return GestureDetector(
-                      onTap: () {
-                        hapticTap();
-                        setState(() => _selectedDay = index);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        width: 58,
-                        decoration: BoxDecoration(
-                          color: isSelected ? tc.primary : tc.card,
-                          borderRadius: BorderRadius.circular(18),
-                          border: isToday
-                              ? Border.all(color: _green, width: 1.5)
-                              : null,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(shortDays[index],
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: isSelected
-                                        ? tc.textOnPrimary
-                                            .withValues(alpha: 0.7)
-                                        : tc.textHint)),
-                            const SizedBox(height: 3),
-                            Text(d['date'] as String? ?? '',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w900,
-                                    color: isSelected
-                                        ? tc.textOnPrimary
-                                        : tc.text)),
-                            const SizedBox(height: 3),
-                            Text(isToday ? 'сегодня' : '',
-                                style: TextStyle(
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
-                                    color: isSelected
-                                        ? _greenSoft
-                                        : _greenDark)),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // ── Итог калорий ──
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [_greenDark, _green],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('$dayCalories',
-                            style: GoogleFonts.inter(
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: -2)),
-                        Text('из $goalCalories ккал',
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontWeight: FontWeight.w600)),
-                      ],
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    r.category,
+                    style: const TextStyle(
+                      color: _green,
+                      fontWeight: FontWeight.w800,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('${meals.length}',
-                            style: GoogleFonts.inter(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white)),                         Text(AppLocalizations.of(context)!.mealsCount,
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontWeight: FontWeight.w600)),
-                      ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    r.title,
+                    style: GoogleFonts.notoSerif(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    r.description,
+                    style: TextStyle(color: tc.textSecondary, height: 1.4),
+                  ),
+                  if (r.imageCredit != null && r.imageCredit!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Фото: ${r.imageCredit}',
+                      style: TextStyle(fontSize: 10.5, color: tc.textHint),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // ── Список приёмов пищи ──
-              ...meals.asMap().entries.map((entry) {
-                final meal = entry.value as Map<String, dynamic>;
-                final icons = [
-                  Icons.wb_sunny_outlined,
-                  Icons.wb_cloudy_outlined,
-                  Icons.nights_stay_outlined,
-                  Icons.local_cafe_outlined,
-                ];
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: tc.card,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                          color: tc.shadow(0.02),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4))
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _ActionChip(
+                        icon: _favorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        label: 'Сохранить',
+                        onTap: () {
+                          setState(() => _favorite = !_favorite);
+                          widget.onFavorite();
+                        },
+                      ),
+                      _ActionChip(
+                        icon: _cooking
+                            ? Icons.check_circle
+                            : Icons.soup_kitchen,
+                        label: _cooking
+                            ? 'Шаг ${_cookingStep + 1}'
+                            : 'Готовить',
+                        onTap: () => setState(() {
+                          _cooking = !_cooking;
+                          _cookingStep = 0;
+                        }),
+                      ),
+                      _ActionChip(
+                        icon: Icons.add,
+                        label: 'В дневник',
+                        onTap: _addToDiary,
+                      ),
+                      _ActionChip(
+                        icon: Icons.auto_awesome,
+                        label: 'Спросить',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AiChatPage(
+                              initialPrompt:
+                                  'Я готовлю рецепт «${r.title}» (${r.calories} ккал, Б ${r.proteinGrams} г, Ж ${r.fatGrams} г, У ${r.carbsGrams} г). Подскажи: ',
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  child: Row(
+                  const SizedBox(height: 26),
+                  Text(
+                    'Калории и нутриенты',
+                    style: GoogleFonts.notoSerif(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _greenSoft,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(icons[entry.key % icons.length],
-                            color: _greenDark, size: 22),
+                      _Nutrient(
+                        value: '${r.calories}',
+                        label: 'ккал',
+                        color: _green,
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(meal['name'] as String? ?? '',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: tc.text)),
-                            Text(meal['time'] as String? ?? '',
-                                style: TextStyle(
-                                    color: tc.textHint,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
+                      _Nutrient(
+                        value: '${r.proteinGrams.round()} г',
+                        label: 'Белки',
+                        color: const Color(0xFF65A66F),
                       ),
-                      Text('${meal['kcal']} ккал',
-                          style: GoogleFonts.inter(
+                      _Nutrient(
+                        value: '${r.fatGrams.round()} г',
+                        label: 'Жиры',
+                        color: const Color(0xFFE6A64A),
+                      ),
+                      _Nutrient(
+                        value: '${r.carbsGrams.round()} г',
+                        label: 'Углеводы',
+                        color: const Color(0xFF6699D1),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Клетчатка ${r.fiberGrams.round()} г · Сахар ${r.sugarGrams.round()} г · Натрий ${r.sodiumMg.round()} мг'
+                    '${r.servingWeightGrams > 0 ? ' · порция ${r.servingWeightGrams} г' : ''}',
+                    style: TextStyle(fontSize: 12, color: tc.textSecondary),
+                  ),
+                  if (r.nutritionIsEstimate) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'КБЖУ — оценочные значения на порцию по составу рецепта. '
+                      'TheMealDB не публикует пищевую ценность.',
+                      style: TextStyle(fontSize: 10.5, color: tc.textHint),
+                    ),
+                  ],
+                  const SizedBox(height: 26),
+                  Text(
+                    'Ингредиенты · ${r.servings} порция',
+                    style: GoogleFonts.notoSerif(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...r.ingredients.map(
+                    (i) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: tc.card,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              i.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: tc.text,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            i.amount,
+                            style: TextStyle(
+                              color: tc.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Приготовление',
+                    style: GoogleFonts.notoSerif(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_cooking)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _green.withValues(alpha: .12),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Шаг ${_cookingStep + 1} из ${r.steps.length}',
+                            style: const TextStyle(
+                              color: _green,
                               fontWeight: FontWeight.w900,
-                              fontSize: 15,
-                              color: tc.text)),
-                    ],
-                  ),
-                );
-              }),
-
-              // ── Подпись AI ──
-              const SizedBox(height: 24),
-              Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: _greenSoft,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.auto_awesome,
-                          size: 14, color: _greenDark),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isFallback
-                            ? (_country.isEmpty                                 ? AppLocalizations.of(context)!.previewMenu
-                                 : AppLocalizations.of(context)!.previewMenuCountry(_country))
-                             : (_country.isEmpty
-                                 ? AppLocalizations.of(context)!.generatedByAi
-                                 : AppLocalizations.of(context)!.generatedByAiCountry(_country)),
-                        style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _greenDark),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            r.steps[_cookingStep].description,
+                            style: TextStyle(color: tc.text, height: 1.4),
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton(
+                              onPressed: _advanceCooking,
+                              child: Text(
+                                _cookingStep + 1 == r.steps.length
+                                    ? 'Завершить'
+                                    : 'Следующий шаг',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ...r.steps.map(
+                    (s) => Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: tc.card,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: _green.withValues(alpha: .15),
+                            child: Text(
+                              '${s.stepNumber}',
+                              style: const TextStyle(
+                                color: _green,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              s.description,
+                              style: TextStyle(height: 1.4, color: tc.text),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 100),
-            ],
+            ),
           ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: FilledButton.icon(
+            onPressed: _addToDiary,
+            icon: const Icon(Icons.add),
+            label: const Text('В дневник'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(17),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Nutrient extends StatelessWidget {
+  const _Nutrient({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+  final String value, label;
+  final Color color;
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      margin: const EdgeInsets.only(right: 7),
+      padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.w900, color: color),
+          ),
+          const SizedBox(height: 3),
+          Text(label, style: const TextStyle(fontSize: 10)),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => ActionChip(
+    avatar: Icon(icon, size: 17, color: _green),
+    label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+    onPressed: onTap,
+  );
+}
+
+/// Фото блюда.
+///
+/// Сначала берётся собственный файл записи (пакет приложения), затем —
+/// `strMealThumb` того же блюда из TheMealDB. Если недоступно и то и другое,
+/// показывается нейтральный тематический placeholder: фотография другого
+/// блюда не подставляется никогда.
+class _RecipeImage extends StatelessWidget {
+  const _RecipeImage({
+    this.imageUrl,
+    this.imagePath,
+    required this.label,
+  });
+
+  final String? imageUrl;
+  final String? imagePath;
+  final String label;
+
+  Widget _placeholder(BuildContext context) =>
+      _RecipeImagePlaceholder(label: label);
+
+  Widget _networkImage(BuildContext context) {
+    final url = imageUrl;
+    if (url == null || url.isEmpty) return _placeholder(context);
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      cacheWidth: 720,
+      semanticLabel: label,
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : const _RecipeImageSkeleton(),
+      errorBuilder: (_, __, ___) => _placeholder(context),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final path = imagePath;
+    if (path == null || path.isEmpty) return _networkImage(context);
+    return Image.asset(
+      path,
+      fit: BoxFit.cover,
+      cacheWidth: 720,
+      semanticLabel: label,
+      // Файл не найден — пробуем фото того же блюда по сети.
+      errorBuilder: (_, __, ___) => _networkImage(context),
+    );
+  }
+}
+
+class _RecipeImagePlaceholder extends StatelessWidget {
+  const _RecipeImagePlaceholder({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
+    return Semantics(
+      label: 'Нет фото: $label',
+      image: true,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [tc.surface, _green.withValues(alpha: tc.isDark ? .16 : .12)],
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.restaurant_rounded,
+              color: _green.withValues(alpha: .75),
+              size: 30,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Фото скоро появится',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: tc.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeImageSkeleton extends StatelessWidget {
+  const _RecipeImageSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
+    return Container(
+      color: tc.surface,
+      alignment: Alignment.center,
+      child: const SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2, color: _green),
+      ),
+    );
+  }
+}
+
+class _EmptyRecipes extends StatelessWidget {
+  const _EmptyRecipes({required this.hasFilters, required this.onReset});
+
+  final bool hasFilters;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 44,
+              color: tc.textSecondary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasFilters
+                  ? 'Ничего не найдено.\nПопробуйте изменить запрос или фильтры.'
+                  : 'Рецепты скоро появятся.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: tc.textSecondary, height: 1.4),
+            ),
+            if (hasFilters) ...[
+              const SizedBox(height: 8),
+              TextButton(onPressed: onReset, child: const Text('Сбросить')),
+            ],
+          ],
         ),
       ),
     );

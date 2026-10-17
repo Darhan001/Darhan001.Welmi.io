@@ -105,7 +105,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerMyGoals => 'My Goals';
 
   @override
-  String get drawerMealPlan => 'Meal Plan';
+  String get drawerMealPlan => 'Recipes';
 
   @override
   String get drawerActivityHistory => 'Activity History';
@@ -453,7 +453,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not recognize speech. Please try again.';
 
   @override
-  String get mealPlanTitle => 'Meal Plan';
+  String get mealPlanTitle => 'Recipes';
 
   @override
   String get whereDoYouLive => 'Where do you live?';
@@ -1687,4 +1687,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityTitle => 'Security';
+
+  @override
+  String get feedbackEmptyMessage => 'Enter a message before sending.';
+
+  @override
+  String get feedbackMessageTooLong =>
+      'The message is too long. Maximum length is 3000 characters.';
+
+  @override
+  String get feedbackSessionError =>
+      'Could not verify your session. Restart the app and try again.';
+
+  @override
+  String get feedbackRateLimitError =>
+      'Too many requests. Wait a moment and try again.';
+
+  @override
+  String get feedbackSendError =>
+      'Could not send your message. Check your connection and try again.';
+
+  @override
+  String get feedbackFunctionMissing =>
+      'The feedback service is not deployed yet. Please try again later.';
+
+  @override
+  String get feedbackSecretsMissing =>
+      'The feedback service is not configured. Please try again later.';
+
+  @override
+  String get feedbackTelegramError =>
+      'Telegram could not deliver the message. Please try again later.';
+
+  @override
+  String get feedbackFunctionError =>
+      'The feedback service is temporarily unavailable. Please try again later.';
+
+  @override
+  String get feedbackNetworkError =>
+      'Could not reach the feedback service. Check your connection and try again.';
 }

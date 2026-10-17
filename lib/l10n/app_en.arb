@@ -37,7 +37,7 @@
   
   "drawerWorkouts": "Workouts",
   "drawerMyGoals": "My Goals",
-  "drawerMealPlan": "Meal Plan",
+  "drawerMealPlan": "Recipes",
   "drawerActivityHistory": "Activity History",
   "drawerSettings": "Settings",
   "drawerSupport": "Support",
@@ -150,7 +150,7 @@
   "voiceErrorPermission": "Allow microphone access to send voice messages.",
   "voiceErrorTranscribe": "Could not recognize speech. Please try again.",
   
-  "mealPlanTitle": "Meal Plan",
+  "mealPlanTitle": "Recipes",
   "whereDoYouLive": "Where do you live?",
   "mealPlanCountrySubtitle": "AI will pick dishes from local cuisine",
   "generateMealPlan": "Generating meal plan...",
@@ -543,5 +543,15 @@
   "termsChangesContent": "We may modify these Terms at any time. Updated terms will be posted in the app. Continued use of the app after changes constitutes acceptance of the new terms.",
   "termsLastUpdated": "Last updated: August 2026",
   "termsContactContent": "For questions about these Terms of Use, contact us:\n\n• Telegram: @welmi_support\n• Email: support@welmi.app",
-  "securityTitle": "Security"
+  "securityTitle": "Security",
+  "feedbackEmptyMessage": "Enter a message before sending.",
+  "feedbackMessageTooLong": "The message is too long. Maximum length is 3000 characters.",
+  "feedbackSessionError": "Could not verify your session. Restart the app and try again.",
+  "feedbackRateLimitError": "Too many requests. Wait a moment and try again.",
+  "feedbackSendError": "Could not send your message. Check your connection and try again.",
+  "feedbackFunctionMissing": "The feedback service is not deployed yet. Please try again later.",
+  "feedbackSecretsMissing": "The feedback service is not configured. Please try again later.",
+  "feedbackTelegramError": "Telegram could not deliver the message. Please try again later.",
+  "feedbackFunctionError": "The feedback service is temporarily unavailable. Please try again later.",
+  "feedbackNetworkError": "Could not reach the feedback service. Check your connection and try again."
 }

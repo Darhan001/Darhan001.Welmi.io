@@ -37,7 +37,7 @@
   
   "drawerWorkouts": "Машыгуулар",
   "drawerMyGoals": "Менин максаттарым",
-  "drawerMealPlan": "Тамак-аш планы",
+  "drawerMealPlan": "Рецепттер",
   "drawerActivityHistory": "Активдүүлүк тарыхы",
   "drawerSettings": "Жөндөөлөр",
   "drawerSupport": "Колдоо",
@@ -150,7 +150,7 @@
   "voiceErrorPermission": "Үн билдирүү жөнөтүү үчүн микрофонго уруксат бериңиз.",
   "voiceErrorTranscribe": "Сүйлөөнү таануу мүмкүн болгон жок. Кайра аракет кылыңыз.",
   
-  "mealPlanTitle": "Тамак-аш планы",
+  "mealPlanTitle": "Рецепттер",
   "whereDoYouLive": "Кайда жашайсыз?",
   "mealPlanCountrySubtitle": "AI жергиликтүү ашкананын тамактарын тандайт",
   "generateMealPlan": "Тамак-аш планы түзүлүүдө...",
@@ -543,5 +543,15 @@
   "termsChangesContent": "Биз бул Шарттарды каалаган убакта өзгөртө алабыз. Жаңыртылган шарттар тиркемеде жарыяланат.",
   "termsLastUpdated": "Акыркы жаңыртуу: 2026-жылдын августу",
   "termsContactContent": "Бул Колдонуу шарттары жөнүндө суроолоруңуз болсо, биз менен байланышыңыз:\n\n• Telegram: @welmi_support\n• Email: support@welmi.app",
-  "securityTitle": "Коопсуздук"
+  "securityTitle": "Коопсуздук",
+  "feedbackEmptyMessage": "Жөнөтүүдөн мурун билдирүү жазыңыз.",
+  "feedbackMessageTooLong": "Билдирүү өтө узун. Максималдуу узундугу — 3000 белги.",
+  "feedbackSessionError": "Сессияны текшерүү мүмкүн болгон жок. Тиркемени кайра ачып көрүңүз.",
+  "feedbackRateLimitError": "Өтө көп суроо-талап. Бир аз күтүп, кайра аракет кылыңыз.",
+  "feedbackSendError": "Билдирүү жөнөтүлгөн жок. Интернетти текшерип, кайра аракет кылыңыз.",
+  "feedbackFunctionMissing": "Пикир билдирүү кызматы жарыялана элек. Кийин кайра аракет кылыңыз.",
+  "feedbackSecretsMissing": "Пикир билдирүү кызматы орнотулган эмес. Кийин кайра аракет кылыңыз.",
+  "feedbackTelegramError": "Telegram билдирүүнү жеткире алган жок. Кийин кайра аракет кылыңыз.",
+  "feedbackFunctionError": "Пикир билдирүү кызматы убактылуу жеткиликсиз. Кийин кайра аракет кылыңыз.",
+  "feedbackNetworkError": "Кызматка туташуу мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз."
 }

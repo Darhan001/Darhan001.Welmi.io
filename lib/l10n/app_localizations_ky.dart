@@ -105,7 +105,7 @@ class AppLocalizationsKy extends AppLocalizations {
   String get drawerMyGoals => 'Менин максаттарым';
 
   @override
-  String get drawerMealPlan => 'Тамак-аш планы';
+  String get drawerMealPlan => 'Рецепттер';
 
   @override
   String get drawerActivityHistory => 'Активдүүлүк тарыхы';
@@ -455,7 +455,7 @@ class AppLocalizationsKy extends AppLocalizations {
       'Сүйлөөнү таануу мүмкүн болгон жок. Кайра аракет кылыңыз.';
 
   @override
-  String get mealPlanTitle => 'Тамак-аш планы';
+  String get mealPlanTitle => 'Рецепттер';
 
   @override
   String get whereDoYouLive => 'Кайда жашайсыз?';
@@ -1695,4 +1695,43 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get securityTitle => 'Коопсуздук';
+
+  @override
+  String get feedbackEmptyMessage => 'Жөнөтүүдөн мурун билдирүү жазыңыз.';
+
+  @override
+  String get feedbackMessageTooLong =>
+      'Билдирүү өтө узун. Максималдуу узундугу — 3000 белги.';
+
+  @override
+  String get feedbackSessionError =>
+      'Сессияны текшерүү мүмкүн болгон жок. Тиркемени кайра ачып көрүңүз.';
+
+  @override
+  String get feedbackRateLimitError =>
+      'Өтө көп суроо-талап. Бир аз күтүп, кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackSendError =>
+      'Билдирүү жөнөтүлгөн жок. Интернетти текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackFunctionMissing =>
+      'Пикир билдирүү кызматы жарыялана элек. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackSecretsMissing =>
+      'Пикир билдирүү кызматы орнотулган эмес. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackTelegramError =>
+      'Telegram билдирүүнү жеткире алган жок. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackFunctionError =>
+      'Пикир билдирүү кызматы убактылуу жеткиликсиз. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackNetworkError =>
+      'Кызматка туташуу мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз.';
 }
