@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/units_format.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
@@ -45,9 +48,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _photoChanged = false;
   bool _hasChanges = false;
 
+  /// Вес из поля в килограммах (поле показывает выбранные единицы).
+  double? _weightKgFrom(TextEditingController ctrl) {
+    final value = parseDecimalInput(ctrl.text);
+    return value == null ? null : UnitsService.instance.weightFromDisplay(value);
+  }
+
   int get _currentBmr {
-    final weight = double.tryParse(_currentWeightCtrl.text) ?? 72;
-    final height = double.tryParse(_heightCtrl.text) ?? 175;
+    // Без введённых данных не считаем BMR по выдуманным 72 кг и 175 см.
+    final weight = _weightKgFrom(_currentWeightCtrl);
+    final height = parseDecimalInput(_heightCtrl.text);
+    if (weight == null || height == null) return 0;
     final age = DateTime.now().year - _birthDate.year;
     if (_gender == Gender.male) {
       return (10 * weight + 6.25 * height - 5 * age + 5).round();
@@ -90,11 +101,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final profile = _userData.profile;
 
     _nameCtrl.text = profile?.displayName ?? AuthService().displayName ?? '';
-    _heightCtrl.text = (profile?.heightCm ?? 175).toStringAsFixed(0);
-    _currentWeightCtrl.text = (profile?.currentWeightKg ?? 72).toStringAsFixed(1);
-    _targetWeightCtrl.text = (profile?.targetWeightKg ?? 70).toStringAsFixed(1);
+    // Без профиля поля пустые: выдуманные значения попали бы в БД при сохранении.
+    final units = UnitsService.instance;
+    _heightCtrl.text = profile == null ? '' : profile.heightCm.toStringAsFixed(0);
+    _currentWeightCtrl.text = profile == null
+        ? ''
+        : units.weightToDisplay(profile.currentWeightKg).toStringAsFixed(1);
+    _targetWeightCtrl.text = profile == null
+        ? ''
+        : units.weightToDisplay(profile.targetWeightKg).toStringAsFixed(1);
 
-    _originalWeight = double.tryParse(_currentWeightCtrl.text);
+    _originalWeight = _weightKgFrom(_currentWeightCtrl);
     _gender = profile?.gender;
     _birthDate = profile?.birthDate ?? DateTime(1995, 1, 1);
     _goal = profile?.goal;
@@ -226,17 +243,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return;
     }
 
+    // Проверяем ввод до сохранения: раньше опечатка «1750» или пустое поле
+    // без профиля записывали в БД нереальный рост или выдуманные 175/72/70.
+    final loc = AppLocalizations.of(context)!;
+    final heightCm = parseDecimalInput(_heightCtrl.text) ?? existing?.heightCm;
+    final currentKg =
+        _weightKgFrom(_currentWeightCtrl) ?? existing?.currentWeightKg;
+    final targetKg = _weightKgFrom(_targetWeightCtrl) ?? existing?.targetWeightKg;
+    if (heightCm == null || !isPlausibleHeightCm(heightCm)) {
+      showWelmiSnackbar(context, loc.heightInvalid, icon: Icons.error_outline);
+      return;
+    }
+    if (currentKg == null ||
+        targetKg == null ||
+        !isPlausibleWeightKg(currentKg) ||
+        !isPlausibleWeightKg(targetKg)) {
+      showWelmiSnackbar(context, loc.weightInvalid, icon: Icons.error_outline);
+      return;
+    }
+
     final profile = UserProfile(
       id: userId,
       displayName:
           _nameCtrl.text.trim().isNotEmpty ? _nameCtrl.text.trim() : existing?.displayName,
       email: existing?.email ?? auth.email,
       photoUrl: existing?.photoUrl ?? auth.photoUrl,
-      heightCm: double.tryParse(_heightCtrl.text) ?? existing?.heightCm ?? 175,
-      currentWeightKg:
-          double.tryParse(_currentWeightCtrl.text) ?? existing?.currentWeightKg ?? 72,
-      targetWeightKg:
-          double.tryParse(_targetWeightCtrl.text) ?? existing?.targetWeightKg ?? 70,
+      heightCm: heightCm,
+      currentWeightKg: currentKg,
+      targetWeightKg: targetKg,
       gender: _gender,
       goal: _goal,
       activityLevel: _activityLevel,
@@ -265,10 +299,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
 
       await _userData.saveProfile(profile);
-      final newWeight = double.tryParse(_currentWeightCtrl.text);
-      final weightChanged = newWeight != null &&
-          (_originalWeight == null ||
-              (newWeight - _originalWeight!).abs() > 0.01);
+      final newWeight = currentKg;
+      final weightChanged = _originalWeight == null ||
+          (newWeight - _originalWeight!).abs() > 0.01;
       if (weightChanged) {
         try {
           await _userData.saveWeight(newWeight);
@@ -400,8 +433,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         icon: Icons.height,
                         label: AppLocalizations.of(context)!.heightCm,
                         controller: _heightCtrl,
-                        keyboardType: TextInputType.number,
-                        suffix: 'см',
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        suffix: AppLocalizations.of(context)!.unitCm,
                         onChanged: (_) => _markChanged(),
                       ),
                       const SizedBox(height: 16),
@@ -409,8 +443,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         tc: tc,
                         icon: Icons.monitor_weight_outlined,                         label: AppLocalizations.of(context)!.currentWeightLabel,
                         controller: _currentWeightCtrl,
-                        keyboardType: TextInputType.number,
-                        suffix: 'кг',
+                        // На iOS TextInputType.number не даёт ввести дробную часть.
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        suffix: AppLocalizations.of(context)!.weightUnitLabel,
                         onChanged: (_) => _markChanged(),
                       ),
                       const SizedBox(height: 16),
@@ -418,8 +454,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         tc: tc,
                         icon: Icons.flag_outlined,                         label: AppLocalizations.of(context)!.targetWeight,
                         controller: _targetWeightCtrl,
-                        keyboardType: TextInputType.number,
-                        suffix: 'кг',
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        suffix: AppLocalizations.of(context)!.weightUnitLabel,
                         onChanged: (_) => _markChanged(),
                       ),
                     ]),

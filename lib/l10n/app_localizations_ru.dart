@@ -105,7 +105,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get drawerMyGoals => 'Мои цели';
 
   @override
-  String get drawerMealPlan => 'План питания';
+  String get drawerMealPlan => 'Рецепты';
 
   @override
   String get drawerActivityHistory => 'История активности';
@@ -222,6 +222,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get imperialUnits => 'Имперские (фунты, мили)';
+
+  @override
+  String get unitCm => 'см';
+
+  @override
+  String get unitKg => 'кг';
+
+  @override
+  String get unitLb => 'lb';
+
+  @override
+  String get unitKm => 'км';
+
+  @override
+  String get unitMi => 'mi';
 
   @override
   String get widgetTitle => 'Виджет';
@@ -453,7 +468,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось распознать речь. Попробуй ещё раз.';
 
   @override
-  String get mealPlanTitle => 'План питания';
+  String get mealPlanTitle => 'Рецепты';
 
   @override
   String get whereDoYouLive => 'Где ты живёшь?';
@@ -813,7 +828,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String goalTargetWeight(Object weight) {
-    return '$weight кг — цель';
+    return '$weight — цель';
   }
 
   @override
@@ -986,47 +1001,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsPageTitle => 'Уведомления';
 
   @override
-  String get inbox => 'Входящие';
+  String get notifOpenSettings => 'Настроить напоминания';
 
   @override
-  String get markAllRead => 'Прочитать всё';
+  String get notifTurnOnHint =>
+      'Включи уведомления, чтобы приложение напоминало о воде, еде и активности.';
 
   @override
-  String get notifWaterReminder => 'Пора выпить воды!';
+  String get notifNoReminders => 'Все напоминания выключены';
 
   @override
-  String get notifWaterSubtitle => 'Вы выпили 60% от дневной нормы';
-
-  @override
-  String get notifLunchReminder => 'Время обеда';
-
-  @override
-  String get notifLunchSubtitle => 'Не забудьте записать приём пищи';
-
-  @override
-  String get notifWeightResult => 'Новый результат!';
-
-  @override
-  String get notifWeightSubtitle => 'Ваш вес снизился на 0.4 кг';
-
-  @override
-  String get notifMotivation => 'Мотивация дня';
-
-  @override
-  String get notifMotivationSubtitle =>
-      'Маленькие шаги ведут к большим результатам';
-
-  @override
-  String get notif15MinAgo => '15 мин назад';
-
-  @override
-  String get notif2HoursAgo => '2 часа назад';
-
-  @override
-  String get notif1DayAgo => '1 день назад';
-
-  @override
-  String get notif2DaysAgo => '2 дня назад';
+  String get notifScheduleHint =>
+      'Расписание напоминаний на каждый день. Нажми на напоминание, чтобы изменить время.';
 
   @override
   String get editProfileTitle => 'Редактирование';
@@ -1056,10 +1042,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get heightCm => 'Рост (см)';
 
   @override
-  String get currentWeightLabel => 'Текущий вес (кг)';
+  String get currentWeightLabel => 'Текущий вес';
 
   @override
-  String get targetWeight => 'Целевой вес (кг)';
+  String get targetWeight => 'Целевой вес';
 
   @override
   String get tapPhotoToChange => 'Нажми на фото, чтобы изменить';
@@ -1695,4 +1681,122 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get securityTitle => 'Безопасность';
+
+  @override
+  String get feedbackEmptyMessage => 'Напиши сообщение перед отправкой.';
+
+  @override
+  String get feedbackMessageTooLong =>
+      'Сообщение слишком длинное. Максимум 3000 символов.';
+
+  @override
+  String get feedbackSessionError =>
+      'Не удалось подтвердить сессию. Перезапусти приложение и попробуй снова.';
+
+  @override
+  String get feedbackRateLimitError =>
+      'Слишком много запросов. Подожди немного и попробуй снова.';
+
+  @override
+  String get feedbackSendError =>
+      'Не удалось отправить сообщение. Проверь интернет и попробуй ещё раз.';
+
+  @override
+  String get feedbackFunctionMissing =>
+      'Сервис обратной связи ещё не опубликован. Попробуй позже.';
+
+  @override
+  String get feedbackSecretsMissing =>
+      'Сервис обратной связи не настроен. Попробуй позже.';
+
+  @override
+  String get feedbackTelegramError =>
+      'Telegram временно не доставил сообщение. Попробуй ещё раз позже.';
+
+  @override
+  String get feedbackFunctionError =>
+      'Сервис обратной связи временно недоступен. Попробуй позже.';
+
+  @override
+  String get feedbackNetworkError =>
+      'Нет соединения с сервисом. Проверь интернет и попробуй снова.';
+
+  @override
+  String get voiceErrorNoInternet =>
+      'Нет интернета. Для распознавания голоса нужен интернет.';
+
+  @override
+  String get voiceErrorUnavailable =>
+      'Распознавание речи сейчас недоступно. Попробуй позже.';
+
+  @override
+  String get voiceErrorRecord => 'Не удалось начать запись. Попробуй ещё раз.';
+
+  @override
+  String get voiceErrorPermissionSettings =>
+      'Доступ к микрофону запрещён. Разреши его в настройках телефона.';
+
+  @override
+  String get ttsPlay => 'Озвучить';
+
+  @override
+  String get ttsStop => 'Остановить';
+
+  @override
+  String get ttsReplay => 'Повторить';
+
+  @override
+  String get ttsVoiceSettings => 'Голос озвучивания';
+
+  @override
+  String get ttsVoiceDefault => 'Голос по умолчанию';
+
+  @override
+  String get ttsVoicesEmpty =>
+      'На устройстве нет голосов для этого языка. Установите синтезатор речи в системных настройках.';
+
+  @override
+  String get ttsErrorUnavailable =>
+      'Озвучивание недоступно на этом устройстве.';
+
+  @override
+  String get aiErrorUnavailable =>
+      'AI-помощник не ответил. Проверь подключение и попробуй ещё раз.';
+
+  @override
+  String get voiceFoodNotRecognized =>
+      'Не удалось определить продукты. Попробуй ещё раз.';
+
+  @override
+  String get voiceFoodAnalysisError =>
+      'Ошибка анализа продуктов. Попробуй ещё раз.';
+
+  @override
+  String get weightInvalid => 'Введи корректный вес';
+
+  @override
+  String get weightSaveError =>
+      'Не удалось сохранить вес. Проверь интернет и попробуй ещё раз.';
+
+  @override
+  String get weightSaved => 'Вес сохранён';
+
+  @override
+  String get saveError =>
+      'Не удалось сохранить. Проверь интернет и попробуй ещё раз.';
+
+  @override
+  String get signInRequired => 'Войди в аккаунт, чтобы сохранять данные';
+
+  @override
+  String get navHome => 'Главная';
+
+  @override
+  String get navScanner => 'Сканер еды';
+
+  @override
+  String get navProfile => 'Профиль';
+
+  @override
+  String get heightInvalid => 'Введи рост от 100 до 250 см';
 }

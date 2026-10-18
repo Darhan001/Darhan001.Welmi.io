@@ -11,7 +11,10 @@ class AppSnackbar {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    // Новое сообщение заменяет старое, а не встаёт в очередь: иначе при
+    // повторных ошибках одинаковые уведомления копятся одно за другим.
+    final messenger = ScaffoldMessenger.of(context)..clearSnackBars();
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [

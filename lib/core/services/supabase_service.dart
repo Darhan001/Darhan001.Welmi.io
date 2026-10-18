@@ -3,6 +3,7 @@
 /// ============================================================
 /// Все методы теперь делают реальные запросы к Supabase.
 /// RLS политики защищают данные — каждый видит только своё.
+library;
 
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -88,13 +89,11 @@ class SupabaseService {
   Future<String> uploadProfilePhoto(String userId, XFile file) async {
     final Uint8List bytes = await file.readAsBytes();
     final name = file.name;
-    final ext = name.contains('.')
-        ? name.split('.').last.toLowerCase()
-        : 'jpg';
+    final ext = name.contains('.') ? name.split('.').last.toLowerCase() : 'jpg';
     final path = '$userId/${DateTime.now().millisecondsSinceEpoch}.$ext';
     await client.storage
         .from('avatars')
-        .uploadBinary(path, bytes, fileOptions: FileOptions(upsert: true));
+        .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true));
     return client.storage.from('avatars').getPublicUrl(path);
   }
 
@@ -223,13 +222,56 @@ class SupabaseService {
     return MealItem.fromJson(response);
   }
 
+  Future<MealItem> updateMealItem({
+    required String id,
+    required String name,
+    required int calories,
+    double? proteinGrams,
+    double? fatGrams,
+    double? carbsGrams,
+    double? amountGrams,
+    String? info,
+  }) async {
+    final response = await client
+        .from('meal_items')
+        .update({
+          'name': name,
+          'calories': calories,
+          'protein_grams': proteinGrams,
+          'fat_grams': fatGrams,
+          'carbs_grams': carbsGrams,
+          'amount_grams': amountGrams,
+          'info': info,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+    return MealItem.fromJson(response);
+  }
+
   Future<void> deleteMealItem(String itemId) async {
     await client.from('meal_items').delete().eq('id', itemId);
   }
 
+  Future<void> deleteFoodEntry(String foodEntryId) async {
+    await client.from('food_entries').delete().eq('id', foodEntryId);
+  }
+
+  Future<void> updateFoodEntryTotalCalories(
+    String foodEntryId,
+    int totalCalories,
+  ) async {
+    await client
+        .from('food_entries')
+        .update({'total_calories': totalCalories})
+        .eq('id', foodEntryId);
+  }
+
   /// Батч-версия getMealItems: одним запросом тянет позиции сразу для
   /// нескольких приёмов пищи (устраняет N+1 запросов в DailyTracker.loadToday).
-  Future<List<MealItem>> getMealItemsForEntries(List<String> foodEntryIds) async {
+  Future<List<MealItem>> getMealItemsForEntries(
+    List<String> foodEntryIds,
+  ) async {
     if (foodEntryIds.isEmpty) return [];
     final response = await client
         .from('meal_items')
@@ -252,7 +294,9 @@ class SupabaseService {
   // BODY MEASUREMENTS (замеры тела)
   // ────────────────────────────────────────────────────────────
 
-  Future<BodyMeasurement> saveBodyMeasurement(BodyMeasurement measurement) async {
+  Future<BodyMeasurement> saveBodyMeasurement(
+    BodyMeasurement measurement,
+  ) async {
     final existing = await client
         .from('body_measurements')
         .select()
@@ -406,7 +450,9 @@ class SupabaseService {
         .order('date', ascending: false);
 
     final response = await query;
-    final logs = (response as List).map((e) => ActivityLog.fromJson(e)).toList();
+    final logs = (response as List)
+        .map((e) => ActivityLog.fromJson(e))
+        .toList();
 
     // Фильтруем по дате в Dart
     if (from != null) {
@@ -423,7 +469,10 @@ class SupabaseService {
   // DAILY NUTRITION SUMMARY
   // ────────────────────────────────────────────────────────────
 
-  Future<DailyNutrition> getOrCreateDailyNutrition(String userId, DateTime date) async {
+  Future<DailyNutrition> getOrCreateDailyNutrition(
+    String userId,
+    DateTime date,
+  ) async {
     final dateStr = date.toIso8601String().substring(0, 10);
     final existing = await client
         .from('daily_nutrition')
@@ -438,10 +487,7 @@ class SupabaseService {
 
     final response = await client
         .from('daily_nutrition')
-        .insert({
-          'user_id': userId,
-          'date': dateStr,
-        })
+        .insert({'user_id': userId, 'date': dateStr})
         .select()
         .single();
     return DailyNutrition.fromJson(response);

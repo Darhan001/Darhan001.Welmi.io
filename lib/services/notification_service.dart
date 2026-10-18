@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,15 @@ class NotificationService {
 
   bool _isInitialized = false;
   void Function(String? payload)? _onTapCallback;
+
+  /// Режим планирования на Android.
+  ///
+  /// [AndroidScheduleMode.exactAllowWhileIdle] срабатывает вовремя даже в
+  /// Doze/энергосбережении, но требует разрешения SCHEDULE_EXACT_ALARM
+  /// (Android 12+). Пока разрешения нет — используем inexact, иначе
+  /// планирование вообще перестало бы работать.
+  AndroidScheduleMode _androidScheduleMode =
+      AndroidScheduleMode.inexactAllowWhileIdle;
 
   // ─── Стабильные ID уведомлений ───
   // Один тип = один id. Планирование с тем же id заменяет прежнее
@@ -124,6 +134,7 @@ class NotificationService {
 
     // Заголовки/тексты запланированных напоминаний берём при показе.
     await _createAndroidChannels();
+    await _refreshScheduleMode();
     _onTapCallback = onNotificationTap;
     _isInitialized = true;
     debugPrint('✅ NotificationService (local) initialized');
@@ -174,11 +185,48 @@ class NotificationService {
     }
   }
 
-  // ════════════════════════════════════════════════════════════
-  // РАЗРЕШЕНИЯ
-  // ════════════════════════════════════════════════════════════
+  /// Актуализирует [_androidScheduleMode] по текущему разрешению на точные
+  /// будильники. На iOS/desktop ничего не делает.
+  Future<void> _refreshScheduleMode() async {
+    if (kIsWeb) return;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    try {
+      final canExact =
+          await android.canScheduleExactNotifications() ?? false;
+      _androidScheduleMode = canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
+    } catch (e) {
+      debugPrint('⚠️ Exact alarm check failed: $e');
+      _androidScheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+    }
+  }
 
-  /// Запрос разрешения (POST_NOTIFICATIONS на Android 13+; alert/sound/badge на iOS).
+  /// Просит пользователя разрешить точные будильники (Android 12+).
+  /// Без этого разрешения напоминания по расписанию на многих прошивках
+  /// (Xiaomi, Samsung, Huawei и др.) откладываются на часы или не приходят.
+  Future<void> ensureExactAlarmsPermission() async {
+    if (kIsWeb) return;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    try {
+      final allowed =
+          await android.canScheduleExactNotifications() ?? false;
+      if (!allowed) await android.requestExactAlarmsPermission();
+    } catch (e) {
+      debugPrint('⚠️ Exact alarm permission request error: $e');
+    }
+    // После запроса перечитываем режим планирования. Перепланированием
+    // занимаются вызывающие стороны (setMasterEnabled / rescheduleAll),
+    // чтобы не потерять актуальное состояние дневной цели по воде.
+    await _refreshScheduleMode();
+  }
+
+  /// Request all required permissions for notifications and reschedule.
+  /// Returns true if both notification and exact alarm permissions are granted.
   Future<bool> requestPermissions() async {
     if (kIsWeb) return true;
     try {
@@ -187,8 +235,12 @@ class NotificationService {
       if (android != null) {
         final granted =
             await android.requestNotificationsPermission() ?? false;
-        // Точные будильники не обязательны: используем inexactAllowWhileIdle.
         debugPrint('📢 Android notifications permission: $granted');
+        // For Android 12+, also request exact alarms permission if needed,
+        // and reschedule all notifications to use the correct mode.
+        if (granted) {
+          await ensureExactAlarmsPermission();
+        }
         return granted;
       }
       final ios = _plugin.resolvePlatformSpecificImplementation<
@@ -206,6 +258,10 @@ class NotificationService {
     }
     return false;
   }
+
+  // ════════════════════════════════════════════════════════════
+  // РАЗРЕШЕНИЯ
+  // ════════════════════════════════════════════════════════════
 
   /// Проверка, выдано ли разрешение на уведомления.
   Future<bool> checkPermissions() async {
@@ -407,6 +463,61 @@ class NotificationService {
   // ПЛАНИРОВАНИЕ
   // ════════════════════════════════════════════════════════════
 
+  NotificationDetails _detailsFor(String channelId, String channelName) =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          channelName,
+          channelDescription: channelName,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+        ),
+      );
+
+  /// Планирует уведомление через AlarmManager.
+  ///
+  /// Сначала пытаемся использовать точный будильник — он срабатывает
+  /// вовремя даже в Doze. Если разрешение на точные будильники не выдано,
+  /// `zonedSchedule` бросает исключение: в этом случае откатываемся на
+  /// inexact-режим, чтобы напоминание всё равно было запланировано.
+  Future<void> _scheduleZoned({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime when,
+    required NotificationDetails details,
+    required String payload,
+    DateTimeComponents? matchDateTimeComponents,
+  }) async {
+    Future<void> attempt(AndroidScheduleMode mode) =>
+        _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          when,
+          details,
+          androidScheduleMode: mode,
+          matchDateTimeComponents: matchDateTimeComponents,
+          payload: payload,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+
+    await _refreshScheduleMode();
+    try {
+      await attempt(_androidScheduleMode);
+    } on PlatformException catch (e) {
+      debugPrint('⚠️ zonedSchedule($id) failed, fallback to inexact: $e');
+      _androidScheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      await attempt(AndroidScheduleMode.inexactAllowWhileIdle);
+    }
+  }
+
   /// Ежедневное уведомление в заданное время (time-zone-aware).
   /// Планирование с тем же [id] заменяет прежнее — дубликатов не будет.
   Future<void> scheduleDaily({
@@ -422,30 +533,14 @@ class NotificationService {
     if (kIsWeb) return;
     if (!_isInitialized) await initialize();
     try {
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        _nextInstanceOf(hour, minute),
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channelId,
-            channelName,
-            channelDescription: channelName,
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: true,
-            presentBadge: true,
-          ),
-        ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
+      await _scheduleZoned(
+        id: id,
+        title: title,
+        body: body,
+        when: _nextInstanceOf(hour, minute),
+        details: _detailsFor(channelId, channelName),
         payload: payload,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
       debugPrint('❌ scheduleDaily($id) error: $e');
@@ -473,30 +568,14 @@ class NotificationService {
     try {
       final safeInterval = intervalMinutes < 15 ? 15 : intervalMinutes;
       final slot = _currentOrNextSlot(safeInterval, startMin, endMin);
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        slot,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channelId,
-            channelName,
-            channelDescription: channelName,
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: true,
-            presentBadge: true,
-          ),
-        ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
+      await _scheduleZoned(
+        id: id,
+        title: title,
+        body: body,
+        when: slot,
+        details: _detailsFor(channelId, channelName),
         payload: payload,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
       );
     } catch (e) {
       debugPrint('❌ scheduleInterval($id) error: $e');
@@ -516,29 +595,13 @@ class NotificationService {
     if (kIsWeb) return;
     if (!_isInitialized) await initialize();
     try {
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        when,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channelId,
-            channelName,
-            channelDescription: channelName,
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: true,
-            presentBadge: true,
-          ),
-        ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      await _scheduleZoned(
+        id: id,
+        title: title,
+        body: body,
+        when: when,
+        details: _detailsFor(channelId, channelName),
         payload: payload,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (e) {
       debugPrint('❌ scheduleOnce($id) error: $e');

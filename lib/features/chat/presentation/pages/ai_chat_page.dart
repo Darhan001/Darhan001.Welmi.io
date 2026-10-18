@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:record/record.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/ai_service.dart';
+import 'package:lumina/core/services/speech_output_service.dart';
+import 'package:lumina/core/services/voice_recorder_service.dart';
+import 'package:lumina/core/widgets/app_snackbar.dart';
+import 'package:lumina/core/widgets/voice_messages.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 // ─── Premium design tokens ────────────────────────────────────
@@ -19,11 +20,11 @@ class _Design {
   static const Color textSecondary = Color(0xFF8A8A8A);
   static const Color textMuted = Color(0xFF555555);
   static const double radiusLg = 28;
-  static const double radiusMd = 20;
 }
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  const AiChatPage({super.key, this.initialPrompt});
+  final String? initialPrompt;
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -37,27 +38,44 @@ class _AiChatPageState extends State<AiChatPage> {
 
   final List<_ChatBubble> _messages = [];
   bool _isLoading = false;
-  String? _errorMessage;
 
   // Голосовые сообщения (запись → распознавание речи → текст в чат)
-  final AudioRecorder _recorder = AudioRecorder();
+  final VoiceRecorderService _voice = VoiceRecorderService();
+  // Озвучивание ответов AI
+  final SpeechOutputService _speech = SpeechOutputService();
   bool _isRecording = false;
+  bool _isStartingRecording = false;
   bool _isTranscribing = false;
+  // Ответы, которые уже озвучивались: для них кнопка становится «повторить».
+  final Set<String> _spokenTexts = {};
   Duration _recordDuration = Duration.zero;
   Timer? _recordTicker;
-  String? _recordingPath;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _bootstrap();
+  }
+
+  /// Сначала восстанавливаем историю, и только потом отправляем стартовый
+  /// вопрос (кнопка «Спросить» на экране рецепта). Пока это шло параллельно,
+  /// история успевала загрузиться после отправки и добавляла тот же вопрос
+  /// вторым сообщением.
+  Future<void> _bootstrap() async {
+    await _loadHistory();
+    if (!mounted) return;
+    final prompt = widget.initialPrompt;
+    if (prompt != null && prompt.isNotEmpty) {
+      await _sendMessage(text: prompt);
+    }
   }
 
   @override
   void dispose() {
     _recordTicker?.cancel();
-    if (_isRecording) _recorder.cancel();
-    _recorder.dispose();
+    if (_isRecording) _voice.cancel();
+    _voice.dispose();
+    _speech.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -69,14 +87,18 @@ class _AiChatPageState extends State<AiChatPage> {
     if (!mounted) return;
 
     final saved = _aiService.chatHistory;
-    if (saved.isNotEmpty) {
+    // Не перезаписываем уже показанную переписку: иначе загруженная история
+    // может задвоить сообщения, отправленные до её окончания.
+    if (saved.isNotEmpty && _messages.isEmpty) {
       setState(() {
         _messages.addAll(
-          saved.map((m) => _ChatBubble(
-            text: m.text,
-            isUser: m.role == 'user',
-            timestamp: m.timestamp,
-          )),
+          saved.map(
+            (m) => _ChatBubble(
+              text: m.text,
+              isUser: m.role == 'user',
+              timestamp: m.timestamp,
+            ),
+          ),
         );
       });
       _scrollToBottom();
@@ -104,37 +126,28 @@ class _AiChatPageState extends State<AiChatPage> {
     _focusNode.unfocus();
 
     setState(() {
-      _messages.add(_ChatBubble(
-        text: message,
-        isUser: true,
-        isVoice: isVoice,
-      ));
+      _messages.add(_ChatBubble(text: message, isUser: true, isVoice: isVoice));
       _isLoading = true;
-      _errorMessage = null;
     });
     _scrollToBottom();
 
+    final loc = AppLocalizations.of(context)!;
+    String reply;
     try {
-      final response = await _aiService.sendChatMessage(message);
-      if (mounted) {
-        setState(() {
-          _messages.add(_ChatBubble(text: response, isUser: false));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
+      reply = await _aiService.sendChatMessage(message);
+    } on AiUnavailableException catch (e) {
+      debugPrint('⚠️ Chat unavailable: ${e.reason}');
+      reply = loc.aiErrorUnavailable;
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _messages.add(_ChatBubble(
-            text: '❌ **Ошибка соединения**\n\n${AppLocalizations.of(context)!.aiErrorConnection}',
-            isUser: false,
-          ));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
+      debugPrint('❌ Chat error: $e');
+      reply = loc.aiErrorConnection;
     }
+    if (!mounted) return;
+    setState(() {
+      _messages.add(_ChatBubble(text: reply, isUser: false));
+      _isLoading = false;
+    });
+    _scrollToBottom();
   }
 
   // ─── Голосовые сообщения: запись и распознавание ───────────
@@ -145,50 +158,34 @@ class _AiChatPageState extends State<AiChatPage> {
 
   /// Начинает запись голосового сообщения.
   Future<void> _startRecording() async {
-    if (kIsWeb || _isRecording || _isTranscribing) return;
+    if (_isRecording || _isTranscribing || _isStartingRecording) return;
     final loc = AppLocalizations.of(context)!;
     HapticFeedback.mediumImpact();
 
+    _isStartingRecording = true;
     try {
-      // Запрашивает разрешение микрофона у системы.
-      final allowed = await _recorder.hasPermission();
-      if (!mounted) return;
-      if (!allowed) {
-        _showVoiceError(loc.voiceErrorPermission);
-        return;
-      }
-
-      final path =
-          '${Directory.systemTemp.path}/welmi_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc, // контейнер m4a, сжатие AAC
-          bitRate: 64000,
-          sampleRate: 16000, // 16 кГц — оптимум для распознавания речи
-          numChannels: 1, // моно для голоса достаточно
-        ),
-        path: path,
-      );
-      if (!mounted) return;
-
-      setState(() {
-        _isRecording = true;
-        _recordingPath = path;
-        _recordDuration = Duration.zero;
-      });
-
-      _recordTicker?.cancel();
-      _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        setState(() => _recordDuration += const Duration(seconds: 1));
-        if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
-          _finishRecording(send: true);
-        }
-      });
-    } catch (e) {
-      debugPrint('⚠️ Voice record error: $e');
-      if (mounted) _showVoiceError(loc.voiceErrorTranscribe);
+      await _voice.start();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
+      if (mounted) _showVoiceError(voiceRecordMessage(loc, e));
+      return;
+    } finally {
+      _isStartingRecording = false;
     }
+    if (!mounted) return;
+
+    setState(() {
+      _isRecording = true;
+      _recordDuration = Duration.zero;
+    });
+    _recordTicker?.cancel();
+    _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _recordDuration += const Duration(seconds: 1));
+      if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
+        _finishRecording(send: true);
+      }
+    });
   }
 
   /// Останавливает запись. [send] = false — просто удалить запись.
@@ -199,24 +196,15 @@ class _AiChatPageState extends State<AiChatPage> {
     HapticFeedback.lightImpact();
     if (mounted) setState(() => _isRecording = false);
 
-    Uint8List? bytes;
-    try {
-      final stoppedPath = await _recorder.stop();
-      final filePath = stoppedPath ?? _recordingPath;
-      if (filePath != null) {
-        final file = File(filePath);
-        if (await file.exists()) {
-          if (send) bytes = await file.readAsBytes();
-          await file.delete(); // временный файл распознаванию больше не нужен
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Voice stop error: $e');
+    if (!send) {
+      await _voice.cancel();
+      return;
     }
-    _recordingPath = null;
-
-    if (!send) return;
-    if (bytes == null || bytes.isEmpty) {
+    Uint8List bytes;
+    try {
+      bytes = await _voice.stopAndRead();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
       if (mounted) {
         _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
       }
@@ -229,20 +217,27 @@ class _AiChatPageState extends State<AiChatPage> {
   Future<void> _transcribeAndSend(Uint8List bytes) async {
     setState(() => _isTranscribing = true);
     String? text;
+    VoiceTranscriptionFailure? failure;
     try {
       text = await _aiService.transcribeAudio(
         bytes,
-        format: 'm4a',
+        format: _voice.format,
         language: _speechLanguageHint,
       );
-    } catch (e) {
-      debugPrint('⚠️ Voice transcribe error: $e');
+    } on VoiceTranscriptionException catch (e) {
+      debugPrint('⚠️ $e');
+      failure = e.failure;
     }
     if (!mounted) return;
     setState(() => _isTranscribing = false);
 
     if (text == null || text.trim().isEmpty) {
-      _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
+      _showVoiceError(
+        voiceTranscriptionMessage(
+          AppLocalizations.of(context)!,
+          failure ?? VoiceTranscriptionFailure.emptyResult,
+        ),
+      );
       return;
     }
     await _sendMessage(text: text, isVoice: true);
@@ -251,28 +246,150 @@ class _AiChatPageState extends State<AiChatPage> {
   /// Подсказка языка для STT: для ru/en заметно точнее,
   /// для остальных локалей оставляем автоопределение провайдеру.
   String? get _speechLanguageHint {
-    final code = Localizations.localeOf(context).languageCode;
+    final code = _languageCode;
     return (code == 'ru' || code == 'en') ? code : null;
   }
 
+  String get _languageCode => Localizations.localeOf(context).languageCode;
+
   void _showVoiceError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: _Design.textPrimary,
-          ),
+    AppSnackbar.error(context, message);
+  }
+
+  // ─── Озвучивание ответов ───────────────────────────────────
+
+  /// Убирает markdown-разметку, которую синтезатор прочитал бы вслух.
+  static String _plainSpeechText(String text) =>
+      text.replaceAll(RegExp(r'[*_#`>]'), '').trim();
+
+  /// Озвучивает сообщение или, если оно уже звучит, останавливает речь.
+  Future<void> _toggleSpeech(String text) async {
+    final loc = AppLocalizations.of(context)!;
+    final plain = _plainSpeechText(text);
+    if (_speech.speakingText.value == plain) {
+      await _speech.stop();
+      return;
+    }
+    HapticFeedback.selectionClick();
+    try {
+      await _speech.speak(plain, languageCode: _languageCode);
+      _spokenTexts.add(text);
+    } on SpeechOutputException catch (e) {
+      debugPrint('⚠️ $e');
+      if (mounted) AppSnackbar.error(context, loc.ttsErrorUnavailable);
+    }
+  }
+
+  Future<void> _showVoicePicker() async {
+    final loc = AppLocalizations.of(context)!;
+    HapticFeedback.lightImpact();
+    List<SpeechVoice> voices;
+    try {
+      await _speech.init();
+      voices = await _speech.voicesFor(_languageCode);
+    } catch (e) {
+      debugPrint('⚠️ TTS voices error: $e');
+      if (mounted) AppSnackbar.error(context, loc.ttsErrorUnavailable);
+      return;
+    }
+    if (!mounted) return;
+    final selected = _speech.selectedVoice;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: _Design.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(_Design.radiusLg),
         ),
-        backgroundColor: _Design.card,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_Design.radiusMd)),
-        duration: const Duration(seconds: 3),
       ),
+      builder: (ctx) {
+        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.6;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Text(
+                    loc.ttsVoiceSettings,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _Design.textPrimary,
+                    ),
+                  ),
+                ),
+                _voiceTile(
+                  title: loc.ttsVoiceDefault,
+                  subtitle: null,
+                  isSelected: selected == null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _speech.selectVoice(null);
+                  },
+                ),
+                if (voices.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Text(
+                      loc.ttsVoicesEmpty,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: _Design.textSecondary,
+                      ),
+                    ),
+                  ),
+                for (final voice in voices)
+                  _voiceTile(
+                    title: voice.name,
+                    subtitle: voice.locale,
+                    isSelected: voice == selected,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _speech.selectVoice(voice);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _voiceTile({
+    required String title,
+    required String? subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: _Design.textPrimary,
+        ),
+      ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _Design.textSecondary,
+              ),
+            ),
+      trailing: isSelected
+          ? const Icon(Icons.check_rounded, color: _Design.lime)
+          : null,
     );
   }
 
@@ -282,31 +399,48 @@ class _AiChatPageState extends State<AiChatPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_Design.radiusLg)),
-        backgroundColor: _Design.card,         title: Text(AppLocalizations.of(context)!.aiNewChat,
-            style: GoogleFonts.inter(
-                fontWeight: FontWeight.w800,
-                color: _Design.textPrimary)),         content: Text(AppLocalizations.of(context)!.aiNewChatConfirm,
-            style: GoogleFonts.inter(color: _Design.textSecondary)),
+          borderRadius: BorderRadius.circular(_Design.radiusLg),
+        ),
+        backgroundColor: _Design.card,
+        title: Text(
+          AppLocalizations.of(context)!.aiNewChat,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            color: _Design.textPrimary,
+          ),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.aiNewChatConfirm,
+          style: GoogleFonts.inter(color: _Design.textSecondary),
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),             child: Text(AppLocalizations.of(context)!.drawerCancel,
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: _Design.textSecondary)),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              AppLocalizations.of(context)!.drawerCancel,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: _Design.textSecondary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
+              _speech.stop();
               setState(() {
                 _messages.clear();
                 _isLoading = false;
-                _errorMessage = null;
               });
               _aiService.startNewChat();
-            },             child: Text(AppLocalizations.of(context)!.aiStart,
-                style: GoogleFonts.inter(
-                    color: _Design.lime, fontWeight: FontWeight.w800)),
+            },
+            child: Text(
+              AppLocalizations.of(context)!.aiStart,
+              style: GoogleFonts.inter(
+                color: _Design.lime,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -329,7 +463,21 @@ class _AiChatPageState extends State<AiChatPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.arrow_back_ios_new_rounded, color: _Design.textPrimary, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: _Design.textPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: AppLocalizations.of(context)!.ttsVoiceSettings,
+                    onPressed: _showVoicePicker,
+                    icon: const Icon(
+                      Icons.record_voice_over_outlined,
+                      color: _Design.textSecondary,
+                      size: 22,
+                    ),
                   ),
                 ],
               ),
@@ -359,7 +507,8 @@ class _AiChatPageState extends State<AiChatPage> {
                   _buildGlowAvatar(),
                   const SizedBox(height: 24),
                   // Capsule label
-                  Text(                     AppLocalizations.of(context)!.gymtoneTrainer,
+                  Text(
+                    AppLocalizations.of(context)!.gymtoneTrainer,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -369,7 +518,8 @@ class _AiChatPageState extends State<AiChatPage> {
                   ),
                   const SizedBox(height: 14),
                   // Greeting
-                  Text(                     AppLocalizations.of(context)!.aiWelcomeGreeting,
+                  Text(
+                    AppLocalizations.of(context)!.aiWelcomeGreeting,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 22,
@@ -379,9 +529,12 @@ class _AiChatPageState extends State<AiChatPage> {
                     ),
                   ),
                   const SizedBox(height: 36),
-                  // Suggestion pills                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion1),
-                  const SizedBox(height: 10),                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion2),
-                  const SizedBox(height: 10),                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion3),
+                  // Suggestion pills
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion1),
+                  const SizedBox(height: 10),
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion2),
+                  const SizedBox(height: 10),
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion3),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -412,31 +565,6 @@ class _AiChatPageState extends State<AiChatPage> {
             },
           ),
         ),
-        // Error message (if any)
-        if (_errorMessage != null)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(_Design.radiusMd),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, size: 16, color: Colors.redAccent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _errorMessage!,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
         // Input field
         _buildInputArea(),
       ],
@@ -466,7 +594,10 @@ class _AiChatPageState extends State<AiChatPage> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _Design.lime.withValues(alpha: 0.1),
-            border: Border.all(color: _Design.lime.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(
+              color: _Design.lime.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
           child: Center(
             child: Container(
@@ -513,11 +644,8 @@ class _AiChatPageState extends State<AiChatPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              _Design.card,
-              const Color(0xFF222222),
-            ],
+          gradient: const LinearGradient(
+            colors: [_Design.card, Color(0xFF222222)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -560,8 +688,9 @@ class _AiChatPageState extends State<AiChatPage> {
         bottom: 6,
       ),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
@@ -577,7 +706,11 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 14,
+              ),
             ),
           ],
           Flexible(
@@ -611,9 +744,11 @@ class _AiChatPageState extends State<AiChatPage> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.mic_rounded,
-                            size: 13,
-                            color: _Design.lime.withValues(alpha: 0.7)),
+                        Icon(
+                          Icons.mic_rounded,
+                          size: 13,
+                          color: _Design.lime.withValues(alpha: 0.7),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           AppLocalizations.of(context)!.voiceMessageLabel,
@@ -643,8 +778,14 @@ class _AiChatPageState extends State<AiChatPage> {
                       ),
                       if (isUser) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.done_all_rounded,
-                            size: 12, color: _Design.lime.withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.done_all_rounded,
+                          size: 12,
+                          color: _Design.lime.withValues(alpha: 0.5),
+                        ),
+                      ] else ...[
+                        const SizedBox(width: 8),
+                        _buildSpeakButton(message.text),
                       ],
                     ],
                   ),
@@ -654,6 +795,39 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Кнопка озвучивания ответа AI: «озвучить», «повторить» или «стоп».
+  Widget _buildSpeakButton(String text) {
+    final loc = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<String?>(
+      valueListenable: _speech.speakingText,
+      builder: (context, speaking, _) {
+        final isSpeaking = speaking == _plainSpeechText(text);
+        final replay = _spokenTexts.contains(text);
+        final tooltip = isSpeaking
+            ? loc.ttsStop
+            : (replay ? loc.ttsReplay : loc.ttsPlay);
+        final icon = isSpeaking
+            ? Icons.stop_circle_outlined
+            : (replay ? Icons.replay_rounded : Icons.volume_up_rounded);
+        return Tooltip(
+          message: tooltip,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _toggleSpeech(text),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Icon(
+                icon,
+                size: 16,
+                color: isSpeaking ? _Design.lime : _Design.textMuted,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -674,9 +848,7 @@ class _AiChatPageState extends State<AiChatPage> {
           )
         : Text(
             text,
-            style: theme.copyWith(
-              fontFamily: GoogleFonts.inter().fontFamily,
-            ),
+            style: theme.copyWith(fontFamily: GoogleFonts.inter().fontFamily),
           );
   }
 
@@ -692,52 +864,60 @@ class _AiChatPageState extends State<AiChatPage> {
 
     for (final match in regex.allMatches(text)) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: baseColor,
-            fontWeight: FontWeight.w500,
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: baseColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ));
+        );
       }
 
       if (match.group(1)?.startsWith('**') == true) {
-        spans.add(TextSpan(
-          text: match.group(2),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: baseColor,
-            fontWeight: FontWeight.w800,
+        spans.add(
+          TextSpan(
+            text: match.group(2),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: baseColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-        ));
+        );
       } else {
-        spans.add(TextSpan(
-          text: match.group(3),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.5,
-            color: italicColor,
-            fontStyle: FontStyle.italic,
+        spans.add(
+          TextSpan(
+            text: match.group(3),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.5,
+              color: italicColor,
+              fontStyle: FontStyle.italic,
+            ),
           ),
-        ));
+        );
       }
 
       lastEnd = match.end;
     }
 
     if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-        style: GoogleFonts.inter(
-          fontSize: 15,
-          height: 1.5,
-          color: baseColor,
-          fontWeight: FontWeight.w500,
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            height: 1.5,
+            color: baseColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ));
+      );
     }
 
     return TextSpan(children: spans);
@@ -762,7 +942,11 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.white,
+              size: 14,
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -776,7 +960,7 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
               border: Border.all(color: _Design.cardBorder),
             ),
-            child: _TypingDots(dotColor: _Design.lime),
+            child: const _TypingDots(dotColor: _Design.lime),
           ),
         ],
       ),
@@ -790,7 +974,10 @@ class _AiChatPageState extends State<AiChatPage> {
       decoration: BoxDecoration(
         color: _Design.bg,
         border: Border(
-          top: BorderSide(color: _Design.cardBorder.withValues(alpha: 0.3), width: 1),
+          top: BorderSide(
+            color: _Design.cardBorder.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: SafeArea(
@@ -804,93 +991,98 @@ class _AiChatPageState extends State<AiChatPage> {
           child: _isTranscribing
               ? _buildTranscribingRow()
               : _isRecording
-                  ? _buildRecordingRow()
-                  : Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const SizedBox(width: 4),
-              // New chat button
-              GestureDetector(
-                onTap: _startNewChat,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 20,
-                    color: _Design.lime.withValues(alpha: 0.6),
-                  ),
-                ),
-              ),
-              // Text field
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  focusNode: _focusNode,
-                  textInputAction: TextInputAction.send,
-                  maxLines: 5,
-                  minLines: 1,
-                  textCapitalization: TextCapitalization.sentences,
-                  enabled: !_isLoading,
-                  onSubmitted: (_) => _sendMessage(),
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: _Design.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _isLoading ? AppLocalizations.of(context)!.aiHintLoading : AppLocalizations.of(context)!.aiHintInput,
-                    hintStyle: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: _Design.textMuted,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
-                  ),
-                ),
-              ),
-              // Mic button — голосовое сообщение
-              if (!kIsWeb)
-                Tooltip(
-                  message: AppLocalizations.of(context)!.voiceSend,
-                  child: GestureDetector(
-                    onTap: _isLoading ? null : _startRecording,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.mic_none_rounded,
-                        size: 22,
-                        color: _isLoading
-                            ? _Design.textMuted
-                            : _Design.lime.withValues(alpha: 0.8),
+              ? _buildRecordingRow()
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const SizedBox(width: 4),
+                    // New chat button
+                    GestureDetector(
+                      onTap: _startNewChat,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.auto_awesome_outlined,
+                          size: 20,
+                          color: _Design.lime.withValues(alpha: 0.6),
+                        ),
                       ),
                     ),
-                  ),
+                    // Text field
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _focusNode,
+                        textInputAction: TextInputAction.send,
+                        maxLines: 5,
+                        minLines: 1,
+                        textCapitalization: TextCapitalization.sentences,
+                        enabled: !_isLoading,
+                        onSubmitted: (_) => _sendMessage(),
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: _Design.textPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: _isLoading
+                              ? AppLocalizations.of(context)!.aiHintLoading
+                              : AppLocalizations.of(context)!.aiHintInput,
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: _Design.textMuted,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Mic button — голосовое сообщение
+                    Tooltip(
+                      message: AppLocalizations.of(context)!.voiceSend,
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _startRecording,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.mic_none_rounded,
+                            size: 22,
+                            color: _isLoading
+                                ? _Design.textMuted
+                                : _Design.lime.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Send button
+                    GestureDetector(
+                      onTap: _isLoading ? null : () => _sendMessage(),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.all(4),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _isLoading
+                              ? _Design.textMuted.withValues(alpha: 0.3)
+                              : _Design.lime,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isLoading
+                              ? Icons.hourglass_empty
+                              : Icons.arrow_upward_rounded,
+                          color: _isLoading ? _Design.textMuted : Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              // Send button
-              GestureDetector(
-                onTap: _isLoading ? null : () => _sendMessage(),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.all(4),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: _isLoading
-                        ? _Design.textMuted.withValues(alpha: 0.3)
-                        : _Design.lime,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isLoading ? Icons.hourglass_empty : Icons.arrow_upward_rounded,
-                    color: _isLoading ? _Design.textMuted : Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -909,8 +1101,11 @@ class _AiChatPageState extends State<AiChatPage> {
             onTap: () => _finishRecording(send: false),
             child: const Padding(
               padding: EdgeInsets.all(10),
-              child: Icon(Icons.close_rounded,
-                  size: 22, color: _Design.textSecondary),
+              child: Icon(
+                Icons.close_rounded,
+                size: 22,
+                color: _Design.textSecondary,
+              ),
             ),
           ),
         ),
@@ -922,9 +1117,10 @@ class _AiChatPageState extends State<AiChatPage> {
               Text(
                 _formatDuration(_recordDuration),
                 style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _Design.textPrimary),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: _Design.textPrimary,
+                ),
               ),
               const SizedBox(width: 10),
               Flexible(
@@ -933,9 +1129,10 @@ class _AiChatPageState extends State<AiChatPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _Design.textMuted),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _Design.textMuted,
+                  ),
                 ),
               ),
             ],
@@ -948,9 +1145,14 @@ class _AiChatPageState extends State<AiChatPage> {
             width: 44,
             height: 44,
             decoration: const BoxDecoration(
-                color: _Design.lime, shape: BoxShape.circle),
-            child: const Icon(Icons.arrow_upward_rounded,
-                color: Colors.black, size: 20),
+              color: _Design.lime,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_upward_rounded,
+              color: Colors.black,
+              size: 20,
+            ),
           ),
         ),
       ],
@@ -967,16 +1169,19 @@ class _AiChatPageState extends State<AiChatPage> {
             width: 16,
             height: 16,
             child: CircularProgressIndicator(
-                strokeWidth: 2, color: _Design.lime),
+              strokeWidth: 2,
+              color: _Design.lime,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppLocalizations.of(context)!.voiceTranscribing,
               style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: _Design.textSecondary),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _Design.textSecondary,
+              ),
             ),
           ),
         ],
@@ -986,8 +1191,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
-    final seconds =
-        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
 
@@ -995,7 +1199,9 @@ class _AiChatPageState extends State<AiChatPage> {
     final now = DateTime.now();
     final diff = now.difference(time);
     if (diff.inMinutes < 1) return AppLocalizations.of(context)!.aiJustNow;
-    if (diff.inMinutes < 60) return AppLocalizations.of(context)!.aiMinutesAgo(diff.inMinutes);
+    if (diff.inMinutes < 60) {
+      return AppLocalizations.of(context)!.aiMinutesAgo(diff.inMinutes);
+    }
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }
@@ -1052,11 +1258,7 @@ class _TypingDotsState extends State<_TypingDots>
           width: 50,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _dot(0.0),
-              _dot(0.2),
-              _dot(0.4),
-            ],
+            children: [_dot(0.0), _dot(0.2), _dot(0.4)],
           ),
         );
       },

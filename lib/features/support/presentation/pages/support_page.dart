@@ -47,7 +47,7 @@ class _SupportPageState extends State<SupportPage> {
     if (text.isEmpty) {
       showWelmiSnackbar(
         context,
-        AppLocalizations.of(context)!.enterNameAndCalories,
+        AppLocalizations.of(context)!.feedbackEmptyMessage,
         icon: Icons.info_outline,
       );
       return;
@@ -55,12 +55,8 @@ class _SupportPageState extends State<SupportPage> {
 
     setState(() => _isSending = true);
 
-    // Получаем имя пользователя
-    final userName = AuthService().displayName ?? 'User';
-
     final result = await _feedbackService.sendFeedback(
       message: text,
-      userName: userName,
       category: _selectedCategory,
     );
 
@@ -76,19 +72,25 @@ class _SupportPageState extends State<SupportPage> {
         icon: Icons.check_circle,
       );
     } else {
-      // Сохранено локально даже если Telegram недоступен
-      _feedbackController.clear();
-      showWelmiSnackbar(
-        context,
-        '${AppLocalizations.of(context)!.thankYouFeedback}\n${result.error ?? ""}',
-        icon: Icons.send_outlined,
-      );
+      final loc = AppLocalizations.of(context)!;
+      final errorMessage = switch (result.error) {
+        'too_long' => loc.feedbackMessageTooLong,
+        'session' => loc.feedbackSessionError,
+        'rate_limit' => loc.feedbackRateLimitError,
+        'function_missing' => loc.feedbackFunctionMissing,
+        'secrets' => loc.feedbackSecretsMissing,
+        'telegram' => loc.feedbackTelegramError,
+        'function' => loc.feedbackFunctionError,
+        'network' => loc.feedbackNetworkError,
+        _ => loc.feedbackSendError,
+      };
+      showWelmiSnackbar(context, errorMessage, icon: Icons.error_outline);
     }
   }
 
   // ─── Открыть Telegram ────────────────────────────────────
   Future<void> _openTelegram() async {
-    final username = 'welmi_support';
+    const username = 'welmi_support';
     // Пробуем открыть Telegram напрямую
     final telegramUri = Uri.parse('tg://resolve?domain=$username');
     final webUri = Uri.parse('https://t.me/$username');
@@ -106,7 +108,8 @@ class _SupportPageState extends State<SupportPage> {
     final email = Uri(
       scheme: 'mailto',
       path: 'support@welmi.app',
-      query: 'subject=${Uri.encodeComponent('Welmi Support — $userName')}&body=${Uri.encodeComponent('Hello Welmi team,\n\n')}',
+      query:
+          'subject=${Uri.encodeComponent('Welmi Support — $userName')}&body=${Uri.encodeComponent('Hello Welmi team,\n\n')}',
     );
 
     if (await canLaunchUrl(email)) {
@@ -142,12 +145,14 @@ class _SupportPageState extends State<SupportPage> {
                     onTap: () => Navigator.pop(context),
                     child: Icon(Icons.arrow_back, size: 28, color: textColor),
                   ),
-                  Text(AppLocalizations.of(context)!.supportTitle,
+                  Text(
+                    AppLocalizations.of(context)!.supportTitle,
                     style: GoogleFonts.notoSerif(
                       fontWeight: FontWeight.w900,
                       fontSize: 20,
                       color: textColor,
-                    )),
+                    ),
+                  ),
                   const SizedBox(width: 28),
                 ],
               ),
@@ -184,8 +189,14 @@ class _SupportPageState extends State<SupportPage> {
               const SizedBox(height: 24),
 
               // FAQ
-              Text(AppLocalizations.of(context)!.faq,
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: textColor)),
+              Text(
+                AppLocalizations.of(context)!.faq,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: textColor,
+                ),
+              ),
               const SizedBox(height: 16),
 
               ..._faq.asMap().entries.map((entry) {
@@ -197,21 +208,31 @@ class _SupportPageState extends State<SupportPage> {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isExpanded
-                      ? AppColors.iconGreen.withValues(alpha:0.3)
-                      : Colors.transparent),
+                    border: Border.all(
+                      color: isExpanded
+                          ? AppColors.iconGreen.withValues(alpha: 0.3)
+                          : Colors.transparent,
+                    ),
                   ),
                   child: Column(
                     children: [
                       GestureDetector(
-                        onTap: () => setState(() => _expandedFaq = isExpanded ? null : i),
+                        onTap: () => setState(
+                          () => _expandedFaq = isExpanded ? null : i,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
                               Expanded(
-                                child: Text(item['q']!, style: TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 14, color: textColor)),
+                                child: Text(
+                                  item['q']!,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: textColor,
+                                  ),
+                                ),
                               ),
                               AnimatedRotation(
                                 turns: isExpanded ? 0.5 : 0,
@@ -226,10 +247,18 @@ class _SupportPageState extends State<SupportPage> {
                         firstChild: const SizedBox(),
                         secondChild: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: Text(item['a']!, style: TextStyle(
-                            color: textSecondary, fontSize: 13, height: 1.5)),
+                          child: Text(
+                            item['a']!,
+                            style: TextStyle(
+                              color: textSecondary,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                        crossFadeState: isExpanded
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
                         duration: const Duration(milliseconds: 200),
                       ),
                     ],
@@ -249,11 +278,23 @@ class _SupportPageState extends State<SupportPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.feedback,
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: textColor)),
+                    Text(
+                      AppLocalizations.of(context)!.feedback,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(AppLocalizations.of(context)!.feedbackSubtitle,
-                      style: TextStyle(color: textHint, fontSize: 12, fontWeight: FontWeight.w500)),
+                    Text(
+                      AppLocalizations.of(context)!.feedbackSubtitle,
+                      style: TextStyle(
+                        color: textHint,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // ─── Категория ───
@@ -286,23 +327,35 @@ class _SupportPageState extends State<SupportPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: buttonColor,
                           foregroundColor: buttonTextColor,
-                          disabledBackgroundColor: buttonColor.withValues(alpha: 0.5),
+                          disabledBackgroundColor: buttonColor.withValues(
+                            alpha: 0.5,
+                          ),
                           minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           elevation: 0,
                         ),
                         child: _isSending
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white70,
+                                ),
                               )
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Icon(Icons.send_outlined, size: 16),
                                   const SizedBox(width: 8),
-                                  Text(AppLocalizations.of(context)!.send, style: TextStyle(fontWeight: FontWeight.bold)),
+                                  Text(
+                                    AppLocalizations.of(context)!.send,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ],
                               ),
                       ),
@@ -321,10 +374,18 @@ class _SupportPageState extends State<SupportPage> {
   // ─── Выбор категории ────────────────────────────────────
   Widget _buildCategoryPicker(bool isDark, Color textColor, Color textHint) {
     final categories = [
-      {'key': 'feedback', 'icon': Icons.chat_bubble_outline, 'label': AppLocalizations.of(context)!.feedback},
+      {
+        'key': 'feedback',
+        'icon': Icons.chat_bubble_outline,
+        'label': AppLocalizations.of(context)!.feedback,
+      },
       {'key': 'bug', 'icon': Icons.bug_report_outlined, 'label': 'Bug'},
       {'key': 'idea', 'icon': Icons.lightbulb_outline, 'label': 'Idea'},
-      {'key': 'support', 'icon': Icons.help_outline, 'label': AppLocalizations.of(context)!.supportTitle},
+      {
+        'key': 'support',
+        'icon': Icons.help_outline,
+        'label': AppLocalizations.of(context)!.supportTitle,
+      },
     ];
 
     return Wrap(
@@ -343,7 +404,9 @@ class _SupportPageState extends State<SupportPage> {
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.iconGreen.withValues(alpha: 0.15)
-                  : (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF9F7F2)),
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : const Color(0xFFF9F7F2)),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected ? AppColors.iconGreen : Colors.transparent,
@@ -353,15 +416,20 @@ class _SupportPageState extends State<SupportPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(cat['icon'] as IconData, size: 14,
-                  color: isSelected ? AppColors.iconGreen : textHint),
+                Icon(
+                  cat['icon'] as IconData,
+                  size: 14,
+                  color: isSelected ? AppColors.iconGreen : textHint,
+                ),
                 const SizedBox(width: 6),
-                Text(cat['label'] as String,
+                Text(
+                  cat['label'] as String,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: isSelected ? AppColors.iconGreen : textHint,
-                  )),
+                  ),
+                ),
               ],
             ),
           ),
@@ -370,11 +438,18 @@ class _SupportPageState extends State<SupportPage> {
     );
   }
 
-  Widget _buildContactCard(IconData icon, String title, String subtitle, bool isDark) {
+  Widget _buildContactCard(
+    IconData icon,
+    String title,
+    String subtitle,
+    bool isDark,
+  ) {
     final cardColor = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : Colors.black;
     final textHint = isDark ? AppColors.darkTextHint : Colors.black38;
-    final iconBg = isDark ? Colors.white.withValues(alpha:0.05) : AppColors.accentGreen;
+    final iconBg = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : AppColors.accentGreen;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -385,7 +460,8 @@ class _SupportPageState extends State<SupportPage> {
       child: Column(
         children: [
           Container(
-            width: 48, height: 48,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: iconBg,
               borderRadius: BorderRadius.circular(16),
@@ -393,9 +469,23 @@ class _SupportPageState extends State<SupportPage> {
             child: Icon(icon, color: AppColors.iconGreen, size: 24),
           ),
           const SizedBox(height: 12),
-          Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: textColor)),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              color: textColor,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: textHint, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: textHint,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

@@ -48,8 +48,20 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   }
 
   Future<bool> _ensurePermission() async {
-    if (await _service.checkPermissions()) return true;
+    // Сначала проверяем разрешение на уведомления.
+    if (await _service.checkPermissions()) {
+      // Разрешение уже есть — обновляем режим планирования и перепланируем,
+      // чтобы уведомления сработали с правильным режимом (exact или inexact).
+      await _service.ensureExactAlarmsPermission();
+      if (mounted) setState(() => _permissionGranted = true);
+      return true;
+    }
+    // Разрешение ещё не выдано — просим у пользователя.
     final granted = await _service.requestPermissions();
+    if (granted) {
+      // После получения разрешения обновляем режим и перепланируем напоминания.
+      await _service.ensureExactAlarmsPermission();
+    }
     if (mounted) setState(() => _permissionGranted = granted);
     return granted;
   }
@@ -82,6 +94,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           }
           return;
         }
+        // Разрешение на точные будильники уже запрошено в _ensurePermission().
         await _service.setMasterEnabled(
           value,
           waterGoalReached: _waterGoalReached,

@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/auth_service.dart';
+import 'package:lumina/core/services/units_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
-import 'package:lumina/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:lumina/core/widgets/logout_flow.dart';
+import 'package:lumina/core/widgets/units_format.dart';
+import 'package:lumina/core/widgets/units_picker_sheet.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:lumina/features/profile/presentation/pages/subscription_page.dart';
+import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/features/settings/presentation/pages/settings_page.dart';
 import 'package:lumina/features/support/presentation/pages/support_page.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
@@ -34,66 +39,43 @@ class _ProfilePageState extends State<ProfilePage> {
     if (mounted) setState(() => _isLoading = false);
   }
 
-  void _showUnitsSettings(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        String selectedUnit = 'Метрические (кг, см)';
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Единицы измерения',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    title: const Text('Метрические (кг, см)'),
-                    trailing: selectedUnit == 'Метрические (кг, см)'
-                        ? const Icon(Icons.check, color: Colors.black)
-                        : null,
-                    onTap: () => setSheetState(() => selectedUnit = 'Метрические (кг, см)'),
-                  ),
-                  ListTile(
-                    title: const Text('Имперские (фунты, футы)'),
-                    trailing: selectedUnit == 'Имперские (фунты, футы)'
-                        ? const Icon(Icons.check, color: Colors.black)
-                        : null,
-                    onTap: () => setSheetState(() => selectedUnit = 'Имперские (фунты, футы)'),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  Future<void> _showUnitsSettings() async {
+    hapticTap();
+    final system = await showUnitsPickerSheet(context);
+    if (system == null) return;
+    await applyUnitSystem(system);
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // Значения считаются внутри builder: раньше они вычислялись один раз
+    // снаружи ListenableBuilder и не обновлялись после загрузки данных.
+    return ListenableBuilder(
+      listenable: Listenable.merge([_userData, UnitsService.instance]),
+      builder: (context, _) => _buildPage(context),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final auth = AuthService();
     // Приоритет — сохранённому профилю (имя/фото можно менять в редактировании)
     final profile = _userData.profile;
     final name = profile?.displayName ?? auth.displayName ?? 'Пользователь';
-    final email = auth.email ?? 'email@example.com';
+    final email = auth.email;
     final photoUrl = profile?.photoUrl ?? auth.photoUrl;
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
-    // Real data from Supabase
-    final currentWeight = _userData.latestWeight ?? 72.0;
-    final targetWeight = _userData.goalWeight ?? 70.0;
-    final weightDiff = (currentWeight - targetWeight).abs();
-    final isLosing = targetWeight < currentWeight;
-    final weightDiffStr = weightDiff.toStringAsFixed(1);
+    // Только реальные данные: без записей веса цель не показываем,
+    // а не подставляем выдуманные 72 → 70 кг.
+    final currentWeight = _userData.latestWeight;
+    final targetWeight = _userData.goalWeight;
+    final hasWeightGoal = currentWeight != null && targetWeight != null;
+    final weightDiff =
+        hasWeightGoal ? (currentWeight - targetWeight).abs() : 0.0;
+    final isLosing = hasWeightGoal && targetWeight < currentWeight;
 
     return Scaffold(
       backgroundColor: tc.background,
@@ -180,8 +162,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     Text(name,
                         style: GoogleFonts.notoSerif(
                             fontSize: 22, fontWeight: FontWeight.w900, color: tc.text)),
-                    Text(email,
-                        style: TextStyle(color: tc.textHint, fontSize: 12)),
+                    if (email != null && email.isNotEmpty)
+                      Text(email,
+                          style: TextStyle(color: tc.textHint, fontSize: 12)),
                     const SizedBox(height: 40),
                     // Weight Goal Card — реальные данные из Supabase
                     Container(
@@ -196,19 +179,25 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text('Цель веса',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: tc.text)),
                           const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildWeightInfo('Текущий', '${currentWeight.toStringAsFixed(1)} кг', tc),
-                              _buildWeightInfo(
-                                isLosing ? 'Осталось сбросить' : 'Осталось набрать',
-                                '$weightDiffStr кг',
-                                tc,
-                                isHighlight: true,
-                              ),
-                              _buildWeightInfo('Целевой', '${targetWeight.toStringAsFixed(1)} кг', tc),
-                            ],
-                          ),
+                          if (!hasWeightGoal)
+                            Text(
+                              loc.aiInsightStartTracking,
+                              style: TextStyle(fontSize: 13, color: tc.textSecondary),
+                            )
+                          else
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildWeightInfo('Текущий', loc.formatWeight(currentWeight), tc),
+                                _buildWeightInfo(
+                                  isLosing ? 'Осталось сбросить' : 'Осталось набрать',
+                                  loc.formatWeight(weightDiff),
+                                  tc,
+                                  isHighlight: true,
+                                ),
+                                _buildWeightInfo('Целевой', loc.formatWeight(targetWeight), tc),
+                              ],
+                            ),
                         ],
                       ),
                     ),
@@ -220,14 +209,25 @@ class _ProfilePageState extends State<ProfilePage> {
                       Navigator.push(
                           context, smoothPageRoute(const SettingsPage()));
                     }),
-                    _buildProfileItem(Icons.straighten_outlined, 'Единицы измерения', tc,
-                        onTap: () => _showUnitsSettings(context)),
-                    _buildProfileItem(Icons.star_outline, 'Подписка', tc,
-                        trailing: 'PRO', onTap: () {
-                      hapticTap();
-                      Navigator.push(
-                          context, smoothPageRoute(const SubscriptionPage()));
-                    }),
+                    _buildProfileItem(Icons.straighten_outlined, loc.measurementUnits, tc,
+                        trailing: '${loc.weightUnitLabel} · ${loc.distanceUnitLabel}',
+                        onTap: _showUnitsSettings),
+                    AnimatedBuilder(
+                      animation: SubscriptionService.instance,
+                      builder: (context, _) => _buildProfileItem(
+                        Icons.star_outline,
+                        'Подписка',
+                        tc,
+                        trailing: SubscriptionService.instance.state.isPremium
+                            ? 'Активна'
+                            : 'Выбрать',
+                        onTap: () {
+                          hapticTap();
+                          Navigator.push(context,
+                              smoothPageRoute(const SubscriptionPage()));
+                        },
+                      ),
+                    ),
                     _buildProfileItem(Icons.help_outline, 'Поддержка', tc,
                         onTap: () {
                           hapticTap();
@@ -236,40 +236,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         }),
                     const SizedBox(height: 40),
                     TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Выйти'),
-                            content: const Text('Вы уверены, что хотите выйти?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Отмена'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  _userData.reset();
-                                  await AuthService().signOut();
-                                  if (context.mounted) {
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                        builder: (context) => const OnboardingPage(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  }
-                                },
-                                child: const Text('Выйти',
-                                    style: TextStyle(color: Colors.redAccent)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: const Text('Выйти',
-                          style: TextStyle(
+                      onPressed: () => confirmAndSignOut(context),
+                      child: Text(loc.drawerLogout,
+                          style: const TextStyle(
                               color: Colors.redAccent, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(height: 100),

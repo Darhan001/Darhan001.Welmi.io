@@ -66,11 +66,13 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
       } else {
         timer.cancel();
         HapticFeedback.vibrate();
-        if (mounted) showWelmiSnackbar(
+        if (mounted) {
+          showWelmiSnackbar(
           context,
           AppLocalizations.of(context)!.restFinished,
           icon: Icons.notifications_active,
         );
+        }
       }
     });
   }
@@ -166,6 +168,8 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
       ),
     );
 
+    // Экран могли закрыть, пока открыт выбор замены.
+    if (!mounted) return;
     if (selected != null && selected != _exercise.name) {
       HapticFeedback.mediumImpact();
       setState(() {

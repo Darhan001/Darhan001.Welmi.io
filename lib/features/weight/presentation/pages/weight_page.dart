@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
-import 'package:lumina/core/widgets/ux_helpers.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/widgets/app_snackbar.dart';
+import 'package:lumina/core/widgets/units_format.dart';
+import 'package:lumina/features/weight/presentation/widgets/record_weight_sheet.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 class WeightPage extends StatefulWidget {
@@ -38,107 +41,19 @@ class _WeightPageState extends State<WeightPage>
     if (mounted) setState(() {});
   }
 
-  void _showRecordWeightDialog(ThemeColors tc) {
-    final current = _userData.latestWeight ?? 70.0;
-    final controller = TextEditingController(text: current.toStringAsFixed(1));
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 32,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
-          ),
-          decoration: BoxDecoration(
-            color: tc.card,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: tc.divider,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
-              const SizedBox(height: 24),               Text(AppLocalizations.of(context)!.recordWeight,
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: tc.text)),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 140,
-                    child: TextField(
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      controller: controller,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: tc.text),
-                      decoration: InputDecoration(
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: tc.divider)),
-                        focusedBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Color(0xFF75A47F), width: 2)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('кг',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: tc.textHint)),
-                ],
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final weight = double.tryParse(controller.text);
-                    if (weight != null && weight > 0) {
-                      hapticSuccess();
-                      await _userData.saveWeight(weight);
-                      if (mounted) {
-                        Navigator.pop(ctx);
-                        _chartController.reset();
-                        _chartController.forward();
-                        setState(() {});
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tc.primary,
-                    foregroundColor: tc.textOnPrimary,
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),                   child: Text(AppLocalizations.of(context)!.save,
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  Future<void> _showRecordWeightDialog() async {
+    final loc = AppLocalizations.of(context)!;
+    final saved = await showRecordWeightSheet(
+      context,
+      initialKg: _userData.latestWeight,
+      onSave: _userData.saveWeight,
     );
+    if (!saved || !mounted) return;
+    _chartController
+      ..reset()
+      ..forward();
+    setState(() {});
+    AppSnackbar.success(context, loc.weightSaved);
   }
 
   @override
@@ -146,7 +61,8 @@ class _WeightPageState extends State<WeightPage>
     final tc = ThemeColors.of(context);
 
     return ListenableBuilder(
-      listenable: _userData,
+      // Единицы могут смениться в настройках, пока экран жив в IndexedStack.
+      listenable: Listenable.merge([_userData, UnitsService.instance]),
       builder: (context, _) {
         final currentWeight = _userData.latestWeight ?? 0.0;
         final startWeight = _userData.startWeight ?? currentWeight;
@@ -184,7 +100,7 @@ class _WeightPageState extends State<WeightPage>
                               fontSize: 18,
                               color: tc.text)),
                       GestureDetector(
-                        onTap: () => _showRecordWeightDialog(tc),
+                        onTap: () => _showRecordWeightDialog(),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -248,7 +164,7 @@ class _WeightPageState extends State<WeightPage>
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [               _buildInfo(tc, AppLocalizations.of(context)!.startWeight, '${start.toStringAsFixed(1)} кг'),
+            children: [               _buildInfo(tc, AppLocalizations.of(context)!.startWeight, AppLocalizations.of(context)!.formatWeight(start)),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -270,7 +186,9 @@ class _WeightPageState extends State<WeightPage>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${loss >= 0 ? '' : '+'}${loss.toStringAsFixed(1)} кг',
+                      // Направление показывает стрелка рядом, поэтому выводим модуль:
+                      // раньше при наборе веса получалось «+-1.2 кг».
+                      AppLocalizations.of(context)!.formatWeight(loss.abs()),
                       style: TextStyle(
                         color: loss > 0
                             ? const Color(0xFF75A47F)
@@ -281,7 +199,7 @@ class _WeightPageState extends State<WeightPage>
                     ),
                   ],
                 ),
-              ),               _buildInfo(tc, AppLocalizations.of(context)!.goalWeight, '${goal.toStringAsFixed(1)} кг'),
+              ),               _buildInfo(tc, AppLocalizations.of(context)!.goalWeight, AppLocalizations.of(context)!.formatWeight(goal)),
             ],
           ),
           const SizedBox(height: 24),
@@ -308,10 +226,10 @@ class _WeightPageState extends State<WeightPage>
                 widthFactor: progress,
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        const Color(0xFF75A47F),
-                        const Color(0xFF4A8C5C)
+                        Color(0xFF75A47F),
+                        Color(0xFF4A8C5C)
                       ],
                     ),
                     borderRadius: BorderRadius.circular(3),
@@ -320,9 +238,9 @@ class _WeightPageState extends State<WeightPage>
               ),
             ),
             const SizedBox(height: 6),               Text(AppLocalizations.of(context)!.percentToGoal((progress * 100).toStringAsFixed(0)),
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 10,
-                    color: const Color(0xFF75A47F),
+                    color: Color(0xFF75A47F),
                     fontWeight: FontWeight.w700)),
           ],
         ],
@@ -455,7 +373,7 @@ class _WeightPageState extends State<WeightPage>
             ),
           ),
           Text(
-            '${weeklyChange >= 0 ? '+' : ''}${weeklyChange.toStringAsFixed(1)} кг',
+            AppLocalizations.of(context)!.formatWeight(weeklyChange, signed: true),
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w900,
@@ -488,11 +406,11 @@ class _WeightPageState extends State<WeightPage>
     return Row(
       children: [
         Expanded(
-            child: _buildMiniStat(                 tc, AppLocalizations.of(context)!.weightLost, '${loss.toStringAsFixed(1)} кг',
+            child: _buildMiniStat(                 tc, AppLocalizations.of(context)!.weightLost, AppLocalizations.of(context)!.formatWeight(loss),
                 Icons.trending_down, const Color(0xFF75A47F))),
         const SizedBox(width: 12),
         Expanded(
-            child: _buildMiniStat(                 tc, AppLocalizations.of(context)!.weightToGoal, '${toGoal.toStringAsFixed(1)} кг',
+            child: _buildMiniStat(                 tc, AppLocalizations.of(context)!.weightToGoal, AppLocalizations.of(context)!.formatWeight(toGoal.toDouble()),
                 Icons.flag_rounded, Colors.orange)),
       ],
     );
@@ -564,7 +482,7 @@ class WeightChartPainter extends CustomPainter {
 
     // Padding
     const leftPad = 0.0;
-    final rightPad = 0.0;
+    const rightPad = 0.0;
     final chartWidth = size.width - leftPad - rightPad;
 
     // Grid lines

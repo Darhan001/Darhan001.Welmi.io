@@ -35,7 +35,7 @@ class SubscriptionStep extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Попробуй бесплатно 7 дней.\nОтмена в любой момент.',
+            'Открой Premium-планы.\nУсловия и цену покажет магазин.',
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: tc.textSecondary, fontSize: 14, height: 1.4),
@@ -80,11 +80,6 @@ class SubscriptionStep extends StatelessWidget {
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: tc.textSecondary)),
-                      Text('-60%',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.red.withValues(alpha: 0.6),
-                              fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -101,12 +96,12 @@ class SubscriptionStep extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30)),
             ),
-            child: const Text('Начать бесплатный период',
+            child: const Text('Посмотреть планы',
                 style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 16),
           Text(
-            'Оплата спишется автоматически за 24 часа до конца пробного периода. Отмените в настройках, если не желаете продлевать. Условия и политика конфиденциальности.',
+            'Оплата проходит через App Store или Google Play. Управлять автопродлением можно в настройках магазина.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 10, color: tc.textHint, height: 1.3),
           ),

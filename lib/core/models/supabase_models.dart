@@ -4,6 +4,7 @@
 /// Эти модели соответствуют таблицам в Supabase.
 /// После подключения Supabase, данные будут сериализоваться
 /// через .fromJson() / .toJson() для работы с Supabase API.
+library;
 
 import 'dart:convert';
 

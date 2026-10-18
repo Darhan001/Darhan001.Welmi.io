@@ -105,7 +105,7 @@ class AppLocalizationsKy extends AppLocalizations {
   String get drawerMyGoals => 'Менин максаттарым';
 
   @override
-  String get drawerMealPlan => 'Тамак-аш планы';
+  String get drawerMealPlan => 'Рецепттер';
 
   @override
   String get drawerActivityHistory => 'Активдүүлүк тарыхы';
@@ -224,6 +224,21 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get imperialUnits => 'Империялык (фунт, миль)';
+
+  @override
+  String get unitCm => 'см';
+
+  @override
+  String get unitKg => 'кг';
+
+  @override
+  String get unitLb => 'lb';
+
+  @override
+  String get unitKm => 'км';
+
+  @override
+  String get unitMi => 'mi';
 
   @override
   String get widgetTitle => 'Виджет';
@@ -455,7 +470,7 @@ class AppLocalizationsKy extends AppLocalizations {
       'Сүйлөөнү таануу мүмкүн болгон жок. Кайра аракет кылыңыз.';
 
   @override
-  String get mealPlanTitle => 'Тамак-аш планы';
+  String get mealPlanTitle => 'Рецепттер';
 
   @override
   String get whereDoYouLive => 'Кайда жашайсыз?';
@@ -816,7 +831,7 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String goalTargetWeight(Object weight) {
-    return '$weight кг — максат';
+    return '$weight — максат';
   }
 
   @override
@@ -988,47 +1003,18 @@ class AppLocalizationsKy extends AppLocalizations {
   String get notificationsPageTitle => 'Эскертүүлөр';
 
   @override
-  String get inbox => 'Кирүүчү';
+  String get notifOpenSettings => 'Эскертмелерди жөндөө';
 
   @override
-  String get markAllRead => 'Бардыгын окуу';
+  String get notifTurnOnHint =>
+      'Колдонмо суу, тамак жана активдүүлүк жөнүндө эскертиши үчүн билдирмелерди күйгүзүңүз.';
 
   @override
-  String get notifWaterReminder => 'Суу ичүү убагы келди!';
+  String get notifNoReminders => 'Бардык эскертмелер өчүк';
 
   @override
-  String get notifWaterSubtitle => 'Сиз күнүмдүк норманын 60% ичтиңиз';
-
-  @override
-  String get notifLunchReminder => 'Түшкү тамак убагы';
-
-  @override
-  String get notifLunchSubtitle => 'Тамак-ашты жазууну унутпаңыз';
-
-  @override
-  String get notifWeightResult => 'Жаңы натыйжа!';
-
-  @override
-  String get notifWeightSubtitle => 'Сиздин салмак 0.4 кг түштү';
-
-  @override
-  String get notifMotivation => 'Күнүмдүк мотивация';
-
-  @override
-  String get notifMotivationSubtitle =>
-      'Кичинекей кадамдар чоң натыйжаларга алып келет';
-
-  @override
-  String get notif15MinAgo => '15 мүн мурун';
-
-  @override
-  String get notif2HoursAgo => '2 саат мурун';
-
-  @override
-  String get notif1DayAgo => '1 күн мурун';
-
-  @override
-  String get notif2DaysAgo => '2 күн мурун';
+  String get notifScheduleHint =>
+      'Күнүмдүк эскертмелердин графиги. Убакытты өзгөртүү үчүн эскертмени басыңыз.';
 
   @override
   String get editProfileTitle => 'Түзөтүү';
@@ -1058,10 +1044,10 @@ class AppLocalizationsKy extends AppLocalizations {
   String get heightCm => 'Бийиктик (см)';
 
   @override
-  String get currentWeightLabel => 'Азыркы салмак (кг)';
+  String get currentWeightLabel => 'Азыркы салмак';
 
   @override
-  String get targetWeight => 'Максат салмак (кг)';
+  String get targetWeight => 'Максат салмак';
 
   @override
   String get tapPhotoToChange => 'Сүрөттү өзгөртүү үчүн басыңыз';
@@ -1695,4 +1681,122 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get securityTitle => 'Коопсуздук';
+
+  @override
+  String get feedbackEmptyMessage => 'Жөнөтүүдөн мурун билдирүү жазыңыз.';
+
+  @override
+  String get feedbackMessageTooLong =>
+      'Билдирүү өтө узун. Максималдуу узундугу — 3000 белги.';
+
+  @override
+  String get feedbackSessionError =>
+      'Сессияны текшерүү мүмкүн болгон жок. Тиркемени кайра ачып көрүңүз.';
+
+  @override
+  String get feedbackRateLimitError =>
+      'Өтө көп суроо-талап. Бир аз күтүп, кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackSendError =>
+      'Билдирүү жөнөтүлгөн жок. Интернетти текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackFunctionMissing =>
+      'Пикир билдирүү кызматы жарыялана элек. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackSecretsMissing =>
+      'Пикир билдирүү кызматы орнотулган эмес. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackTelegramError =>
+      'Telegram билдирүүнү жеткире алган жок. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackFunctionError =>
+      'Пикир билдирүү кызматы убактылуу жеткиликсиз. Кийин кайра аракет кылыңыз.';
+
+  @override
+  String get feedbackNetworkError =>
+      'Кызматка туташуу мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get voiceErrorNoInternet =>
+      'Интернет жок. Үндү таануу үчүн интернет керек.';
+
+  @override
+  String get voiceErrorUnavailable =>
+      'Үн таануу азыр жеткиликсиз. Кийинчерээк аракет кылыңыз.';
+
+  @override
+  String get voiceErrorRecord =>
+      'Жазууну баштоо мүмкүн болгон жок. Кайра аракет кылыңыз.';
+
+  @override
+  String get voiceErrorPermissionSettings =>
+      'Микрофонго уруксат жок. Телефондун жөндөөлөрүндө уруксат бериңиз.';
+
+  @override
+  String get ttsPlay => 'Угуу';
+
+  @override
+  String get ttsStop => 'Токтотуу';
+
+  @override
+  String get ttsReplay => 'Кайра угуу';
+
+  @override
+  String get ttsVoiceSettings => 'Үн';
+
+  @override
+  String get ttsVoiceDefault => 'Демейки үн';
+
+  @override
+  String get ttsVoicesEmpty =>
+      'Бул түзмөктө бул тил үчүн үн жок. Тутум жөндөөлөрүнөн үн кошуңуз.';
+
+  @override
+  String get ttsErrorUnavailable => 'Бул түзмөктө үн ойнотуу жеткиликсиз.';
+
+  @override
+  String get aiErrorUnavailable =>
+      'AI-жардамчы жооп берген жок. Туташууңузду текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get voiceFoodNotRecognized =>
+      'Продуктууларды аныктоо мүмкүн болгон жок. Кайра аракет кылыңыз.';
+
+  @override
+  String get voiceFoodAnalysisError =>
+      'Продуктуларды талдоодо ката кетти. Кайра аракет кылыңыз.';
+
+  @override
+  String get weightInvalid => 'Туура салмакты киргизиңиз';
+
+  @override
+  String get weightSaveError =>
+      'Салмакты сактоо мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get weightSaved => 'Салмак сакталды';
+
+  @override
+  String get saveError =>
+      'Сактоо мүмкүн болгон жок. Интернетти текшерип, кайра аракет кылыңыз.';
+
+  @override
+  String get signInRequired => 'Маалыматтарды сактоо үчүн аккаунтка кириңиз';
+
+  @override
+  String get navHome => 'Башкы бет';
+
+  @override
+  String get navScanner => 'Тамак сканери';
+
+  @override
+  String get navProfile => 'Профиль';
+
+  @override
+  String get heightInvalid => 'Боюңузду 100дөн 250 смге чейин киргизиңиз';
 }

@@ -90,6 +90,11 @@
          RECEIVE_BOOT_COMPLETED — восстановление расписания после перезагрузки;
          VIBRATE и WAKE_LOCK — вибрация и пробуждение устройства для показа. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Точные будильники (Android 12+): без этого разрешения системные
+         OEM-прошивки часто откладывают/убивают inexact-будильники, и
+         напоминания по расписанию не приходят. Разрешение запрашивается
+         в рантайме через NotificationService.requestPermissions(). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -116,6 +121,9 @@
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
         <package android:name="com.google.android.apps.healthdata" />
     </queries>

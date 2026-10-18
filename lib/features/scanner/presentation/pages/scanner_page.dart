@@ -636,8 +636,8 @@ class _ScannerPageState extends State<ScannerPage>
                       fontWeight: FontWeight.w900,
                       color: Colors.black87)),
               const SizedBox(width: 6),
-              Text('ккал',
-                  style: const TextStyle(
+              const Text('ккал',
+                  style: TextStyle(
                       fontSize: 18,
                       color: Colors.black38,
                       fontWeight: FontWeight.w700)),
