@@ -19,6 +19,7 @@ import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/services/biometric_service.dart';
 import 'package:lumina/core/services/widget_service.dart';
 import 'package:lumina/core/services/health_sync_service.dart';
+import 'package:lumina/core/services/units_service.dart';
 import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/core/theme/app_theme.dart';
 import 'package:lumina/core/theme/theme_provider.dart';
@@ -76,6 +77,9 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrapApp() async {
+  // Локальная настройка: загружаем до первого кадра, чтобы вес сразу
+  // показывался в выбранных единицах.
+  await UnitsService.instance.load();
   try {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
     await SupabaseService().initialize();
@@ -185,7 +189,7 @@ class WelmiApp extends StatefulWidget {
   State<WelmiApp> createState() => _WelmiAppState();
 }
 
-class _WelmiAppState extends State<WelmiApp> {
+class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
   final AuthService _auth = AuthService();
   final BiometricService _biometric = BiometricService();
   static const String _themeModeKey = 'theme_mode';
@@ -199,6 +203,7 @@ class _WelmiAppState extends State<WelmiApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadThemeMode();
     _checkAuthState();
 
@@ -232,6 +237,29 @@ class _WelmiAppState extends State<WelmiApp> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Возвращаясь в приложение, заново ставим напоминания в AlarmManager:
+  /// некоторые прошивки сбрасывают будильники при агрессивном энергосбережении,
+  /// а пользователь мог выдать разрешение в системных настройках.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || kIsWeb) return;
+    if (!_auth.isSignedIn) return;
+    if (_isLocked) return;
+    // На холодном старте инициализация ещё может идти — расписание
+    // восстановит сама _bootstrapApp(), повторно инициализировать не нужно.
+    if (!NotificationService().isInitialized) return;
+    final tracker = DailyTracker();
+    final reached =
+        tracker.goalWaterMl > 0 && tracker.totalWaterMl >= tracker.goalWaterMl;
+    NotificationService().rescheduleAll(waterGoalReached: reached);
   }
 
   Future<void> _loadThemeMode() async {
@@ -269,6 +297,9 @@ class _WelmiAppState extends State<WelmiApp> {
 
     if (_auth.isSignedIn && _auth.userId != null) {
       await UserDataService().loadAll();
+      await UnitsService.instance.adoptFromProfile(
+        UserDataService().profile?.unitsSystem,
+      );
       await DailyTracker().loadToday();
 
       if (!kIsWeb) await PushNotificationService().registerTokenIfNeeded();

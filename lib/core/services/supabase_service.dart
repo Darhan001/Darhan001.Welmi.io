@@ -3,6 +3,7 @@
 /// ============================================================
 /// Все методы теперь делают реальные запросы к Supabase.
 /// RLS политики защищают данные — каждый видит только своё.
+library;
 
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,7 +93,7 @@ class SupabaseService {
     final path = '$userId/${DateTime.now().millisecondsSinceEpoch}.$ext';
     await client.storage
         .from('avatars')
-        .uploadBinary(path, bytes, fileOptions: FileOptions(upsert: true));
+        .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true));
     return client.storage.from('avatars').getPublicUrl(path);
   }
 

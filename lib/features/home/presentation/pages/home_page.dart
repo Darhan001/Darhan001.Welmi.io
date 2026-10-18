@@ -10,7 +10,6 @@ import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/onboarding/presentation/widgets/calculation_step.dart'
     show lastAiPlan;
-import 'package:lumina/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:lumina/features/diary/presentation/pages/diary_page.dart';
 import 'package:lumina/features/water/presentation/pages/water_page.dart';
 import 'package:lumina/features/weight/presentation/pages/weight_page.dart';
@@ -23,6 +22,8 @@ import 'package:lumina/features/notifications/presentation/pages/notifications_p
 import 'package:lumina/features/settings/presentation/pages/settings_page.dart';
 import 'package:lumina/features/support/presentation/pages/support_page.dart';
 import 'package:lumina/features/chat/presentation/pages/ai_chat_page.dart';
+import 'package:lumina/features/profile/domain/services/subscription_service.dart';
+import 'package:lumina/core/widgets/logout_flow.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
@@ -114,8 +115,9 @@ class _HomePageState extends State<HomePage> {
           color: tc.primary,
           backgroundColor: tc.card,
           child: SingleChildScrollView(
-            physics:
-                const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _isLoading ? _buildLoading(tc) : _buildContent(tc),
           ),
@@ -136,7 +138,9 @@ class _HomePageState extends State<HomePage> {
             Text(
               AppLocalizations.of(context)!.loadingData,
               style: TextStyle(
-                  color: tc.textSecondary, fontWeight: FontWeight.w600),
+                color: tc.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -149,7 +153,8 @@ class _HomePageState extends State<HomePage> {
     final goal = _tracker.goalCalories;
     final remaining = _tracker.remainingCalories;
     final progress = _tracker.calorieProgress;
-    final fullName = _userData.profile?.displayName ??
+    final fullName =
+        _userData.profile?.displayName ??
         AuthService().displayName ??
         AppLocalizations.of(context)!.guest;
     final firstName = fullName.trim().split(' ').first;
@@ -163,12 +168,15 @@ class _HomePageState extends State<HomePage> {
           builder: (context) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () {
+              // Зона нажатия 48×48 и подписи для экранного диктора: раньше
+              // колокольчик реагировал только на сами пиксели иконки.
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                onPressed: () {
                   hapticTap();
                   Scaffold.of(context).openDrawer();
                 },
-                child: Container(
+                icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: tc.primary,
@@ -180,16 +188,21 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'Welmi',
                 style: GoogleFonts.notoSerif(
-                    fontWeight: FontWeight.w900, fontSize: 20, color: tc.text),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  color: tc.text,
+                ),
               ),
-              GestureDetector(
-                onTap: () {
+              IconButton(
+                tooltip: AppLocalizations.of(context)!.notificationsPageTitle,
+                onPressed: () {
                   hapticTap();
-                  Navigator.push(context,
-                      smoothPageRoute(const NotificationsPage()));
+                  Navigator.push(
+                    context,
+                    smoothPageRoute(const NotificationsPage()),
+                  );
                 },
-                child: Icon(Icons.notifications_none,
-                    size: 28, color: tc.text),
+                icon: Icon(Icons.notifications_none, size: 28, color: tc.text),
               ),
             ],
           ),
@@ -197,18 +210,22 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 32),
 
         // ── Приветствие + совет ──
-        Text('${_greeting()}, $firstName!',
-            style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: tc.text)),
+        Text(
+          '${_greeting()}, $firstName!',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: tc.text,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           _dailyTip(progress, consumed, goal, remaining),
           style: TextStyle(
-              fontSize: 12,
-              color: tc.textSecondary,
-              fontWeight: FontWeight.w500),
+            fontSize: 12,
+            color: tc.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -220,9 +237,10 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: tc.shadow(0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8)),
+                color: tc.shadow(0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
             ],
           ),
           child: Column(
@@ -246,8 +264,8 @@ class _HomePageState extends State<HomePage> {
                             color: progress > 0.8
                                 ? tc.green
                                 : progress > 0.5
-                                    ? Colors.orange
-                                    : tc.primary,
+                                ? Colors.orange
+                                : tc.primary,
                             strokeCap: StrokeCap.round,
                           );
                         },
@@ -256,11 +274,14 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(AppLocalizations.of(context)!.remaining,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: tc.textSecondary,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          AppLocalizations.of(context)!.remaining,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: tc.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         Text(
                           '$remaining',
                           style: GoogleFonts.inter(
@@ -269,11 +290,15 @@ class _HomePageState extends State<HomePage> {
                             letterSpacing: -2,
                             color: tc.text,
                           ),
-                        ),                         Text(AppLocalizations.of(context)!.ofKcal(goal),
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: tc.textHint)),
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.ofKcal(goal),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: tc.textHint,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -284,9 +309,21 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildMacroPill(                       tc, AppLocalizations.of(context)!.protein, '${_tracker.totalProtein} / ${_tracker.goalProtein}г'),
-                  _buildMacroPill(                       tc, AppLocalizations.of(context)!.fat, '${_tracker.totalFat} / ${_tracker.goalFat}г'),                   _buildMacroPill(tc, AppLocalizations.of(context)!.carbs,
-                      '${_tracker.totalCarbs} / ${_tracker.goalCarbs}г'),
+                  _buildMacroPill(
+                    tc,
+                    AppLocalizations.of(context)!.protein,
+                    '${_tracker.totalProtein} / ${_tracker.goalProtein}г',
+                  ),
+                  _buildMacroPill(
+                    tc,
+                    AppLocalizations.of(context)!.fat,
+                    '${_tracker.totalFat} / ${_tracker.goalFat}г',
+                  ),
+                  _buildMacroPill(
+                    tc,
+                    AppLocalizations.of(context)!.carbs,
+                    '${_tracker.totalCarbs} / ${_tracker.goalCarbs}г',
+                  ),
                 ],
               ),
             ],
@@ -304,30 +341,38 @@ class _HomePageState extends State<HomePage> {
           childAspectRatio: 1.3,
           children: [
             _buildStatTile(
-              tc,               AppLocalizations.of(context)!.steps,
+              tc,
+              AppLocalizations.of(context)!.steps,
               _tracker.totalSteps > 0 ? '${_tracker.totalSteps}' : '—',
               Icons.directions_run,
               Colors.orange,
-              () => Navigator.push(context, smoothPageRoute(const ActivityPage())),
+              () => Navigator.push(
+                context,
+                smoothPageRoute(const ActivityPage()),
+              ),
             ),
             _buildStatTile(
-              tc,               AppLocalizations.of(context)!.water,
+              tc,
+              AppLocalizations.of(context)!.water,
               _formatWater(_tracker.totalWaterMl),
               Icons.water_drop,
               const Color(0xFF5EB5FF),
               () => Navigator.push(context, smoothPageRoute(const WaterPage())),
             ),
             _buildStatTile(
-              tc,               AppLocalizations.of(context)!.weight,
+              tc,
+              AppLocalizations.of(context)!.weight,
               _userData.latestWeight != null
                   ? _userData.latestWeight!.toStringAsFixed(1)
                   : '—',
               Icons.monitor_weight_outlined,
               const Color(0xFFC78BFF),
-              () => Navigator.push(context, smoothPageRoute(const WeightPage())),
+              () =>
+                  Navigator.push(context, smoothPageRoute(const WeightPage())),
             ),
             _buildStatTile(
-              tc,               AppLocalizations.of(context)!.goal,
+              tc,
+              AppLocalizations.of(context)!.goal,
               '${(progress * 100).clamp(0, 100).toInt()}%',
               Icons.flag_rounded,
               tc.green,
@@ -338,11 +383,14 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 32),
 
         // ── Сегодня съедено ──
-        Text(AppLocalizations.of(context)!.todayEaten,
-            style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
-                color: tc.text)),
+        Text(
+          AppLocalizations.of(context)!.todayEaten,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            color: tc.text,
+          ),
+        ),
         const SizedBox(height: 16),
         GestureDetector(
           onTap: () {
@@ -357,9 +405,10 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                    color: tc.shadow(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5)),
+                  color: tc.shadow(0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
@@ -371,26 +420,33 @@ class _HomePageState extends State<HomePage> {
                     color: tc.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.restaurant_rounded,
-                      size: 24, color: tc.green),
+                  child: Icon(
+                    Icons.restaurant_rounded,
+                    size: 24,
+                    color: tc.green,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.foodDiary,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                              color: tc.text)),
+                      Text(
+                        AppLocalizations.of(context)!.foodDiary,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          color: tc.text,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         '$consumed из $goal ккал · ${_tracker.totalProtein}г белка',
                         style: TextStyle(
-                            fontSize: 12,
-                            color: tc.textSecondary,
-                            fontWeight: FontWeight.w600),
+                          fontSize: 12,
+                          color: tc.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -420,9 +476,10 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                    color: tc.greenDark.withValues(alpha: 0.25),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8)),
+                  color: tc.greenDark.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
               ],
             ),
             child: Row(
@@ -433,30 +490,42 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded,
-                      size: 22, color: Colors.white),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 22,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.aiAssistant,
-                          style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 15,
-                              color: Colors.white)),
+                      Text(
+                        AppLocalizations.of(context)!.aiAssistant,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text(AppLocalizations.of(context)!.aiAssistantDesc,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.85),
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        AppLocalizations.of(context)!.aiAssistantDesc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios,
-                    size: 16, color: Colors.white.withValues(alpha: 0.9)),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
               ],
             ),
           ),
@@ -468,19 +537,20 @@ class _HomePageState extends State<HomePage> {
 
   String _formatWater(int ml) {
     if (ml <= 0) return '—';
-    return ml >= 1000
-        ? '${(ml / 1000).toStringAsFixed(1)}л'
-        : '$mlмл';
+    return ml >= 1000 ? '${(ml / 1000).toStringAsFixed(1)}л' : '$mlмл';
   }
 
   Widget _buildMacroPill(ThemeColors tc, String label, String value) {
     return Column(
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: tc.textHint)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: tc.textHint,
+          ),
+        ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -489,18 +559,27 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: tc.divider.withValues(alpha: 0.4)),
           ),
-          child: Text(value,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: tc.text)),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: tc.text,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatTile(ThemeColors tc, String label, String value,
-      IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildStatTile(
+    ThemeColors tc,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -510,9 +589,10 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: tc.shadow(0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4)),
+              color: tc.shadow(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Column(
@@ -530,8 +610,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Icon(icon, size: 18, color: color),
                 ),
-                Icon(Icons.arrow_forward_ios,
-                    size: 13, color: tc.textHint.withValues(alpha: 0.6)),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 13,
+                  color: tc.textHint.withValues(alpha: 0.6),
+                ),
               ],
             ),
             Column(
@@ -539,18 +622,24 @@ class _HomePageState extends State<HomePage> {
               children: [
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(value,
-                      style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: tc.text)),
+                  child: Text(
+                    value,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text,
+                    ),
+                  ),
                 ),
-                Text(label,
-                    style: TextStyle(
-                        fontSize: 10,
-                        color: tc.textHint,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.3)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: tc.textHint,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
               ],
             ),
           ],
@@ -565,7 +654,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawer(BuildContext context) {
     final tc = ThemeColors.of(context);
-    final fullName = _userData.profile?.displayName ??
+    final fullName =
+        _userData.profile?.displayName ??
         AuthService().displayName ??
         AppLocalizations.of(context)!.userDefault;
     final initial = fullName.trim().isNotEmpty
@@ -592,9 +682,10 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                         initial,
                         style: TextStyle(
-                            color: tc.textOnPrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold),
+                          color: tc.textOnPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -603,15 +694,23 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(fullName,
-                            style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                color: tc.text)),
-                        const SizedBox(height: 2),
-                        Text(AppLocalizations.of(context)!.welmiPremium,
-                            style: TextStyle(
-                                color: tc.greenDark, fontSize: 12)),
+                        Text(
+                          fullName,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: tc.text,
+                          ),
+                        ),
+                        // Статус Premium — только по серверному entitlement.
+                        // Раньше подпись «Welmi Premium» видели все.
+                        if (SubscriptionService.instance.state.isPremium) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            AppLocalizations.of(context)!.welmiPremium,
+                            style: TextStyle(color: tc.greenDark, fontSize: 12),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -624,39 +723,91 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
                   _drawerItem(
-                      context, Icons.fitness_center_rounded, AppLocalizations.of(context)!.drawerWorkouts, () {
-                    hapticTap();
-                    Navigator.push(
-                        context, smoothPageRoute(const WorkoutPage()));
-                  }),
-                  _drawerItem(context, Icons.auto_awesome_outlined, AppLocalizations.of(context)!.drawerMyGoals, () {
-                    hapticTap();
-                    Navigator.push(context, smoothPageRoute(const GoalPage()));
-                  }),
-                  _drawerItem(context, Icons.restaurant_menu_outlined, AppLocalizations.of(context)!.drawerMealPlan, () {
-                    hapticTap();
-                    Navigator.push(context, smoothPageRoute(const MealPlanPage()));
-                  }),
-                  _drawerItem(context, Icons.history_rounded, AppLocalizations.of(context)!.drawerActivityHistory, () {
-                    hapticTap();
-                    Navigator.push(context, smoothPageRoute(const ActivityHistoryPage()));
-                  }),
-                  _drawerItem(context, Icons.settings_outlined, AppLocalizations.of(context)!.drawerSettings, () {
-                    hapticTap();
-                    Navigator.push(context, smoothPageRoute(const SettingsPage()));
-                  }),
-                  _drawerItem(context, Icons.help_outline_rounded, AppLocalizations.of(context)!.drawerSupport, () {
-                    hapticTap();
-                    Navigator.push(context, smoothPageRoute(const SupportPage()));
-                  }),
+                    context,
+                    Icons.fitness_center_rounded,
+                    AppLocalizations.of(context)!.drawerWorkouts,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const WorkoutPage()),
+                      );
+                    },
+                  ),
+                  _drawerItem(
+                    context,
+                    Icons.auto_awesome_outlined,
+                    AppLocalizations.of(context)!.drawerMyGoals,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const GoalPage()),
+                      );
+                    },
+                  ),
+                  _drawerItem(
+                    context,
+                    Icons.restaurant_menu_outlined,
+                    AppLocalizations.of(context)!.drawerMealPlan,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const MealPlanPage()),
+                      );
+                    },
+                  ),
+                  _drawerItem(
+                    context,
+                    Icons.history_rounded,
+                    AppLocalizations.of(context)!.drawerActivityHistory,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const ActivityHistoryPage()),
+                      );
+                    },
+                  ),
+                  _drawerItem(
+                    context,
+                    Icons.settings_outlined,
+                    AppLocalizations.of(context)!.drawerSettings,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const SettingsPage()),
+                      );
+                    },
+                  ),
+                  _drawerItem(
+                    context,
+                    Icons.help_outline_rounded,
+                    AppLocalizations.of(context)!.drawerSupport,
+                    () {
+                      hapticTap();
+                      Navigator.push(
+                        context,
+                        smoothPageRoute(const SupportPage()),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: _drawerItem(context, Icons.logout_rounded, AppLocalizations.of(context)!.drawerLogout, () {
-                _confirmLogout(context, tc);
-              }, color: Colors.redAccent),
+              child: _drawerItem(
+                context,
+                Icons.logout_rounded,
+                AppLocalizations.of(context)!.drawerLogout,
+                () {
+                  confirmAndSignOut(context);
+                },
+                color: Colors.redAccent,
+              ),
             ),
           ],
         ),
@@ -664,51 +815,33 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _confirmLogout(BuildContext context, ThemeColors tc) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(AppLocalizations.of(context)!.drawerLogout, style: TextStyle(fontWeight: FontWeight.w900)),
-        content: Text(AppLocalizations.of(context)!.drawerLogoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.drawerCancel, style: TextStyle(fontWeight: FontWeight.w600)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              _tracker.resetAll();
-              await AuthService().signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  smoothPageRoute(const OnboardingPage()),
-                  (route) => false,
-                );
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.drawerLogout,
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _drawerItem(BuildContext context, IconData icon, String title,
-      VoidCallback onTap,
-      {Color? color}) {
+  Widget _drawerItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     final tc = ThemeColors.of(context);
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color ?? tc.text.withValues(alpha: 0.7)),
-      title: Text(title,
+    return Builder(
+      // Свой context внутри Drawer: через него закрываем меню перед
+      // переходом, иначе при возврате назад оно оставалось открытым.
+      builder: (itemContext) => ListTile(
+        onTap: () {
+          Scaffold.maybeOf(itemContext)?.closeDrawer();
+          onTap();
+        },
+        leading: Icon(icon, color: color ?? tc.text.withValues(alpha: 0.7)),
+        title: Text(
+          title,
           style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: color ?? tc.text)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: color ?? tc.text,
+          ),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }

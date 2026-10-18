@@ -6,12 +6,17 @@ import 'package:lumina/features/notifications/presentation/pages/notification_se
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/biometric_service.dart'; // Добавлено
 import 'package:lumina/core/services/health_sync_service.dart';
+import 'package:lumina/core/services/units_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_provider.dart';
 import 'package:lumina/core/theme/locale_provider.dart';
+import 'package:lumina/core/widgets/units_picker_sheet.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:lumina/features/settings/presentation/pages/about_page.dart';
+import 'package:lumina/features/settings/presentation/pages/privacy_policy_page.dart';
+import 'package:lumina/features/settings/presentation/pages/terms_of_use_page.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lumina/main.dart' show localeProvider;
 import 'package:lumina/l10n/app_localizations.dart';
 
@@ -30,12 +35,23 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _healthConnected = false;
   bool _healthSyncing = false;
   
-  String _units = 'metric';
+  String? _appVersion;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadVersion();
+  }
+
+  /// Версия берётся из сборки (pubspec), а не из захардкоженной строки.
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) setState(() => _appVersion = info.version);
+    } catch (e) {
+      debugPrint('⚠️ PackageInfo error: $e');
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -54,21 +70,24 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _toggleBiometrics(bool value) async {
     HapticFeedback.mediumImpact();
+    final loc = AppLocalizations.of(context)!;
     if (value) {
       // Если включает, пробуем аутентифицировать сразу для проверки
       final authenticated = await _biometric.authenticate();
+      if (!mounted) return;
       if (!authenticated) {
-        showWelmiSnackbar(context, AppLocalizations.of(context)!.biometricFailed, icon: Icons.fingerprint_sharp);
+        showWelmiSnackbar(context, loc.biometricFailed, icon: Icons.fingerprint_sharp);
         return;
       }
     }
-    
+
     await _biometric.setEnabled(value);
+    if (!mounted) return;
     setState(() => _biometricEnabled = value);
-    
+
     showWelmiSnackbar(
       context,
-      value ? AppLocalizations.of(context)!.biometricEnabled : AppLocalizations.of(context)!.biometricDisabled,
+      value ? loc.biometricEnabled : loc.biometricDisabled,
       icon: Icons.security,
     );
   }
@@ -185,11 +204,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         context,
                         smoothPageRoute(const EditProfilePage()),
                       );
-                      if (result == true && mounted) {
-                        // Пересобираем карточку профиля — фото/имя обновились
-                        setState(() {});
-                        showWelmiSnackbar(context, AppLocalizations.of(context)!.profileUpdated, icon: Icons.check_circle);
-                      }
+                      if (result != true || !context.mounted) return;
+                      // Пересобираем карточку профиля — фото/имя обновились
+                      setState(() {});
+                      showWelmiSnackbar(context, AppLocalizations.of(context)!.profileUpdated, icon: Icons.check_circle);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(20),
@@ -466,9 +484,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     child: Column(
                       children: [
-                        _buildRadioTile(AppLocalizations.of(context)!.metricUnits, 'metric', isDark),
+                        _buildRadioTile(AppLocalizations.of(context)!.metricUnits, UnitSystem.metric, isDark),
                         Divider(height: 1, indent: 52, endIndent: 16, color: isDark ? Colors.white10 : Colors.black12),
-                        _buildRadioTile(AppLocalizations.of(context)!.imperialUnits, 'imperial', isDark),
+                        _buildRadioTile(AppLocalizations.of(context)!.imperialUnits, UnitSystem.imperial, isDark),
                       ],
                     ),
                   ),
@@ -545,11 +563,23 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       child: Column(
                         children: [
-                          _buildInfoTile(Icons.info_outline, AppLocalizations.of(context)!.version, '1.0.0', isDark),
+                          _buildInfoTile(Icons.info_outline, AppLocalizations.of(context)!.version, _appVersion ?? '…', isDark),
                           Divider(height: 1, indent: 52, endIndent: 16, color: isDark ? Colors.white10 : Colors.black12),
-                          _buildInfoTile(Icons.description_outlined, AppLocalizations.of(context)!.privacyPolicy, '', isDark),
+                          _buildInfoTile(
+                            Icons.description_outlined,
+                            AppLocalizations.of(context)!.privacyPolicy,
+                            '',
+                            isDark,
+                            onTap: () => Navigator.push(context, smoothPageRoute(const PrivacyPolicyPage())),
+                          ),
                           Divider(height: 1, indent: 52, endIndent: 16, color: isDark ? Colors.white10 : Colors.black12),
-                          _buildInfoTile(Icons.gavel_outlined, AppLocalizations.of(context)!.termsOfUse, '', isDark),
+                          _buildInfoTile(
+                            Icons.gavel_outlined,
+                            AppLocalizations.of(context)!.termsOfUse,
+                            '',
+                            isDark,
+                            onTap: () => Navigator.push(context, smoothPageRoute(const TermsOfUsePage())),
+                          ),
                         ],
                       ),
                     ),
@@ -721,14 +751,20 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildRadioTile(String title, String value, bool isDark) {
-    final isSelected = _units == value;
+  Future<void> _selectUnits(UnitSystem system, String title) async {
+    if (UnitsService.instance.value == system) return;
+    HapticFeedback.selectionClick();
+    final loc = AppLocalizations.of(context)!;
+    await applyUnitSystem(system);
+    if (!mounted) return;
+    setState(() {});
+    showWelmiSnackbar(context, loc.unitsChanged(title), icon: Icons.check);
+  }
+
+  Widget _buildRadioTile(String title, UnitSystem value, bool isDark) {
+    final isSelected = UnitsService.instance.value == value;
     return ListTile(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        setState(() => _units = value);
-        showWelmiSnackbar(context, AppLocalizations.of(context)!.unitsChanged(title), icon: Icons.check);
-      },
+      onTap: () => _selectUnits(value, title),
       leading: Container(
         width: 24, height: 24,
         decoration: BoxDecoration(
@@ -897,8 +933,15 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String trailing, bool isDark) {
+  Widget _buildInfoTile(
+    IconData icon,
+    String title,
+    String trailing,
+    bool isDark, {
+    VoidCallback? onTap,
+  }) {
     return ListTile(
+      onTap: onTap,
       leading: Icon(icon, size: 22, color: isDark ? Colors.white70 : Colors.black54),
       title: Text(title,
         style: GoogleFonts.inter(

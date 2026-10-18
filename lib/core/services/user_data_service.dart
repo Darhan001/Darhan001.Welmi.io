@@ -1,5 +1,6 @@
 /// UserDataService — загружает данные пользователя из Supabase
 /// и предоставляет их для всех экранов (профиль, прогресс, главная)
+library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -206,9 +207,14 @@ class UserDataService extends ChangeNotifier {
 
   /// Сохранить запись веса.
   /// Если запись за этот день уже есть — обновляем её (без дубликатов).
+  ///
+  /// Бросает [StateError], если пользователь не вошёл, и пробрасывает
+  /// ошибку сети: экран должен показать, что вес не сохранён.
   Future<void> saveWeight(double weightKg, {DateTime? date}) async {
     final userId = AuthService().userId;
-    if (userId == null) return;
+    if (userId == null) {
+      throw StateError('Нельзя сохранить вес без входа в аккаунт');
+    }
 
     final targetDate = date ?? DateTime.now();
 
@@ -220,8 +226,15 @@ class UserDataService extends ChangeNotifier {
     );
     if (idx >= 0) {
       final existing = _weightEntries[idx];
+      final previous = existing.weightKg;
       existing.weightKg = weightKg;
-      await _supabase.updateWeightEntry(existing);
+      try {
+        await _supabase.updateWeightEntry(existing);
+      } catch (_) {
+        // Не оставляем в кэше значение, которое не дошло до сервера.
+        existing.weightKg = previous;
+        rethrow;
+      }
       _saveCache();
       notifyListeners();
       return;

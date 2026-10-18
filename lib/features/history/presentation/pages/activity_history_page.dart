@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/units_format.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
@@ -354,7 +357,8 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
                         TextInputType.number)),
                 const SizedBox(width: 10),
                 Expanded(
-                    child: _field(ctx, distanceCtl, 'Км', '3.5',
+                    child: _field(ctx, distanceCtl,
+                        AppLocalizations.of(context)!.distanceUnitLabel, '3.5',
                         const TextInputType.numberWithOptions(decimal: true))),
               ],
             ),
@@ -365,7 +369,8 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
                 onPressed: () async {
                   final steps = int.tryParse(stepsCtl.text) ?? 0;
                   final minutes = int.tryParse(minutesCtl.text) ?? 0;
-                  final distance = double.tryParse(distanceCtl.text) ?? 0;
+                  final distance = UnitsService.instance
+                      .distanceFromDisplay(parseDecimalInput(distanceCtl.text) ?? 0);
                   final userId = AuthService().userId;
                   if (userId == null) return;
 
@@ -394,7 +399,7 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18)),
                 ),                     child: Text(AppLocalizations.of(context)!.save,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
               ),
             ),
@@ -609,7 +614,7 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18)),
                     ),                     child: Text(AppLocalizations.of(context)!.addButton,
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontWeight: FontWeight.w800, fontSize: 15)),
                   ),
                 ),
@@ -959,8 +964,12 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
                 _metricChip(
                     Icons.timer_outlined, '${d.minutes}', 'мин', _orange, _orangeSoft),
               if (d.distanceKm > 0)
-                _metricChip(Icons.straighten, d.distanceKm.toStringAsFixed(1),
-                    'км', _green, _greenSoft),
+                _metricChip(
+                    Icons.straighten,
+                    AppLocalizations.of(context)!.distanceValue(d.distanceKm),
+                    AppLocalizations.of(context)!.distanceUnitLabel,
+                    _green,
+                    _greenSoft),
             ],
           ),
           // Упражнения

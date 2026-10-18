@@ -125,7 +125,7 @@ class DailyTracker extends ChangeNotifier {
   int _goalFat = 60;
   int _goalCarbs = 200;
   int _goalWaterMl = 2000;
-  int _goalSteps = 10000;
+  final int _goalSteps = 10000;
 
   int get goalCalories => _goalCalories;
   int get goalProtein => _goalProtein;

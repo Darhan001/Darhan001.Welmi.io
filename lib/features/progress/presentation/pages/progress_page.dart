@@ -1,5 +1,14 @@
+import 'dart:math' as math;
+
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/app_snackbar.dart';
+import 'package:lumina/core/widgets/units_format.dart';
+import 'package:lumina/features/weight/presentation/widgets/record_weight_sheet.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/models/supabase_models.dart';
@@ -16,6 +25,12 @@ class _ProgressPageState extends State<ProgressPage> {
   bool _isLoading = true;
   String _selectedChip = 'Все';
   String? _errorMessage;
+
+  /// Интервал графиков: 7, 28 или 90 дней.
+  int _rangeDays = 28;
+
+  /// Выбранный замер для графика во вкладке «Замеры».
+  String _measureMetric = 'waist';
 
   final List<String> _chips = ['Все', 'Замеры', '% жира'];
 
@@ -43,9 +58,6 @@ class _ProgressPageState extends State<ProgressPage> {
 
   // ─── Weight helpers ───
 
-  List<double> get _weightHistory =>
-      _userData.weightEntries.reversed.map((e) => e.weightKg).toList();
-
   double? get _currentWeight => _userData.latestWeight;
   double? get _startWeight =>
       _userData.weightEntries.isNotEmpty ? _userData.weightEntries.last.weightKg : null;
@@ -53,6 +65,83 @@ class _ProgressPageState extends State<ProgressPage> {
       _startWeight != null && _currentWeight != null
           ? _startWeight! - _currentWeight!
           : null;
+
+  /// Начало выбранного интервала (включительно, от полуночи).
+  DateTime get _rangeStart {
+    final today = DateTime.now();
+    return DateTime(today.year, today.month, today.day)
+        .subtract(Duration(days: _rangeDays - 1));
+  }
+
+  /// Только настоящие записи веса внутри выбранного интервала,
+  /// отсортированные по возрастанию даты (для графика).
+  List<WeightEntry> get _rangeWeights {
+    final from = _rangeStart;
+    return _userData.weightEntries
+        .where((e) =>
+            !DateTime(e.date.year, e.date.month, e.date.day).isBefore(from))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  /// Замеры внутри выбранного интервала по возрастанию даты.
+  List<BodyMeasurement> get _rangeMeasurements {
+    final from = _rangeStart;
+    return _userData.measurements
+        .where((m) =>
+            !DateTime(m.date.year, m.date.month, m.date.day).isBefore(from))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  /// Записи % жира внутри выбранного интервала по возрастанию даты.
+  List<BodyFatEntry> get _rangeBodyFat {
+    final from = _rangeStart;
+    return _userData.bodyFatEntries
+        .where((b) =>
+            !DateTime(b.date.year, b.date.month, b.date.day).isBefore(from))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  /// Значение выбранного замера в записи (null, если он не заполнен).
+  double? _metricValue(BodyMeasurement m, String metric) {
+    switch (metric) {
+      case 'waist':
+        return m.waistCm;
+      case 'chest':
+        return m.chestCm;
+      case 'hips':
+        return m.hipsCm;
+      case 'arm':
+        return m.leftArmCm ?? m.rightArmCm;
+      case 'thigh':
+        return m.leftThighCm ?? m.rightThighCm;
+      case 'neck':
+        return m.neckCm;
+      default:
+        return null;
+    }
+  }
+
+  String _metricLabel(String metric) {
+    switch (metric) {
+      case 'waist':
+        return 'Талия';
+      case 'chest':
+        return 'Грудь';
+      case 'hips':
+        return 'Бёдра';
+      case 'arm':
+        return 'Рука';
+      case 'thigh':
+        return 'Бедро';
+      case 'neck':
+        return 'Шея';
+      default:
+        return metric;
+    }
+  }
 
   // ─── Быстрые действия (вместо нерабочей иконки) ───
 
@@ -135,84 +224,16 @@ class _ProgressPageState extends State<ProgressPage> {
 
   // ─── Dialogs ───
 
-  void _showRecordWeightDialog() {
-    final current = _currentWeight ?? 70.0;
-    double newWeight = current;
-    final controller = TextEditingController(text: current.toStringAsFixed(1));
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final tc = ThemeColors.of(context);
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 24, right: 24, top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Записать вес',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: tc.text)),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  SizedBox(
-                    width: 120,
-                    child: TextField(
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: tc.surface,
-                      ),
-                      controller: controller,
-                      onChanged: (v) => newWeight = double.tryParse(v) ?? current,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 32, fontWeight: FontWeight.w900, color: tc.text),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('кг',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: tc.textSecondary)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await _userData.saveWeight(newWeight);
-                    if (context.mounted) Navigator.pop(context);
-                    if (mounted) setState(() {});
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tc.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Сохранить',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  Future<void> _showRecordWeightDialog() async {
+    final loc = AppLocalizations.of(context)!;
+    final saved = await showRecordWeightSheet(
+      context,
+      initialKg: _userData.latestWeight,
+      onSave: _userData.saveWeight,
     );
+    if (!saved || !mounted) return;
+    setState(() {});
+    AppSnackbar.success(context, loc.weightSaved);
   }
 
   void _showRecordMeasurementsDialog() {
@@ -256,17 +277,17 @@ class _ProgressPageState extends State<ProgressPage> {
                 Text('Записать замеры',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: tc.text)),
                 const SizedBox(height: 20),
-                _buildMeasureField(tc, 'Грудь (см)', chestC, (v) => chest = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Грудь (см)', chestC, (v) => chest = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 12),
-                _buildMeasureField(tc, 'Талия (см)', waistC, (v) => waist = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Талия (см)', waistC, (v) => waist = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 12),
-                _buildMeasureField(tc, 'Бёдра (см)', hipsC, (v) => hips = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Бёдра (см)', hipsC, (v) => hips = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 12),
-                _buildMeasureField(tc, 'Рука (см)', armC, (v) => arm = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Рука (см)', armC, (v) => arm = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 12),
-                _buildMeasureField(tc, 'Бедро (см)', thighC, (v) => thigh = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Бедро (см)', thighC, (v) => thigh = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 12),
-                _buildMeasureField(tc, 'Шея (см)', neckC, (v) => neck = double.tryParse(v) ?? 0),
+                _buildMeasureField(tc, 'Шея (см)', neckC, (v) => neck = parseDecimalInput(v) ?? 0),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -419,7 +440,7 @@ class _ProgressPageState extends State<ProgressPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
-                        final pct = double.tryParse(controller.text) ?? percent;
+                        final pct = parseDecimalInput(controller.text) ?? percent;
                         await _userData.saveBodyFat(pct, method: method);
                         if (context.mounted) Navigator.pop(context);
                         if (mounted) setState(() {});
@@ -439,6 +460,146 @@ class _ProgressPageState extends State<ProgressPage> {
               );
             },
           ),
+        );
+      },
+    );
+  }
+
+  /// Оценка % жира по методу ВМФ США (Navy formula).
+  /// Требует обхваты (талия, шея, для женщин ещё бёдра) и рост.
+  /// Возвращает null, если данных недостаточно.
+  double? _estimateBodyFatPercent() {
+    final profile = _userData.profile;
+    if (profile == null || profile.gender == null) return null;
+
+    final m = _userData.measurements.isNotEmpty
+        ? _userData.measurements.first
+        : null;
+    final height = profile.heightCm;
+    final waist = m?.waistCm;
+    final neck = m?.neckCm;
+    final hips = m?.hipsCm;
+
+    if (m == null || height <= 0 || waist == null || neck == null) {
+      return null;
+    }
+
+    double log10(double v) => math.log(v) / math.ln10;
+    if (profile.gender == Gender.male) {
+      final circumferenceDiff = waist - neck;
+      if (circumferenceDiff <= 0) return null;
+      return 495 /
+              (1.0324 -
+                  0.19077 * log10(circumferenceDiff) +
+                  0.15456 * log10(height)) -
+          450;
+    }
+
+    if (hips == null) return null;
+    final circumference = waist + hips - neck;
+    if (circumference <= 0) return null;
+    return 495 /
+            (1.29579 -
+                0.35004 * log10(circumference) +
+                0.22100 * log10(height)) -
+        450;
+  }
+
+  /// Показывает оценку % жира и позволяет сохранить её как «оценочную».
+  void _showEstimateBodyFatDialog() {
+    final estimate = _estimateBodyFatPercent();
+    final tc = ThemeColors.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final dtx = ThemeColors.of(ctx);
+        return AlertDialog(
+          backgroundColor: dtx.card,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24)),
+          title: Text('Оценка % жира',
+              style: TextStyle(
+                  fontWeight: FontWeight.w900, color: dtx.text, fontSize: 17)),
+          content: estimate == null
+              ? Text(
+                  'Недостаточно данных для расчёта.\n\n'
+                  'Нужны: рост и пол в профиле, а также замеры талии и шеи '
+                  '(для женщин — ещё и бёдер). Добавьте замеры и попробуйте снова.',
+                  style: TextStyle(
+                      fontSize: 13, height: 1.45, color: dtx.textSecondary),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          estimate.toStringAsFixed(1),
+                          style: GoogleFonts.inter(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: dtx.text),
+                        ),
+                        Text(' %',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: dtx.textSecondary)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Расчёт по методу ВМФ США (Navy) на основе обхватов '
+                      'талии, шеи${_userData.profile?.gender == Gender.female ? ', бёдер' : ''} '
+                      'и роста.\n\n'
+                      'Это приблизительная оценка, а не измерение. '
+                      'Погрешность метода — несколько процентных пунктов.',
+                      style: TextStyle(
+                          fontSize: 12, height: 1.45, color: dtx.textSecondary),
+                    ),
+                  ],
+                ),
+          actions: estimate == null
+              ? [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Понятно',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: dtx.textSecondary)),
+                  ),
+                ]
+              : [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Отмена',
+                        style: TextStyle(color: dtx.textSecondary)),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await _userData.saveBodyFat(estimate,
+                          method: 'estimated');
+                      if (!mounted) return;
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                              'Оценка сохранена как оценочное значение'),
+                          backgroundColor: tc.primary,
+                        ),
+                      );
+                    },
+                    child: const Text('Сохранить',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFAB47BC))),
+                  ),
+                ],
         );
       },
     );
@@ -476,7 +637,7 @@ class _ProgressPageState extends State<ProgressPage> {
     final tc = ThemeColors.of(context);
 
     return ListenableBuilder(
-      listenable: _userData,
+      listenable: Listenable.merge([_userData, UnitsService.instance]),
       builder: (context, _) {
         if (_isLoading) {
           return Scaffold(
@@ -571,7 +732,15 @@ class _ProgressPageState extends State<ProgressPage> {
                         child: _buildChip(chip, _selectedChip == chip),
                       )).toList(),
                     ),
-                  const SizedBox(height: 30),
+                  if (_userData.profile != null ||
+                      _userData.weightEntries.isNotEmpty ||
+                      _userData.measurements.isNotEmpty ||
+                      _userData.bodyFatEntries.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: _buildRangeSelector(tc),
+                    ),
+                  const SizedBox(height: 26),
                   // Empty state if no data at all
                   if (_userData.profile == null &&
                       _userData.weightEntries.isEmpty &&
@@ -627,6 +796,185 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
+  // ─── Графики (fl_chart) ───
+
+  /// Переключатель интервала графиков: 7 / 28 / 90 дней.
+  Widget _buildRangeSelector(ThemeColors tc) {
+    const options = [7, 28, 90];
+    return Row(
+      children: options.map((days) {
+        final selected = _rangeDays == days;
+        return GestureDetector(
+          onTap: () => setState(() => _rangeDays = days),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: selected ? tc.primary : tc.card,
+              borderRadius: BorderRadius.circular(14),
+              border: selected ? null : Border.all(color: tc.divider),
+            ),
+            child: Text(
+              '$days дней',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : tc.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildChartPlaceholder(ThemeColors tc, String text) {
+    return Container(
+      height: 110,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: tc.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 12, color: tc.textSecondary),
+      ),
+    );
+  }
+
+  /// Линейный график по настоящим записям пользователя.
+  Widget _buildLineChart({
+    required ThemeColors tc,
+    required List<DateTime> dates,
+    required List<double> values,
+    required Color color,
+    required String unit,
+  }) {
+    if (values.length < 2) {
+      return _buildChartPlaceholder(
+        tc,
+        'Нужно минимум 2 записи за выбранный период\n(${values.length} из 2)',
+      );
+    }
+
+    final minV = values.reduce(math.min);
+    final maxV = values.reduce(math.max);
+    final spread = maxV - minV;
+    final pad = spread > 0 ? spread * 0.25 : 1.0;
+    final step = spread > 0 ? spread / 3 : 1.0;
+    final spots = List.generate(
+      values.length,
+      (i) => FlSpot(i.toDouble(), values[i]),
+    );
+    final labelStep = math.max(1, (dates.length / 4).ceil());
+
+    return SizedBox(
+      height: 180,
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: (values.length - 1).toDouble(),
+          minY: minV - pad,
+          maxY: maxV + pad,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: step,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: tc.divider.withValues(alpha: 0.7),
+              strokeWidth: 1,
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 38,
+                interval: step,
+                getTitlesWidget: (value, meta) => Text(
+                  value.toStringAsFixed(0),
+                  style: TextStyle(fontSize: 9, color: tc.textHint),
+                ),
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 26,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final i = value.round();
+                  if (i < 0 || i >= dates.length) {
+                    return const SizedBox.shrink();
+                  }
+                  if (i % labelStep != 0 && i != dates.length - 1) {
+                    return const SizedBox.shrink();
+                  }
+                  final d = dates[i];
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '${d.day}.${d.month.toString().padLeft(2, '0')}',
+                      style: TextStyle(fontSize: 9, color: tc.textHint),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipItems: (touched) => touched.map((spot) {
+                final i = spot.x.round().clamp(0, values.length - 1);
+                final d = dates[i];
+                return LineTooltipItem(
+                  '${d.day}.${d.month}: ${spot.y.toStringAsFixed(1)} $unit',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              curveSmoothness: 0.25,
+              color: color,
+              barWidth: 3,
+              dotData: FlDotData(
+                show: values.length <= 20,
+                getDotPainter: (spot, percent, bar, index) =>
+                    FlDotCirclePainter(
+                  radius: 3,
+                  color: color,
+                  strokeWidth: 1.5,
+                  strokeColor: Colors.white,
+                ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                color: color.withValues(alpha: 0.12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── TAB: ВСЕ ───
 
   Widget _buildAllTab(ThemeColors tc) {
@@ -657,8 +1005,14 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   Widget _buildWeightCard(ThemeColors tc) {
+    final loc = AppLocalizations.of(context)!;
     final loss = _weightLoss ?? 0;
-    final weights = _weightHistory;
+    final entries = _rangeWeights;
+    final dates = entries.map((e) => e.date).toList();
+    // График подписывает значения, поэтому переводим их в выбранные единицы.
+    final values = entries
+        .map((e) => UnitsService.instance.weightToDisplay(e.weightKg))
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -684,12 +1038,12 @@ class _ProgressPageState extends State<ProgressPage> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        _currentWeight!.toStringAsFixed(1),
+                        loc.weightValue(_currentWeight!),
                         style: GoogleFonts.inter(
                             fontSize: 32, fontWeight: FontWeight.w900, color: tc.text),
                       ),
                       const SizedBox(width: 4),
-                      Text('кг',
+                      Text(loc.weightUnitLabel,
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: tc.textSecondary)),
                     ],
                   ),
@@ -705,7 +1059,7 @@ class _ProgressPageState extends State<ProgressPage> {
                   child: Row(
                     children: [
                       const Icon(Icons.arrow_downward, size: 12, color: Color(0xFF75A47F)),
-                      Text(' ${loss.toStringAsFixed(1)} кг',
+                      Text(' ${loc.formatWeight(loss)}',
                           style: const TextStyle(
                               color: Color(0xFF75A47F), fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
@@ -713,28 +1067,27 @@ class _ProgressPageState extends State<ProgressPage> {
                 ),
             ],
           ),
-          if (weights.length >= 2) ...[
-            const SizedBox(height: 30),
-            SizedBox(
-              height: 150,
-              width: double.infinity,
-              child: CustomPaint(
-                painter: ProgressChartPainter(weightHistory: weights, color: tc.primary),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${DateTime.now().subtract(Duration(days: weights.length - 1)).day} ${_getMonthName(DateTime.now().subtract(Duration(days: weights.length - 1)))}',
-                  style: TextStyle(fontSize: 10, color: tc.textHint)),
-                Text(
-                  '${DateTime.now().day} ${_getMonthName(DateTime.now())}',
-                  style: TextStyle(fontSize: 10, color: tc.textHint)),
-              ],
-            ),
-          ],
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Динамика веса',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: tc.text)),
+              Text('за $_rangeDays дн.',
+                  style: TextStyle(fontSize: 11, color: tc.textHint)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLineChart(
+            tc: tc,
+            dates: dates,
+            values: values,
+            color: const Color(0xFF75A47F),
+            unit: loc.weightUnitLabel,
+          ),
         ],
       ),
     );
@@ -786,36 +1139,7 @@ class _ProgressPageState extends State<ProgressPage> {
             ),
           ),
           const SizedBox(height: 16),
-          if (measurements.length >= 2) ...[
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: tc.card,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: tc.shadow(0.04), blurRadius: 15, offset: const Offset(0, 5))],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Динамика замеров',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: tc.text)),
-                  const SizedBox(height: 16),
-                  if (measurements[0].chestCm != null && measurements[1].chestCm != null)
-                    _buildMeasureRow('Грудь', measurements[0].chestCm!, measurements[1].chestCm!, tc),
-                  if (measurements[0].waistCm != null && measurements[1].waistCm != null)
-                    _buildMeasureRow('Талия', measurements[0].waistCm!, measurements[1].waistCm!, tc),
-                  if (measurements[0].hipsCm != null && measurements[1].hipsCm != null)
-                    _buildMeasureRow('Бёдра', measurements[0].hipsCm!, measurements[1].hipsCm!, tc),
-                  if (measurements[0].leftArmCm != null && measurements[1].leftArmCm != null)
-                    _buildMeasureRow('Рука', measurements[0].leftArmCm!, measurements[1].leftArmCm!, tc),
-                  if (measurements[0].leftThighCm != null && measurements[1].leftThighCm != null)
-                    _buildMeasureRow('Бедро', measurements[0].leftThighCm!, measurements[1].leftThighCm!, tc),
-                  if (measurements[0].neckCm != null && measurements[1].neckCm != null)
-                    _buildMeasureRow('Шея', measurements[0].neckCm!, measurements[1].neckCm!, tc),
-                ],
-              ),
-            ),
-          ],
+          _buildMeasurementChartCard(tc),
         ] else ...[
           Container(
             padding: const EdgeInsets.all(40),
@@ -851,6 +1175,112 @@ class _ProgressPageState extends State<ProgressPage> {
               style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
+    );
+  }
+
+  /// Карточка с графиком выбранного замера (только реальные записи).
+  Widget _buildMeasurementChartCard(ThemeColors tc) {
+    const metrics = ['waist', 'chest', 'hips', 'arm', 'thigh', 'neck'];
+    final series = <({DateTime date, double value})>[];
+    for (final m in _rangeMeasurements) {
+      final v = _metricValue(m, _measureMetric);
+      if (v != null && v > 0) {
+        series.add((date: m.date, value: v));
+      }
+    }
+
+    final diff = series.length >= 2
+        ? series.last.value - series.first.value
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: tc.card,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+              color: tc.shadow(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Динамика замеров',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: tc.text)),
+              if (diff != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A90E2).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${diff > 0 ? '+' : ''}${diff.toStringAsFixed(1)} см',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF4A90E2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: metrics.map((m) {
+                final selected = _measureMetric == m;
+                return GestureDetector(
+                  onTap: () => setState(() => _measureMetric = m),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? const Color(0xFF4A90E2)
+                          : tc.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _metricLabel(m),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? Colors.white : tc.textSecondary,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (series.isEmpty)
+            _buildChartPlaceholder(
+                tc, 'За выбранный период нет замеров «${_metricLabel(_measureMetric)}»')
+          else
+            _buildLineChart(
+              tc: tc,
+              dates: series.map((e) => e.date).toList(),
+              values: series.map((e) => e.value).toList(),
+              color: const Color(0xFF4A90E2),
+              unit: 'см',
+            ),
+        ],
+      ),
     );
   }
 
@@ -954,6 +1384,86 @@ class _ProgressPageState extends State<ProgressPage> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: tc.card,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                    color: tc.shadow(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5))
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Динамика % жира',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            color: tc.text)),
+                    Text('за $_rangeDays дн.',
+                        style: TextStyle(fontSize: 11, color: tc.textHint)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                if (_rangeBodyFat.isEmpty)
+                  _buildChartPlaceholder(
+                      tc, 'За выбранный период нет записей % жира')
+                else
+                  _buildLineChart(
+                    tc: tc,
+                    dates: _rangeBodyFat.map((e) => e.date).toList(),
+                    values:
+                        _rangeBodyFat.map((e) => e.bodyFatPercent).toList(),
+                    color: const Color(0xFFAB47BC),
+                    unit: '%',
+                  ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 13, color: Color(0xFFAB47BC)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Оценочный расчёт по замерам — не медицинское измерение.',
+                        style: TextStyle(
+                            fontSize: 10, color: tc.textHint, height: 1.3),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: _showEstimateBodyFatDialog,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFAB47BC).withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Оценить по замерам',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFAB47BC),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           if (entries.length >= 2) ...[
             const SizedBox(height: 24),
             Container(
@@ -1035,6 +1545,8 @@ class _ProgressPageState extends State<ProgressPage> {
         return 'калипер';
       case 'scale':
         return 'весы';
+      case 'estimated':
+        return 'оценка';
       default:
         return 'вручную';
     }
@@ -1055,11 +1567,15 @@ class _ProgressPageState extends State<ProgressPage> {
                 widthFactor: fraction,
                 child: Container(
                   height: 12,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [const Color(0xFF75A47F), const Color(0xFFFF9800), const Color(0xFFE53935)],
+                      colors: [
+                        Color(0xFF75A47F),
+                        Color(0xFFFF9800),
+                        Color(0xFFE53935)
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
                   ),
                 ),
               ),
@@ -1169,34 +1685,40 @@ class _ProgressPageState extends State<ProgressPage> {
                     day.day == now.day;
 
                 return Expanded(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 28,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? tc.primary
-                          : isActive
-                              ? const Color(0xFF75A47F).withValues(alpha: 0.75)
-                              : tc.text.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                      border: isToday
-                          ? Border.all(
-                              color: tc.text.withValues(alpha: 0.6), width: 1.5)
-                          : null,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _showDayDetails(day),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 28,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: isToday
+                            ? tc.primary
+                            : isActive
+                                ? const Color(0xFF75A47F)
+                                    .withValues(alpha: 0.75)
+                                : tc.text.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: isToday
+                            ? Border.all(
+                                color: tc.text.withValues(alpha: 0.6),
+                                width: 1.5)
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          color: isToday || isActive
+                              ? Colors.white
+                              : tc.textHint,
+                          fontSize: 8,
+                          fontWeight:
+                              isToday ? FontWeight.w800 : FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: isToday
-                        ? Text('${day.day}',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 8, fontWeight: FontWeight.w800))
-                        : (isActive
-                            ? Text('${day.day}',
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w600))
-                            : null),
                   ),
                 );
               }),
@@ -1212,12 +1734,133 @@ class _ProgressPageState extends State<ProgressPage> {
               const Spacer(),
               Icon(Icons.touch_app_outlined, size: 12, color: tc.textHint),
               const SizedBox(width: 4),
-              Text('дни с записями подсвечены',
+              Text('нажмите на день',
                   style: TextStyle(fontSize: 10, color: tc.textHint, fontWeight: FontWeight.w500)),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  /// Показывает фактические записи выбранного дня календаря.
+  /// Если записей нет — так и показывает, без выдуманных данных.
+  void _showDayDetails(DateTime day) {
+    bool sameDay(DateTime d) =>
+        d.year == day.year && d.month == day.month && d.day == day.day;
+
+    final weights =
+        _userData.weightEntries.where((e) => sameDay(e.date)).toList();
+    final measurements =
+        _userData.measurements.where((m) => sameDay(m.date)).toList();
+    final fats =
+        _userData.bodyFatEntries.where((b) => sameDay(b.date)).toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final tc = ThemeColors.of(ctx);
+        final hasAny =
+            weights.isNotEmpty || measurements.isNotEmpty || fats.isNotEmpty;
+        const months = [
+          'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+        ];
+
+        Widget row(String label, String value, IconData icon, Color color) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(label,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: tc.textSecondary)),
+                ),
+                Text(value,
+                    style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: tc.text)),
+              ],
+            ),
+          );
+        }
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${day.day} ${months[day.month - 1]} ${day.year}',
+                  style: GoogleFonts.notoSerif(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: tc.text),
+                ),
+                const SizedBox(height: 16),
+                if (!hasAny)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: tc.surface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      'За этот день записей нет.',
+                      style: TextStyle(
+                          fontSize: 13, color: tc.textSecondary),
+                    ),
+                  ),
+                for (final w in weights)
+                  row('Вес', AppLocalizations.of(context)!.formatWeight(w.weightKg),
+                      Icons.monitor_weight_outlined, const Color(0xFF75A47F)),
+                for (final m in measurements) ...[
+                  if (m.chestCm != null)
+                    row('Грудь', '${m.chestCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                  if (m.waistCm != null)
+                    row('Талия', '${m.waistCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                  if (m.hipsCm != null)
+                    row('Бёдра', '${m.hipsCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                  if (m.leftArmCm != null)
+                    row('Рука', '${m.leftArmCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                  if (m.leftThighCm != null)
+                    row('Бедро', '${m.leftThighCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                  if (m.neckCm != null)
+                    row('Шея', '${m.neckCm!.toStringAsFixed(1)} см',
+                        Icons.straighten, const Color(0xFF4A90E2)),
+                ],
+                for (final f in fats)
+                  row(
+                    f.method == 'estimated'
+                        ? '% жира (оценка)'
+                        : '% жира',
+                    '${f.bodyFatPercent.toStringAsFixed(1)} %',
+                    Icons.monitor_heart_outlined,
+                    const Color(0xFFAB47BC),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1266,59 +1909,4 @@ class _ProgressPageState extends State<ProgressPage> {
     ];
     return months[date.month - 1];
   }
-}
-
-// ─── CHART PAINTER ───
-
-class ProgressChartPainter extends CustomPainter {
-  final List<double> weightHistory;
-  final Color color;
-
-  ProgressChartPainter({required this.weightHistory, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (weightHistory.isEmpty) return;
-
-    final paint = Paint()
-      ..color = const Color(0xFF75A47F)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    final minWeight = weightHistory.reduce((a, b) => a < b ? a : b);
-    final maxWeight = weightHistory.reduce((a, b) => a > b ? a : b);
-    final range = (maxWeight - minWeight).clamp(1.0, double.infinity);
-
-    final path = Path();
-    final stepX = size.width / (weightHistory.length - 1);
-
-    for (int i = 0; i < weightHistory.length; i++) {
-      final x = i * stepX;
-      final y = size.height -
-          ((weightHistory[i] - minWeight) / range) * (size.height * 0.8) -
-          size.height * 0.1;
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    canvas.drawPath(path, paint);
-
-    // Draw dots
-    final dotPaint = Paint()..color = const Color(0xFF75A47F);
-    final lastX = (weightHistory.length - 1) * stepX;
-    final lastY = size.height -
-        ((weightHistory.last - minWeight) / range) * (size.height * 0.8) -
-        size.height * 0.1;
-    canvas.drawCircle(Offset(lastX, lastY), 6, dotPaint);
-    canvas.drawCircle(Offset(lastX, lastY), 3, Paint()..color = Colors.white);
-  }
-
-  @override
-  bool shouldRepaint(covariant ProgressChartPainter oldDelegate) =>
-      oldDelegate.weightHistory != weightHistory;
 }

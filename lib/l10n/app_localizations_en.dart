@@ -225,6 +225,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imperialUnits => 'Imperial (lbs, miles)';
 
   @override
+  String get unitCm => 'cm';
+
+  @override
+  String get unitKg => 'kg';
+
+  @override
+  String get unitLb => 'lb';
+
+  @override
+  String get unitKm => 'km';
+
+  @override
+  String get unitMi => 'mi';
+
+  @override
   String get widgetTitle => 'Widget';
 
   @override
@@ -814,7 +829,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String goalTargetWeight(Object weight) {
-    return '$weight kg — goal';
+    return '$weight — goal';
   }
 
   @override
@@ -982,46 +997,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsPageTitle => 'Notifications';
 
   @override
-  String get inbox => 'Inbox';
+  String get notifOpenSettings => 'Set up reminders';
 
   @override
-  String get markAllRead => 'Mark all read';
+  String get notifTurnOnHint =>
+      'Turn on notifications so the app can remind you about water, meals and activity.';
 
   @override
-  String get notifWaterReminder => 'Time to drink water!';
+  String get notifNoReminders => 'All reminders are off';
 
   @override
-  String get notifWaterSubtitle => 'You\'ve drunk 60% of your daily goal';
-
-  @override
-  String get notifLunchReminder => 'Lunchtime';
-
-  @override
-  String get notifLunchSubtitle => 'Don\'t forget to log a meal';
-
-  @override
-  String get notifWeightResult => 'New result!';
-
-  @override
-  String get notifWeightSubtitle => 'Your weight dropped by 0.4 kg';
-
-  @override
-  String get notifMotivation => 'Motivation of the day';
-
-  @override
-  String get notifMotivationSubtitle => 'Small steps lead to big results';
-
-  @override
-  String get notif15MinAgo => '15 min ago';
-
-  @override
-  String get notif2HoursAgo => '2 hours ago';
-
-  @override
-  String get notif1DayAgo => '1 day ago';
-
-  @override
-  String get notif2DaysAgo => '2 days ago';
+  String get notifScheduleHint =>
+      'Your daily reminder schedule. Tap a reminder to change its time.';
 
   @override
   String get editProfileTitle => 'Editing';
@@ -1051,10 +1038,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heightCm => 'Height (cm)';
 
   @override
-  String get currentWeightLabel => 'Current Weight (kg)';
+  String get currentWeightLabel => 'Current Weight';
 
   @override
-  String get targetWeight => 'Target Weight (kg)';
+  String get targetWeight => 'Target Weight';
 
   @override
   String get tapPhotoToChange => 'Tap photo to change';
@@ -1726,4 +1713,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get feedbackNetworkError =>
       'Could not reach the feedback service. Check your connection and try again.';
+
+  @override
+  String get voiceErrorNoInternet =>
+      'No internet connection. Voice recognition needs the internet.';
+
+  @override
+  String get voiceErrorUnavailable =>
+      'Speech recognition is unavailable right now. Please try again later.';
+
+  @override
+  String get voiceErrorRecord => 'Could not start recording. Please try again.';
+
+  @override
+  String get voiceErrorPermissionSettings =>
+      'Microphone access is denied. Allow it in your phone settings.';
+
+  @override
+  String get ttsPlay => 'Listen';
+
+  @override
+  String get ttsStop => 'Stop';
+
+  @override
+  String get ttsReplay => 'Replay';
+
+  @override
+  String get ttsVoiceSettings => 'Speech voice';
+
+  @override
+  String get ttsVoiceDefault => 'Default voice';
+
+  @override
+  String get ttsVoicesEmpty =>
+      'This device has no voices for this language. Install a speech engine in the system settings.';
+
+  @override
+  String get ttsErrorUnavailable =>
+      'Speech playback is not available on this device.';
+
+  @override
+  String get aiErrorUnavailable =>
+      'The AI assistant did not respond. Check your connection and try again.';
+
+  @override
+  String get voiceFoodNotRecognized =>
+      'Could not identify the food. Please try again.';
+
+  @override
+  String get voiceFoodAnalysisError =>
+      'Could not analyze the food. Please try again.';
+
+  @override
+  String get weightInvalid => 'Enter a valid weight';
+
+  @override
+  String get weightSaveError =>
+      'Could not save your weight. Check your connection and try again.';
+
+  @override
+  String get weightSaved => 'Weight saved';
+
+  @override
+  String get saveError =>
+      'Could not save. Check your connection and try again.';
+
+  @override
+  String get signInRequired => 'Sign in to save your data';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navScanner => 'Food scanner';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get heightInvalid => 'Enter a height between 100 and 250 cm';
 }

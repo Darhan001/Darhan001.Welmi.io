@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/units_format.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
 import 'package:lumina/core/services/user_data_service.dart';
@@ -142,7 +145,7 @@ class _GoalPageState extends State<GoalPage>
       final e = limited[i];
       final isFirst = i == 0;
       list.add({
-        'label': '${e.weightKg.toStringAsFixed(1)} кг',
+        'label': AppLocalizations.of(context)!.formatWeight(e.weightKg),
         'date': _formatDate(e.date),
         'done': true,
         'first': isFirst,
@@ -150,7 +153,7 @@ class _GoalPageState extends State<GoalPage>
     }
     if (_currentWeight > _goalWeight) {
       list.add({
-        'label': '${_goalWeight.toStringAsFixed(1)} кг 🎯',
+        'label': '${AppLocalizations.of(context)!.formatWeight(_goalWeight)} 🎯',
         'date': _estimatedDaysToGoal > 0
             ? '~$_estimatedDaysToGoal дн'
             : 'Цель!',
@@ -274,7 +277,7 @@ class _GoalPageState extends State<GoalPage>
     GoalType? selectedGoal = existing?.goal;
     double selectedSpeed = existing?.goalSpeedKgPerWeek ?? 0.5;
     final targetCtl =
-        TextEditingController(text: _goalWeight.toStringAsFixed(1));
+        TextEditingController(text: AppLocalizations.of(context)!.weightValue(_goalWeight));
 
     showModalBottomSheet(
       context: context,
@@ -366,7 +369,7 @@ class _GoalPageState extends State<GoalPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('кг',
+                    Text(AppLocalizations.of(context)!.weightUnitLabel,
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -391,12 +394,12 @@ class _GoalPageState extends State<GoalPage>
                             decoration: BoxDecoration(
                               color: isSel
                                   ? const Color(0xFFE8F3E5)
-                                  : tc.text.withOpacity(0.03),
+                                  : tc.text.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isSel
                                     ? const Color(0xFF4A8C5C)
-                                    : tc.text.withOpacity(0.06),
+                                    : tc.text.withValues(alpha: 0.06),
                                 width: isSel ? 2 : 1,
                               ),
                             ),
@@ -434,8 +437,9 @@ class _GoalPageState extends State<GoalPage>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final val = double.tryParse(targetCtl.text);
-                      if (val == null || val <= 0) {
+                      final entered = parseDecimalInput(targetCtl.text);
+                      final val = entered == null ? null : UnitsService.instance.weightFromDisplay(entered);
+                      if (val == null || !isPlausibleWeightKg(val)) {
                         showWelmiSnackbar(context,
                             'Введите корректный целевой вес',
                             icon: Icons.error_outline);
@@ -526,12 +530,12 @@ class _GoalPageState extends State<GoalPage>
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFFE8F3E5)
-              : tc.text.withOpacity(0.03),
+              : tc.text.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF4A8C5C)
-                : tc.text.withOpacity(0.06),
+                : tc.text.withValues(alpha: 0.06),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -609,7 +613,7 @@ class _GoalPageState extends State<GoalPage>
                               ? '~$_estimatedDaysToGoal дней до цели'
                               : _daysIn > 0
                                   ? '$_daysIn дней с начала пути'
-                                  : '${_goalWeight.toStringAsFixed(1)} кг — цель',
+                                  : AppLocalizations.of(context)!.goalTargetWeight(AppLocalizations.of(context)!.formatWeight(_goalWeight)),
                     style: TextStyle(fontSize: 12, color: tc.textHint)),
               ],
             ),
@@ -648,7 +652,7 @@ class _GoalPageState extends State<GoalPage>
                     CircularProgressIndicator(
                       value: 1.0,
                       strokeWidth: 12,
-                      backgroundColor: tc.text.withOpacity(0.05),
+                      backgroundColor: tc.text.withValues(alpha: 0.05),
                       color: Colors.transparent,
                     ),
                     CircularProgressIndicator(
@@ -683,14 +687,14 @@ class _GoalPageState extends State<GoalPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildRingStat(                   '${_startWeight.toStringAsFixed(1)} кг', AppLocalizations.of(context)!.start, tc),
+              _buildRingStat(                   AppLocalizations.of(context)!.formatWeight(_startWeight), AppLocalizations.of(context)!.start, tc),
               _buildRingStat(
-                  '${_totalLoss.toStringAsFixed(1)} кг',
+                  AppLocalizations.of(context)!.formatWeight(_totalLoss),
                   'Потеряно',
                   tc,
                   isHighlight: true),
               _buildRingStat(
-                  '${_goalWeight.toStringAsFixed(1)} кг', 'Цель', tc),
+                  AppLocalizations.of(context)!.formatWeight(_goalWeight), 'Цель', tc),
             ],
           ),
         ],
@@ -808,7 +812,7 @@ class _GoalPageState extends State<GoalPage>
                   end: Alignment.topCenter,
                   colors: [
                     color,
-                    color.withOpacity(0.6),
+                    color.withValues(alpha: 0.6),
                   ],
                 ),
                 borderRadius:
@@ -819,7 +823,7 @@ class _GoalPageState extends State<GoalPage>
         ),
         const SizedBox(height: 8),
         Text(
-          weight.toStringAsFixed(1),
+          AppLocalizations.of(context)!.weightValue(weight),
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -883,7 +887,7 @@ class _GoalPageState extends State<GoalPage>
                           height: 8,
                           color: isDone
                               ? const Color(0xFF75A47F)
-                              : tc.text.withOpacity(0.08),
+                              : tc.text.withValues(alpha: 0.08),
                         ),
                         Container(
                           width: 20,
@@ -896,7 +900,7 @@ class _GoalPageState extends State<GoalPage>
                             border: Border.all(
                               color: isDone
                                   ? const Color(0xFF75A47F)
-                                  : tc.text.withOpacity(0.15),
+                                  : tc.text.withValues(alpha: 0.15),
                               width: 2,
                             ),
                           ),
@@ -911,7 +915,7 @@ class _GoalPageState extends State<GoalPage>
                               width: 2,
                               color: isDone
                                   ? const Color(0xFF75A47F)
-                                  : tc.text.withOpacity(0.08),
+                                  : tc.text.withValues(alpha: 0.08),
                             ),
                           ),
                       ],
@@ -1062,7 +1066,7 @@ class _GoalPageState extends State<GoalPage>
         color: isDark ? const Color(0xFF1E281E) : const Color(0xFFE8F3E5),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: const Color(0xFF75A47F).withOpacity(0.2)),
+            color: const Color(0xFF75A47F).withValues(alpha: 0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1070,7 +1074,7 @@ class _GoalPageState extends State<GoalPage>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF75A47F).withOpacity(0.1),
+              color: const Color(0xFF75A47F).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.auto_awesome,
@@ -1121,7 +1125,7 @@ class _GoalPageState extends State<GoalPage>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF75A47F).withOpacity(0.3),
+            color: const Color(0xFF75A47F).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1136,7 +1140,7 @@ class _GoalPageState extends State<GoalPage>
                   color: Colors.white, size: 18),
               const SizedBox(width: 8),                         Text(AppLocalizations.of(context)!.motivation,
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
@@ -1160,7 +1164,7 @@ class _GoalPageState extends State<GoalPage>
               Text(
                 'Welmi',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

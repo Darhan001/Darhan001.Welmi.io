@@ -25,6 +25,7 @@ Route<T> smoothPageRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      if (MediaQuery.disableAnimationsOf(context)) return child;
       const begin = Offset(0.15, 0.0);
       const end = Offset.zero;
       const curve = Curves.easeInOutCubic;
@@ -49,6 +50,7 @@ Route<T> scalePageRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      if (MediaQuery.disableAnimationsOf(context)) return child;
       return ScaleTransition(
         scale: Tween<double>(begin: 0.92, end: 1.0).animate(
           CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
@@ -63,6 +65,34 @@ Route<T> scalePageRoute<T>(Widget page) {
     },
     transitionDuration: const Duration(milliseconds: 350),
   );
+}
+
+/// Мягкое появление содержимого: прозрачность + небольшой сдвиг снизу.
+///
+/// [index] задаёт короткую задержку для элементов списка (каскад), но
+/// не больше ~240 мс, чтобы длинные списки не «ползли». При системной
+/// настройке «уменьшить движение» виджет показывается сразу.
+class FadeSlideIn extends StatelessWidget {
+  const FadeSlideIn({super.key, required this.child, this.index = 0});
+
+  final Widget child;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final delay = (index.clamp(0, 6)) * 40;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 260 + delay),
+      curve: Interval(delay / (260 + delay), 1, curve: Curves.easeOutCubic),
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(offset: Offset(0, 12 * (1 - t)), child: child),
+      ),
+      child: child,
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

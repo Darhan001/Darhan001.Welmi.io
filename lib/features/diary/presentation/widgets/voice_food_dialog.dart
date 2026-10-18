@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-import 'package:record/record.dart';
+import 'package:lumina/core/services/voice_recorder_service.dart';
 import 'package:lumina/core/models/supabase_models.dart';
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
+import 'package:lumina/core/widgets/voice_messages.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 enum _VoiceStep { idle, listening, processing, result, error }
@@ -60,7 +58,9 @@ class VoiceFoodDialog extends StatefulWidget {
 
 class _VoiceFoodDialogState extends State<VoiceFoodDialog>
     with SingleTickerProviderStateMixin {
-  final AudioRecorder _recorder = AudioRecorder();
+  static const int _maxVoiceSeconds = 45;
+
+  final VoiceRecorderService _recorder = VoiceRecorderService();
   final AiService _aiService = AiService();
 
   _VoiceStep _step = _VoiceStep.idle;
@@ -81,7 +81,6 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
 
   Duration _recordDuration = Duration.zero;
   Timer? _recordTimer;
-  String? _recordingPath;
 
   late AnimationController _pulseController;
 
@@ -141,64 +140,32 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
     HapticFeedback.mediumImpact();
 
     try {
-      final allowed = await _recorder.hasPermission();
+      await _recorder.start();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
       if (!mounted) return;
-      if (!allowed) {
-        setState(() {
-          _step = _VoiceStep.error;
-          _errorMessage = loc.voiceErrorPermission;
-        });
-        return;
-      }
-
-      if (kIsWeb) {
-        await _recorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.opus,
-            bitRate: 64000,
-            sampleRate: 16000,
-            numChannels: 1,
-          ),
-          path: '',
-        );
-      } else {
-        final path =
-            '${Directory.systemTemp.path}/voice_food_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        await _recorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.aacLc,
-            bitRate: 64000,
-            sampleRate: 16000,
-            numChannels: 1,
-          ),
-          path: path,
-        );
-        _recordingPath = path;
-      }
-
       setState(() {
-        _step = _VoiceStep.listening;
-        _recordDuration = Duration.zero;
-        _errorMessage = null;
+        _step = _VoiceStep.error;
+        _errorMessage = voiceRecordMessage(loc, e);
       });
-
-      _recordTimer?.cancel();
-      _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        setState(() => _recordDuration += const Duration(seconds: 1));
-        if (_recordDuration.inSeconds >= 45) {
-          _stopListeningAndProcess();
-        }
-      });
-    } catch (e) {
-      debugPrint('⚠️ Voice record error: $e');
-      if (mounted) {
-        setState(() {
-          _step = _VoiceStep.error;
-          _errorMessage = loc.voiceErrorTranscribe;
-        });
-      }
+      return;
     }
+    if (!mounted) return;
+
+    setState(() {
+      _step = _VoiceStep.listening;
+      _recordDuration = Duration.zero;
+      _errorMessage = null;
+    });
+
+    _recordTimer?.cancel();
+    _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _recordDuration += const Duration(seconds: 1));
+      if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
+        _stopListeningAndProcess();
+      }
+    });
   }
 
   Future<void> _stopListeningAndProcess() async {
@@ -209,35 +176,15 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
 
     setState(() => _step = _VoiceStep.processing);
 
-    Uint8List? bytes;
+    Uint8List bytes;
     try {
-      final stoppedPath = await _recorder.stop();
-      if (kIsWeb) {
-        if (stoppedPath != null && stoppedPath.isNotEmpty) {
-          final uri = Uri.parse(stoppedPath);
-          final res = await http.get(uri);
-          if (res.statusCode == 200) bytes = res.bodyBytes;
-        }
-      } else {
-        final filePath = stoppedPath ?? _recordingPath;
-        if (filePath != null) {
-          final file = File(filePath);
-          if (await file.exists()) {
-            bytes = await file.readAsBytes();
-            await file.delete();
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Error stopping recorder: $e');
-    }
-    _recordingPath = null;
-
-    if (bytes == null || bytes.isEmpty) {
+      bytes = await _recorder.stopAndRead();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
       if (mounted) {
         setState(() {
           _step = _VoiceStep.error;
-          _errorMessage = AppLocalizations.of(context)!.voiceErrorTranscribe;
+          _errorMessage = voiceRecordMessage(AppLocalizations.of(context)!, e);
         });
       }
       return;
@@ -248,27 +195,25 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
 
   Future<void> _transcribeAndAnalyze(Uint8List bytes) async {
     final loc = AppLocalizations.of(context)!;
-    String? text;
+    String text;
 
     try {
       text = await _aiService.transcribeAudio(
         bytes,
-        format: kIsWeb ? 'webm' : 'm4a',
+        format: _recorder.format,
         language: 'ru',
       );
-    } catch (e) {
+    } on VoiceTranscriptionException catch (e) {
       debugPrint('⚠️ Voice transcription error: $e');
-    }
-
-    if (!mounted) return;
-
-    if (text == null || text.trim().isEmpty) {
+      if (!mounted) return;
       setState(() {
         _step = _VoiceStep.error;
-        _errorMessage = loc.voiceErrorTranscribe;
+        _errorMessage = voiceTranscriptionMessage(loc, e.failure);
       });
       return;
     }
+
+    if (!mounted) return;
 
     _recognizedText = text.trim();
 
@@ -279,7 +224,7 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
       if (result == null || result.items.isEmpty) {
         setState(() {
           _step = _VoiceStep.error;
-          _errorMessage = 'Не удалось определить продукты. Попробуй ещё раз.';
+          _errorMessage = loc.voiceFoodNotRecognized;
         });
         return;
       }
@@ -296,7 +241,7 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog>
       if (mounted) {
         setState(() {
           _step = _VoiceStep.error;
-          _errorMessage = 'Ошибка анализа продуктов. Попробуй ещё раз.';
+          _errorMessage = loc.voiceFoodAnalysisError;
         });
       }
     }

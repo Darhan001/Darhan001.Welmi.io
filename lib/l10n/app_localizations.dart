@@ -508,6 +508,36 @@ abstract class AppLocalizations {
   /// **'Imperial (lbs, miles)'**
   String get imperialUnits;
 
+  /// No description provided for @unitCm.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get unitCm;
+
+  /// No description provided for @unitKg.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unitKg;
+
+  /// No description provided for @unitLb.
+  ///
+  /// In en, this message translates to:
+  /// **'lb'**
+  String get unitLb;
+
+  /// No description provided for @unitKm.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get unitKm;
+
+  /// No description provided for @unitMi.
+  ///
+  /// In en, this message translates to:
+  /// **'mi'**
+  String get unitMi;
+
   /// No description provided for @widgetTitle.
   ///
   /// In en, this message translates to:
@@ -1591,7 +1621,7 @@ abstract class AppLocalizations {
   /// No description provided for @goalTargetWeight.
   ///
   /// In en, this message translates to:
-  /// **'{weight} kg — goal'**
+  /// **'{weight} — goal'**
   String goalTargetWeight(Object weight);
 
   /// No description provided for @editGoal.
@@ -1906,89 +1936,29 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsPageTitle;
 
-  /// No description provided for @inbox.
+  /// No description provided for @notifOpenSettings.
   ///
   /// In en, this message translates to:
-  /// **'Inbox'**
-  String get inbox;
+  /// **'Set up reminders'**
+  String get notifOpenSettings;
 
-  /// No description provided for @markAllRead.
+  /// No description provided for @notifTurnOnHint.
   ///
   /// In en, this message translates to:
-  /// **'Mark all read'**
-  String get markAllRead;
+  /// **'Turn on notifications so the app can remind you about water, meals and activity.'**
+  String get notifTurnOnHint;
 
-  /// No description provided for @notifWaterReminder.
+  /// No description provided for @notifNoReminders.
   ///
   /// In en, this message translates to:
-  /// **'Time to drink water!'**
-  String get notifWaterReminder;
+  /// **'All reminders are off'**
+  String get notifNoReminders;
 
-  /// No description provided for @notifWaterSubtitle.
+  /// No description provided for @notifScheduleHint.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve drunk 60% of your daily goal'**
-  String get notifWaterSubtitle;
-
-  /// No description provided for @notifLunchReminder.
-  ///
-  /// In en, this message translates to:
-  /// **'Lunchtime'**
-  String get notifLunchReminder;
-
-  /// No description provided for @notifLunchSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Don\'t forget to log a meal'**
-  String get notifLunchSubtitle;
-
-  /// No description provided for @notifWeightResult.
-  ///
-  /// In en, this message translates to:
-  /// **'New result!'**
-  String get notifWeightResult;
-
-  /// No description provided for @notifWeightSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your weight dropped by 0.4 kg'**
-  String get notifWeightSubtitle;
-
-  /// No description provided for @notifMotivation.
-  ///
-  /// In en, this message translates to:
-  /// **'Motivation of the day'**
-  String get notifMotivation;
-
-  /// No description provided for @notifMotivationSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Small steps lead to big results'**
-  String get notifMotivationSubtitle;
-
-  /// No description provided for @notif15MinAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'15 min ago'**
-  String get notif15MinAgo;
-
-  /// No description provided for @notif2HoursAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'2 hours ago'**
-  String get notif2HoursAgo;
-
-  /// No description provided for @notif1DayAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'1 day ago'**
-  String get notif1DayAgo;
-
-  /// No description provided for @notif2DaysAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'2 days ago'**
-  String get notif2DaysAgo;
+  /// **'Your daily reminder schedule. Tap a reminder to change its time.'**
+  String get notifScheduleHint;
 
   /// No description provided for @editProfileTitle.
   ///
@@ -2047,13 +2017,13 @@ abstract class AppLocalizations {
   /// No description provided for @currentWeightLabel.
   ///
   /// In en, this message translates to:
-  /// **'Current Weight (kg)'**
+  /// **'Current Weight'**
   String get currentWeightLabel;
 
   /// No description provided for @targetWeight.
   ///
   /// In en, this message translates to:
-  /// **'Target Weight (kg)'**
+  /// **'Target Weight'**
   String get targetWeight;
 
   /// No description provided for @tapPhotoToChange.
@@ -3255,6 +3225,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not reach the feedback service. Check your connection and try again.'**
   String get feedbackNetworkError;
+
+  /// No description provided for @voiceErrorNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Voice recognition needs the internet.'**
+  String get voiceErrorNoInternet;
+
+  /// No description provided for @voiceErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is unavailable right now. Please try again later.'**
+  String get voiceErrorUnavailable;
+
+  /// No description provided for @voiceErrorRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start recording. Please try again.'**
+  String get voiceErrorRecord;
+
+  /// No description provided for @voiceErrorPermissionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is denied. Allow it in your phone settings.'**
+  String get voiceErrorPermissionSettings;
+
+  /// No description provided for @ttsPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get ttsPlay;
+
+  /// No description provided for @ttsStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get ttsStop;
+
+  /// No description provided for @ttsReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get ttsReplay;
+
+  /// No description provided for @ttsVoiceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech voice'**
+  String get ttsVoiceSettings;
+
+  /// No description provided for @ttsVoiceDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default voice'**
+  String get ttsVoiceDefault;
+
+  /// No description provided for @ttsVoicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no voices for this language. Install a speech engine in the system settings.'**
+  String get ttsVoicesEmpty;
+
+  /// No description provided for @ttsErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech playback is not available on this device.'**
+  String get ttsErrorUnavailable;
+
+  /// No description provided for @aiErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI assistant did not respond. Check your connection and try again.'**
+  String get aiErrorUnavailable;
+
+  /// No description provided for @voiceFoodNotRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not identify the food. Please try again.'**
+  String get voiceFoodNotRecognized;
+
+  /// No description provided for @voiceFoodAnalysisError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not analyze the food. Please try again.'**
+  String get voiceFoodAnalysisError;
+
+  /// No description provided for @weightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid weight'**
+  String get weightInvalid;
+
+  /// No description provided for @weightSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your weight. Check your connection and try again.'**
+  String get weightSaveError;
+
+  /// No description provided for @weightSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight saved'**
+  String get weightSaved;
+
+  /// No description provided for @saveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Check your connection and try again.'**
+  String get saveError;
+
+  /// No description provided for @signInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save your data'**
+  String get signInRequired;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Food scanner'**
+  String get navScanner;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// No description provided for @heightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a height between 100 and 250 cm'**
+  String get heightInvalid;
 }
 
 class _AppLocalizationsDelegate

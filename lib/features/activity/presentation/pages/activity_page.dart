@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/units_format.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/models/supabase_models.dart';
@@ -25,7 +29,7 @@ class _ActivityPageState extends State<ActivityPage>
   double _todayCalories = 0;
   double _todayMinutes = 0;
   double _todayDistance = 0;
-  int _stepGoal = 10000;
+  final int _stepGoal = 10000;
 
   @override
   void initState() {
@@ -112,6 +116,7 @@ class _ActivityPageState extends State<ActivityPage>
       switch (result.status) {
         case HealthSyncStatus.success:
           await _loadTodayActivity();
+          if (!mounted) return;
           hapticSuccess();
           showWelmiSnackbar(
             context,
@@ -150,7 +155,7 @@ class _ActivityPageState extends State<ActivityPage>
   void _showLogActivityDialog(ThemeColors tc) {
     final stepsCtl = TextEditingController(text: _todaySteps > 0 ? _todaySteps.toString() : '');
     final minutesCtl = TextEditingController(text: _todayMinutes > 0 ? _todayMinutes.toInt().toString() : '');
-    final distanceCtl = TextEditingController(text: _todayDistance > 0 ? _todayDistance.toStringAsFixed(1) : '');
+    final distanceCtl = TextEditingController(text: _todayDistance > 0 ? AppLocalizations.of(context)!.distanceValue(_todayDistance) : '');
 
     showModalBottomSheet(
       context: context,
@@ -216,7 +221,7 @@ class _ActivityPageState extends State<ActivityPage>
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: tc.text),
                     decoration: InputDecoration(
-                      labelText: 'Км',
+                      labelText: AppLocalizations.of(context)!.distanceUnitLabel,
                       hintText: '3.5',
                       filled: true,
                       fillColor: tc.background,
@@ -234,10 +239,17 @@ class _ActivityPageState extends State<ActivityPage>
                 onPressed: () async {
                   final steps = int.tryParse(stepsCtl.text) ?? 0;
                   final minutes = int.tryParse(minutesCtl.text) ?? 0;
-                  final distance = double.tryParse(distanceCtl.text) ?? 0;
+                  final distance = UnitsService.instance.distanceFromDisplay(parseDecimalInput(distanceCtl.text) ?? 0);
 
+                  final loc = AppLocalizations.of(context)!;
                   final userId = AuthService().userId;
-                  if (userId != null) {
+                  // Без входа запись некуда сохранить — не делаем вид, что сохранили.
+                  if (userId == null) {
+                    showWelmiSnackbar(context, loc.signInRequired,
+                        icon: Icons.lock_outline);
+                    return;
+                  }
+                  try {
                     await _supabase.saveActivityLog(ActivityLog(
                       userId: userId,
                       steps: steps,
@@ -245,15 +257,23 @@ class _ActivityPageState extends State<ActivityPage>
                       activeMinutes: minutes.toDouble(),
                       distanceKm: distance > 0 ? distance : null,
                     ));
+                  } catch (e) {
+                    debugPrint('⚠️ Save activity error: $e');
+                    if (mounted) {
+                      showWelmiSnackbar(context, loc.saveError,
+                          icon: Icons.error_outline);
+                    }
+                    return;
                   }
 
-                  if (mounted) {
-                    hapticSuccess();
-                    Navigator.pop(ctx);
-                    _animController.reset();
-                    _animController.forward();
-                    _loadTodayActivity();
-                  }
+                  hapticSuccess();
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (!mounted) return;
+                  _animController.reset();
+                  _animController.forward();
+                  _loadTodayActivity();
+                  showWelmiSnackbar(context, loc.activitySaved,
+                      icon: Icons.check_circle);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: tc.primary,
@@ -423,7 +443,7 @@ class _ActivityPageState extends State<ActivityPage>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildMiniStat(tc,
-                  _todayDistance > 0 ? '${_todayDistance.toStringAsFixed(1)} км' : '—',
+                  _todayDistance > 0 ? AppLocalizations.of(context)!.formatDistance(_todayDistance) : '—',
                   'Дистанция'),
               _buildMiniStat(tc,
                   _todayCalories > 0 ? '${_todayCalories.toInt()} ккал' : '—',

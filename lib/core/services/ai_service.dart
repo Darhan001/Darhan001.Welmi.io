@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:lumina/core/models/workout_plan.dart';
+import 'package:lumina/core/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AiChatMessage {
   final String role; 
@@ -12,6 +14,40 @@ class AiChatMessage {
   AiChatMessage({required this.role, required this.text, DateTime? timestamp}) 
       : timestamp = timestamp ?? DateTime.now();
   Map<String, dynamic> toJson() => {'role': role, 'text': text, 'timestamp': timestamp.toIso8601String()};
+
+  /// Возвращает null для повреждённой записи, чтобы одна битая строка
+  /// не обнуляла всю историю.
+  static AiChatMessage? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final role = json['role'];
+    final text = json['text'];
+    if ((role != 'user' && role != 'assistant') || text is! String) return null;
+    return AiChatMessage(
+      role: role as String,
+      text: text,
+      timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? ''),
+    );
+  }
+}
+
+/// Ни один AI-провайдер не ответил на запрос чата.
+class AiUnavailableException implements Exception {
+  const AiUnavailableException(this.reason);
+  final String reason;
+
+  @override
+  String toString() => 'AiUnavailableException: $reason';
+}
+
+/// Почему распознавание речи не вернуло текст.
+enum VoiceTranscriptionFailure { noApiKey, network, emptyResult, unavailable }
+
+class VoiceTranscriptionException implements Exception {
+  const VoiceTranscriptionException(this.failure);
+  final VoiceTranscriptionFailure failure;
+
+  @override
+  String toString() => 'VoiceTranscriptionException: $failure';
 }
 
 class FoodAnalysisResult {
@@ -2078,20 +2114,22 @@ $countryInstruction
   }
 
   // --- ЧАТ ---
+
+  /// Возвращает ответ AI. Если ни один провайдер не ответил, бросает
+  /// [AiUnavailableException]: ошибка не попадает в историю как ответ AI.
   Future<String> sendChatMessage(String message) async {
     _lastAiIssue = null;
-    // Добавляем сообщение пользователя в историю
     _chatHistory.add(AiChatMessage(role: 'user', text: message));
     // Ограничиваем историю 10 последними сообщениями, чтобы запрос
-    // укладывался в небольшой баланс аккаунта.
-    // ВАЖНО: не включаем последнее сообщение пользователя в history,
-    //因为它 уже передаётся через userPrompt, иначе получится
-    // два подряд user-сообщения, что ломает API.
+    // укладывался в небольшой баланс аккаунта. Текущее сообщение пользователя
+    // не включаем в history: оно передаётся через userPrompt, иначе
+    // получатся два user-сообщения подряд.
     final historyMessages = _chatHistory.length > 11
         ? _chatHistory.sublist(_chatHistory.length - 11, _chatHistory.length - 1)
         : _chatHistory.sublist(0, _chatHistory.length - 1);
+    String? text;
     try {
-      final text = await _tryAiCompletion(
+      text = await _tryAiCompletion(
         systemPrompt:
             'Ты — Welmi AI, помощник по здоровью и питанию. Отвечай на том же языке, на котором пишет пользователь: если он пишет по-русски — отвечай по-русски, по-английски — по-английски и т.д. Также приветствуй пользователя в начале диалога.',
         userPrompt: message,
@@ -2100,16 +2138,20 @@ $countryInstruction
             .map((m) => {'role': m.role, 'content': m.text})
             .toList(),
       ).timeout(const Duration(seconds: 75));
-      if (text != null && text.isNotEmpty) {
-        _chatHistory.add(AiChatMessage(role: 'assistant', text: text));
-        return text;
-      }
     } catch (e) {
       debugPrint('❌ Chat Error: $e');
       _lastAiIssue = 'нет ответа от AI-провайдера';
     }
-    final reason = _lastAiIssue ?? 'AI не настроен: добавьте ключ провайдера';
-    return 'AI недоступен: $reason. Попробуйте позже.';
+    if (text == null || text.isEmpty) {
+      // Убираем неотвеченное сообщение, чтобы история оставалась парной.
+      _chatHistory.removeLast();
+      throw AiUnavailableException(
+        _lastAiIssue ?? 'AI не настроен: добавьте ключ провайдера',
+      );
+    }
+    _chatHistory.add(AiChatMessage(role: 'assistant', text: text));
+    await saveChatHistory();
+    return text;
   }
 
   // --- ГОЛОСОВЫЕ СООБЩЕНИЯ (РАСПОЗНАВАНИЕ РЕЧИ) ---
@@ -2123,14 +2165,20 @@ $countryInstruction
   /// [format] — формат записи без точки (`m4a`, `wav`, `mp3`, `ogg`).
   /// [language] — подсказка языка по ISO-639-1 (`ru`, `en`);
   ///   если null, провайдер определяет язык сам.
-  /// Возвращает null, если распознать не удалось (тогда UI покажет ошибку).
-  Future<String?> transcribeAudio(
+  /// Бросает [VoiceTranscriptionException] с причиной, если текст не получен.
+  Future<String> transcribeAudio(
     Uint8List audioBytes, {
     String format = 'm4a',
     String? language,
   }) async {
-    if (audioBytes.isEmpty) return null;
+    if (audioBytes.isEmpty) {
+      throw const VoiceTranscriptionException(
+        VoiceTranscriptionFailure.emptyResult,
+      );
+    }
     final base64Audio = base64Encode(audioBytes);
+    var sawNetworkError = false;
+    var sawEmptyResult = false;
 
     // 1) OpenRouter Speech-to-Text. Принимает только ключи вида sk-or-…
     const sttModels = ['openai/whisper-1', 'openai/whisper-large-v3'];
@@ -2161,10 +2209,15 @@ $countryInstruction
           if (response.statusCode == 200) {
             final text = (jsonDecode(response.body) as Map)['text'] as String?;
             if (text != null && text.trim().isNotEmpty) return text.trim();
+            sawEmptyResult = true;
           } else {
             debugPrint('⚠️ STT HTTP ${response.statusCode} ($model)');
           }
         } catch (e) {
+          // package:http оборачивает сбои сокета в ClientException.
+          if (e is http.ClientException || e is TimeoutException) {
+            sawNetworkError = true;
+          }
           debugPrint('⚠️ STT error with $model: $e');
         }
       }
@@ -2175,6 +2228,11 @@ $countryInstruction
         .whereType<String>()
         .where((k) => !k.startsWith('sk-or-'))
         .toList();
+    if (orKeys.isEmpty && geminiKeys.isEmpty) {
+      throw const VoiceTranscriptionException(
+        VoiceTranscriptionFailure.noApiKey,
+      );
+    }
     const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
     const sttPrompt =
         'Распознай речь в этом аудио и верни ТОЛЬКО текст без пояснений. '
@@ -2226,16 +2284,26 @@ $countryInstruction
                 if (result.isNotEmpty) return result;
               }
             }
+            sawEmptyResult = true;
           } else {
             debugPrint('⚠️ STT Gemini HTTP ${response.statusCode} ($model)');
           }
         } catch (e) {
+          if (e is http.ClientException || e is TimeoutException) {
+            sawNetworkError = true;
+          }
           debugPrint('⚠️ STT Gemini error with $model: $e');
         }
       }
     }
 
-    return null;
+    throw VoiceTranscriptionException(
+      sawNetworkError
+          ? VoiceTranscriptionFailure.network
+          : sawEmptyResult
+              ? VoiceTranscriptionFailure.emptyResult
+              : VoiceTranscriptionFailure.unavailable,
+    );
   }
 
   /// MIME-тип аудио для Gemini REST (m4a — это контейнер с AAC внутри).
@@ -2499,7 +2567,73 @@ $countryInstruction
   }
 
   List<AiChatMessage> get chatHistory => List.unmodifiable(_chatHistory);
-  void startNewChat() => _chatHistory.clear();
-  Future<void> saveChatHistory() async {}
-  Future<void> loadChatHistory() async {}
+
+  // ─── История чата на устройстве ───
+  // Хранится отдельно для каждого пользователя, чтобы на общем устройстве
+  // не показывать чужую переписку. Последние 50 сообщений.
+  static const int _maxStoredMessages = 50;
+  String? _historyOwner;
+
+  static String _historyKey(String userId) => 'ai_chat_history_$userId';
+
+  void startNewChat() {
+    _chatHistory.clear();
+    final userId = AuthService().userId;
+    if (userId == null) return;
+    SharedPreferences.getInstance()
+        .then((prefs) => prefs.remove(_historyKey(userId)))
+        .catchError((Object e) {
+      debugPrint('⚠️ Chat history clear error: $e');
+      return false;
+    });
+  }
+
+  /// Очищает переписку в памяти при выходе из аккаунта, не удаляя её
+  /// с устройства: после повторного входа история вернётся.
+  void clearInMemory() {
+    _chatHistory.clear();
+    _historyOwner = null;
+  }
+
+  Future<void> saveChatHistory() async {
+    final userId = AuthService().userId;
+    if (userId == null) return;
+    _historyOwner = userId;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final recent = _chatHistory.length > _maxStoredMessages
+          ? _chatHistory.sublist(_chatHistory.length - _maxStoredMessages)
+          : _chatHistory;
+      await prefs.setString(
+        _historyKey(userId),
+        jsonEncode(recent.map((m) => m.toJson()).toList()),
+      );
+    } catch (e) {
+      debugPrint('⚠️ Chat history save error: $e');
+    }
+  }
+
+  /// Загружает историю текущего пользователя. Если она уже в памяти
+  /// (тот же пользователь в этой сессии) — ничего не делает.
+  Future<void> loadChatHistory() async {
+    final userId = AuthService().userId;
+    if (userId == null) {
+      _chatHistory.clear();
+      _historyOwner = null;
+      return;
+    }
+    if (_historyOwner == userId) return;
+    _chatHistory.clear();
+    _historyOwner = userId;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_historyKey(userId));
+      if (raw == null) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+      _chatHistory.addAll(decoded.map(AiChatMessage.fromJson).whereType<AiChatMessage>());
+    } catch (e) {
+      debugPrint('⚠️ Chat history load error: $e');
+    }
+  }
 }

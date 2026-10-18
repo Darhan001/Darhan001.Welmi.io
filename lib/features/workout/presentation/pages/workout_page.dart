@@ -197,7 +197,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           ),
                         ),
                         isSel
-                            ? Icon(Icons.check_circle_rounded, size: 18, color: _Design.lime)
+                            ? const Icon(Icons.check_circle_rounded, size: 18, color: _Design.lime)
                             : const SizedBox(width: 18),
                       ],
                     ),
@@ -346,7 +346,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
             // Back button
             IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.arrow_back_ios_new_rounded, color: _Design.textPrimary, size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _Design.textPrimary, size: 20),
             ),
             // Pill widget: icon + "Мой план: Неделя 2" + arrow
             GestureDetector(
@@ -361,7 +361,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.directions_run_rounded, size: 16, color: _Design.lime),
+                    const Icon(Icons.directions_run_rounded, size: 16, color: _Design.lime),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context)!.myPlan,
@@ -372,7 +372,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.chevron_right, size: 16, color: _Design.textSecondary),
+                    const Icon(Icons.chevron_right, size: 16, color: _Design.textSecondary),
                   ],
                 ),
               ),
@@ -387,7 +387,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 color: _Design.card,
                 border: Border.all(color: _Design.cardBorder),
               ),
-              child: Center(
+              child: const Center(
                 child: Icon(Icons.person_outline_rounded, size: 20, color: _Design.textSecondary),
               ),
             ),
@@ -420,7 +420,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                     color: _Design.lime.withValues(alpha: 0.1),
                     border: Border.all(color: _Design.lime.withValues(alpha: 0.2)),
                   ),
-                  child: Icon(Icons.add, color: _Design.lime, size: 22),
+                  child: const Icon(Icons.add, color: _Design.lime, size: 22),
                 ),
               );
             }
@@ -474,7 +474,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
     final mainMuscle = day.focus.split(' ')[0].replaceAll(',', '');
     final visuals = _muscleVisuals(mainMuscle);
     return Muscle3DViewer(
-      key: ValueKey('day_view_3d_${_selectedDay}'),
+      key: ValueKey('day_view_3d_$_selectedDay'),
       highlightColor: visuals.color,
       muscleIcon: visuals.icon,
       muscleName: day.focus.isNotEmpty ? day.focus : 'Общая',
@@ -585,7 +585,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: _Design.textMuted, size: 20),
+            const Icon(Icons.chevron_right, color: _Design.textMuted, size: 20),
           ],
         ),
       ),
@@ -615,7 +615,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
             ),
             TextButton(
               onPressed: _loadPlan,               child: Text(AppLocalizations.of(context)!.retry,
-                  style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w800)),
             ),
           ],
         ),

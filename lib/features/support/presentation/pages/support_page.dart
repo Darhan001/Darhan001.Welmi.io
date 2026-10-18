@@ -90,7 +90,7 @@ class _SupportPageState extends State<SupportPage> {
 
   // ─── Открыть Telegram ────────────────────────────────────
   Future<void> _openTelegram() async {
-    final username = 'welmi_support';
+    const username = 'welmi_support';
     // Пробуем открыть Telegram напрямую
     final telegramUri = Uri.parse('tg://resolve?domain=$username');
     final webUri = Uri.parse('https://t.me/$username');
@@ -352,7 +352,7 @@ class _SupportPageState extends State<SupportPage> {
                                   const SizedBox(width: 8),
                                   Text(
                                     AppLocalizations.of(context)!.send,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

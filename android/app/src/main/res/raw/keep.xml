@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  flutter_local_notifications использует @mipmap/ic_launcher как иконку
+  уведомления. В release-сборке включён isShrinkResources, поэтому иконку
+  нужно явно оставить — иначе система не находит ресурс и запланированное
+  уведомление молча не показывается.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@mipmap/ic_launcher,@mipmap/ic_launcher_round,@drawable/*" />

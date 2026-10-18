@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:record/record.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/ai_service.dart';
+import 'package:lumina/core/services/speech_output_service.dart';
+import 'package:lumina/core/services/voice_recorder_service.dart';
+import 'package:lumina/core/widgets/app_snackbar.dart';
+import 'package:lumina/core/widgets/voice_messages.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 // ─── Premium design tokens ────────────────────────────────────
@@ -20,7 +20,6 @@ class _Design {
   static const Color textSecondary = Color(0xFF8A8A8A);
   static const Color textMuted = Color(0xFF555555);
   static const double radiusLg = 28;
-  static const double radiusMd = 20;
 }
 
 class AiChatPage extends StatefulWidget {
@@ -39,15 +38,18 @@ class _AiChatPageState extends State<AiChatPage> {
 
   final List<_ChatBubble> _messages = [];
   bool _isLoading = false;
-  String? _errorMessage;
 
   // Голосовые сообщения (запись → распознавание речи → текст в чат)
-  final AudioRecorder _recorder = AudioRecorder();
+  final VoiceRecorderService _voice = VoiceRecorderService();
+  // Озвучивание ответов AI
+  final SpeechOutputService _speech = SpeechOutputService();
   bool _isRecording = false;
+  bool _isStartingRecording = false;
   bool _isTranscribing = false;
+  // Ответы, которые уже озвучивались: для них кнопка становится «повторить».
+  final Set<String> _spokenTexts = {};
   Duration _recordDuration = Duration.zero;
   Timer? _recordTicker;
-  String? _recordingPath;
 
   @override
   void initState() {
@@ -71,8 +73,9 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   void dispose() {
     _recordTicker?.cancel();
-    if (_isRecording) _recorder.cancel();
-    _recorder.dispose();
+    if (_isRecording) _voice.cancel();
+    _voice.dispose();
+    _speech.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -125,34 +128,26 @@ class _AiChatPageState extends State<AiChatPage> {
     setState(() {
       _messages.add(_ChatBubble(text: message, isUser: true, isVoice: isVoice));
       _isLoading = true;
-      _errorMessage = null;
     });
     _scrollToBottom();
 
+    final loc = AppLocalizations.of(context)!;
+    String reply;
     try {
-      final response = await _aiService.sendChatMessage(message);
-      if (mounted) {
-        setState(() {
-          _messages.add(_ChatBubble(text: response, isUser: false));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
+      reply = await _aiService.sendChatMessage(message);
+    } on AiUnavailableException catch (e) {
+      debugPrint('⚠️ Chat unavailable: ${e.reason}');
+      reply = loc.aiErrorUnavailable;
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _messages.add(
-            _ChatBubble(
-              text:
-                  '❌ **Ошибка соединения**\n\n${AppLocalizations.of(context)!.aiErrorConnection}',
-              isUser: false,
-            ),
-          );
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
+      debugPrint('❌ Chat error: $e');
+      reply = loc.aiErrorConnection;
     }
+    if (!mounted) return;
+    setState(() {
+      _messages.add(_ChatBubble(text: reply, isUser: false));
+      _isLoading = false;
+    });
+    _scrollToBottom();
   }
 
   // ─── Голосовые сообщения: запись и распознавание ───────────
@@ -163,63 +158,34 @@ class _AiChatPageState extends State<AiChatPage> {
 
   /// Начинает запись голосового сообщения.
   Future<void> _startRecording() async {
-    if (_isRecording || _isTranscribing) return;
+    if (_isRecording || _isTranscribing || _isStartingRecording) return;
     final loc = AppLocalizations.of(context)!;
     HapticFeedback.mediumImpact();
 
+    _isStartingRecording = true;
     try {
-      // Запрашивает разрешение микрофона у системы / браузера.
-      final allowed = await _recorder.hasPermission();
-      if (!mounted) return;
-      if (!allowed) {
-        _showVoiceError(loc.voiceErrorPermission);
-        return;
-      }
-
-      if (kIsWeb) {
-        // Для Web record поддерживает запись напрямую без пути или через webm/opus
-        await _recorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.opus,
-            bitRate: 64000,
-            sampleRate: 16000,
-            numChannels: 1,
-          ),
-          path: '',
-        );
-      } else {
-        final path =
-            '${Directory.systemTemp.path}/welmi_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        await _recorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.aacLc, // контейнер m4a, сжатие AAC
-            bitRate: 64000,
-            sampleRate: 16000, // 16 кГц — оптимум для распознавания речи
-            numChannels: 1, // моно для голоса достаточно
-          ),
-          path: path,
-        );
-        _recordingPath = path;
-      }
-      if (!mounted) return;
-
-      setState(() {
-        _isRecording = true;
-        _recordDuration = Duration.zero;
-      });
-
-      _recordTicker?.cancel();
-      _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        setState(() => _recordDuration += const Duration(seconds: 1));
-        if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
-          _finishRecording(send: true);
-        }
-      });
-    } catch (e) {
-      debugPrint('⚠️ Voice record error: $e');
-      if (mounted) _showVoiceError(loc.voiceErrorTranscribe);
+      await _voice.start();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
+      if (mounted) _showVoiceError(voiceRecordMessage(loc, e));
+      return;
+    } finally {
+      _isStartingRecording = false;
     }
+    if (!mounted) return;
+
+    setState(() {
+      _isRecording = true;
+      _recordDuration = Duration.zero;
+    });
+    _recordTicker?.cancel();
+    _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _recordDuration += const Duration(seconds: 1));
+      if (_recordDuration.inSeconds >= _maxVoiceSeconds) {
+        _finishRecording(send: true);
+      }
+    });
   }
 
   /// Останавливает запись. [send] = false — просто удалить запись.
@@ -230,39 +196,15 @@ class _AiChatPageState extends State<AiChatPage> {
     HapticFeedback.lightImpact();
     if (mounted) setState(() => _isRecording = false);
 
-    Uint8List? bytes;
-    try {
-      final stoppedPath = await _recorder.stop();
-      if (kIsWeb) {
-        if (stoppedPath != null && stoppedPath.isNotEmpty) {
-          // В Web stop() возвращает blob URL или data url, загружаем байты по HTTP/URI
-          try {
-            final uri = Uri.parse(stoppedPath);
-            final res = await http.get(uri);
-            if (res.statusCode == 200) {
-              bytes = res.bodyBytes;
-            }
-          } catch (e) {
-            debugPrint('⚠️ Web voice fetch error: $e');
-          }
-        }
-      } else {
-        final filePath = stoppedPath ?? _recordingPath;
-        if (filePath != null) {
-          final file = File(filePath);
-          if (await file.exists()) {
-            if (send) bytes = await file.readAsBytes();
-            await file.delete(); // временный файл распознаванию больше не нужен
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Voice stop error: $e');
+    if (!send) {
+      await _voice.cancel();
+      return;
     }
-    _recordingPath = null;
-
-    if (!send) return;
-    if (bytes == null || bytes.isEmpty) {
+    Uint8List bytes;
+    try {
+      bytes = await _voice.stopAndRead();
+    } on VoiceRecordException catch (e) {
+      debugPrint('⚠️ $e');
       if (mounted) {
         _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
       }
@@ -275,20 +217,27 @@ class _AiChatPageState extends State<AiChatPage> {
   Future<void> _transcribeAndSend(Uint8List bytes) async {
     setState(() => _isTranscribing = true);
     String? text;
+    VoiceTranscriptionFailure? failure;
     try {
       text = await _aiService.transcribeAudio(
         bytes,
-        format: kIsWeb ? 'webm' : 'm4a',
+        format: _voice.format,
         language: _speechLanguageHint,
       );
-    } catch (e) {
-      debugPrint('⚠️ Voice transcribe error: $e');
+    } on VoiceTranscriptionException catch (e) {
+      debugPrint('⚠️ $e');
+      failure = e.failure;
     }
     if (!mounted) return;
     setState(() => _isTranscribing = false);
 
     if (text == null || text.trim().isEmpty) {
-      _showVoiceError(AppLocalizations.of(context)!.voiceErrorTranscribe);
+      _showVoiceError(
+        voiceTranscriptionMessage(
+          AppLocalizations.of(context)!,
+          failure ?? VoiceTranscriptionFailure.emptyResult,
+        ),
+      );
       return;
     }
     await _sendMessage(text: text, isVoice: true);
@@ -297,29 +246,150 @@ class _AiChatPageState extends State<AiChatPage> {
   /// Подсказка языка для STT: для ru/en заметно точнее,
   /// для остальных локалей оставляем автоопределение провайдеру.
   String? get _speechLanguageHint {
-    final code = Localizations.localeOf(context).languageCode;
+    final code = _languageCode;
     return (code == 'ru' || code == 'en') ? code : null;
   }
 
+  String get _languageCode => Localizations.localeOf(context).languageCode;
+
   void _showVoiceError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: _Design.textPrimary,
-          ),
+    AppSnackbar.error(context, message);
+  }
+
+  // ─── Озвучивание ответов ───────────────────────────────────
+
+  /// Убирает markdown-разметку, которую синтезатор прочитал бы вслух.
+  static String _plainSpeechText(String text) =>
+      text.replaceAll(RegExp(r'[*_#`>]'), '').trim();
+
+  /// Озвучивает сообщение или, если оно уже звучит, останавливает речь.
+  Future<void> _toggleSpeech(String text) async {
+    final loc = AppLocalizations.of(context)!;
+    final plain = _plainSpeechText(text);
+    if (_speech.speakingText.value == plain) {
+      await _speech.stop();
+      return;
+    }
+    HapticFeedback.selectionClick();
+    try {
+      await _speech.speak(plain, languageCode: _languageCode);
+      _spokenTexts.add(text);
+    } on SpeechOutputException catch (e) {
+      debugPrint('⚠️ $e');
+      if (mounted) AppSnackbar.error(context, loc.ttsErrorUnavailable);
+    }
+  }
+
+  Future<void> _showVoicePicker() async {
+    final loc = AppLocalizations.of(context)!;
+    HapticFeedback.lightImpact();
+    List<SpeechVoice> voices;
+    try {
+      await _speech.init();
+      voices = await _speech.voicesFor(_languageCode);
+    } catch (e) {
+      debugPrint('⚠️ TTS voices error: $e');
+      if (mounted) AppSnackbar.error(context, loc.ttsErrorUnavailable);
+      return;
+    }
+    if (!mounted) return;
+    final selected = _speech.selectedVoice;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: _Design.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(_Design.radiusLg),
         ),
-        backgroundColor: _Design.card,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_Design.radiusMd),
-        ),
-        duration: const Duration(seconds: 3),
       ),
+      builder: (ctx) {
+        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.6;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Text(
+                    loc.ttsVoiceSettings,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _Design.textPrimary,
+                    ),
+                  ),
+                ),
+                _voiceTile(
+                  title: loc.ttsVoiceDefault,
+                  subtitle: null,
+                  isSelected: selected == null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _speech.selectVoice(null);
+                  },
+                ),
+                if (voices.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Text(
+                      loc.ttsVoicesEmpty,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: _Design.textSecondary,
+                      ),
+                    ),
+                  ),
+                for (final voice in voices)
+                  _voiceTile(
+                    title: voice.name,
+                    subtitle: voice.locale,
+                    isSelected: voice == selected,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _speech.selectVoice(voice);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _voiceTile({
+    required String title,
+    required String? subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: _Design.textPrimary,
+        ),
+      ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _Design.textSecondary,
+              ),
+            ),
+      trailing: isSelected
+          ? const Icon(Icons.check_rounded, color: _Design.lime)
+          : null,
     );
   }
 
@@ -357,10 +427,10 @@ class _AiChatPageState extends State<AiChatPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
+              _speech.stop();
               setState(() {
                 _messages.clear();
                 _isLoading = false;
-                _errorMessage = null;
               });
               _aiService.startNewChat();
             },
@@ -393,10 +463,20 @@ class _AiChatPageState extends State<AiChatPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: _Design.textPrimary,
                       size: 20,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: AppLocalizations.of(context)!.ttsVoiceSettings,
+                    onPressed: _showVoicePicker,
+                    icon: const Icon(
+                      Icons.record_voice_over_outlined,
+                      color: _Design.textSecondary,
+                      size: 22,
                     ),
                   ),
                 ],
@@ -449,7 +529,8 @@ class _AiChatPageState extends State<AiChatPage> {
                     ),
                   ),
                   const SizedBox(height: 36),
-                  // Suggestion pills                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion1),
+                  // Suggestion pills
+                  _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion1),
                   const SizedBox(height: 10),
                   _buildSuggestion(AppLocalizations.of(context)!.aiSuggestion2),
                   const SizedBox(height: 10),
@@ -484,36 +565,6 @@ class _AiChatPageState extends State<AiChatPage> {
             },
           ),
         ),
-        // Error message (if any)
-        if (_errorMessage != null)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(_Design.radiusMd),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: Colors.redAccent,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _errorMessage!,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         // Input field
         _buildInputArea(),
       ],
@@ -593,8 +644,8 @@ class _AiChatPageState extends State<AiChatPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_Design.card, const Color(0xFF222222)],
+          gradient: const LinearGradient(
+            colors: [_Design.card, Color(0xFF222222)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -732,6 +783,9 @@ class _AiChatPageState extends State<AiChatPage> {
                           size: 12,
                           color: _Design.lime.withValues(alpha: 0.5),
                         ),
+                      ] else ...[
+                        const SizedBox(width: 8),
+                        _buildSpeakButton(message.text),
                       ],
                     ],
                   ),
@@ -741,6 +795,39 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Кнопка озвучивания ответа AI: «озвучить», «повторить» или «стоп».
+  Widget _buildSpeakButton(String text) {
+    final loc = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<String?>(
+      valueListenable: _speech.speakingText,
+      builder: (context, speaking, _) {
+        final isSpeaking = speaking == _plainSpeechText(text);
+        final replay = _spokenTexts.contains(text);
+        final tooltip = isSpeaking
+            ? loc.ttsStop
+            : (replay ? loc.ttsReplay : loc.ttsPlay);
+        final icon = isSpeaking
+            ? Icons.stop_circle_outlined
+            : (replay ? Icons.replay_rounded : Icons.volume_up_rounded);
+        return Tooltip(
+          message: tooltip,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _toggleSpeech(text),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Icon(
+                icon,
+                size: 16,
+                color: isSpeaking ? _Design.lime : _Design.textMuted,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -873,7 +960,7 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
               border: Border.all(color: _Design.cardBorder),
             ),
-            child: _TypingDots(dotColor: _Design.lime),
+            child: const _TypingDots(dotColor: _Design.lime),
           ),
         ],
       ),
@@ -1112,8 +1199,9 @@ class _AiChatPageState extends State<AiChatPage> {
     final now = DateTime.now();
     final diff = now.difference(time);
     if (diff.inMinutes < 1) return AppLocalizations.of(context)!.aiJustNow;
-    if (diff.inMinutes < 60)
+    if (diff.inMinutes < 60) {
       return AppLocalizations.of(context)!.aiMinutesAgo(diff.inMinutes);
+    }
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }

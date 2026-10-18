@@ -8,6 +8,7 @@ import 'package:lumina/features/diary/presentation/pages/diary_page.dart';
 import 'package:lumina/features/scanner/presentation/pages/scanner_page.dart';
 import 'package:lumina/features/progress/presentation/pages/progress_page.dart';
 import 'package:lumina/features/profile/presentation/pages/profile_page.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -37,10 +38,17 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final isDark = ThemeProvider.isDark(context);
-    final navBg = isDark ? AppColors.darkCard.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.85);
-    final navBorder = isDark ? AppColors.darkBorder.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.2);
-    final navShadow = isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.08);
+    final navBg = isDark
+        ? AppColors.darkCard.withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.85);
+    final navBorder = isDark
+        ? AppColors.darkBorder.withValues(alpha: 0.3)
+        : Colors.white.withValues(alpha: 0.2);
+    final navShadow = isDark
+        ? Colors.transparent
+        : Colors.black.withValues(alpha: 0.08);
 
     return Scaffold(
       extendBody: true,
@@ -66,10 +74,7 @@ class _MainShellState extends State<MainShell> {
                 decoration: BoxDecoration(
                   color: navBg,
                   borderRadius: BorderRadius.circular(35),
-                  border: Border.all(
-                    color: navBorder,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: navBorder, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: navShadow,
@@ -81,11 +86,32 @@ class _MainShellState extends State<MainShell> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(0, Icons.home_rounded, Icons.home_outlined),
-                    _buildNavItem(1, Icons.bookmark_rounded, Icons.bookmark_outline_rounded),
-                    _buildCenterItem(),
-                    _buildNavItem(3, Icons.insert_chart_rounded, Icons.insert_chart_outlined_rounded),
-                    _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+                    _buildNavItem(
+                      0,
+                      Icons.home_rounded,
+                      Icons.home_outlined,
+                      loc.navHome,
+                    ),
+                    // Дневник питания: раньше была иконка закладки, не связанная с разделом.
+                    _buildNavItem(
+                      1,
+                      Icons.menu_book_rounded,
+                      Icons.menu_book_outlined,
+                      loc.diaryTitle,
+                    ),
+                    _buildCenterItem(loc.navScanner),
+                    _buildNavItem(
+                      3,
+                      Icons.insert_chart_rounded,
+                      Icons.insert_chart_outlined_rounded,
+                      loc.progressTitle,
+                    ),
+                    _buildNavItem(
+                      4,
+                      Icons.person_rounded,
+                      Icons.person_outline_rounded,
+                      loc.navProfile,
+                    ),
                   ],
                 ),
               ),
@@ -96,77 +122,106 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData selectedIcon, IconData unselectedIcon) {
+  Widget _buildNavItem(
+    int index,
+    IconData selectedIcon,
+    IconData unselectedIcon,
+    String label,
+  ) {
     final isDark = ThemeProvider.isDark(context);
     bool isSelected = _currentIndex == index;
     final activeColor = isDark ? AppColors.iconGreenDark : Colors.black;
-    final inactiveColor = isDark ? AppColors.darkTextHint : Colors.black26;
+    // Black26 давал контраст ниже 2:1 на светлом фоне — иконки неактивных
+    // разделов было трудно различить. Black45 ≈ 3.6:1 — порог для иконок.
+    final inactiveColor = isDark ? AppColors.darkTextHint : Colors.black45;
+    final animate = !MediaQuery.disableAnimationsOf(context);
 
-    return InkWell(
-      onTap: () => _onTap(index),
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isSelected ? selectedIcon : unselectedIcon,
-                color: isSelected ? activeColor : inactiveColor,
-                size: 28,
-              ),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          onTap: () => _onTap(index),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          customBorder: const CircleBorder(),
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: animate ? 300 : 0),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedScale(
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    isSelected ? selectedIcon : unselectedIcon,
+                    color: isSelected ? activeColor : inactiveColor,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: animate ? 300 : 0),
+                  height: 4,
+                  width: isSelected ? 4 : 0,
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              height: 4,
-              width: isSelected ? 4 : 0,
-              decoration: BoxDecoration(
-                color: activeColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCenterItem() {
+  Widget _buildCenterItem(String label) {
     final isDark = ThemeProvider.isDark(context);
     bool isSelected = _currentIndex == 2;
     final btnColor = isDark ? AppColors.iconGreenDark : Colors.black;
     final shadowColor = Colors.black.withValues(alpha: isDark ? 0.5 : 0.3);
 
-    return GestureDetector(
-      onTap: () => _onTap(2),
-      child: AnimatedScale(
-        scale: isSelected ? 1.1 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: Container(
-          height: 56,
-          width: 56,
-          decoration: BoxDecoration(
-            color: btnColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor,
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          onTap: () => _onTap(2),
+          child: AnimatedScale(
+            scale: isSelected ? 1.1 : 1.0,
+            duration: Duration(
+              milliseconds: MediaQuery.disableAnimationsOf(context) ? 0 : 200,
+            ),
+            child: Container(
+              height: 56,
+              width: 56,
+              decoration: BoxDecoration(
+                color: btnColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Icon(
-            Icons.qr_code_scanner_rounded,
-            color: Colors.white,
-            size: 28,
+              child: const Icon(
+                Icons.qr_code_scanner_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
           ),
         ),
       ),
