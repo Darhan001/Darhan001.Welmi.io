@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,6 +7,20 @@ plugins {
     // Google Services отключен, так как отсутствует файл google-services.json
     // id("com.google.gms.google-services")
 }
+
+// Ключ загрузки для Google Play: android/key.properties (в git не попадает,
+// см. android/.gitignore). Формат:
+//   storePassword=…
+//   keyPassword=…
+//   keyAlias=upload
+//   storeFile=C:/путь/к/upload-keystore.jks
+// Без файла release собирается с debug-ключом — такой APK годится только
+// для локальной проверки, в Google Play его загрузить нельзя.
+val keystoreProperties = Properties().apply {
+    val propsFile = rootProject.file("key.properties")
+    if (propsFile.exists()) propsFile.inputStream().use { this.load(it) }
+}
+val hasReleaseKeystore = keystoreProperties.getProperty("storeFile") != null
 
 android {
     namespace = "com.example.lumina"
@@ -25,9 +41,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

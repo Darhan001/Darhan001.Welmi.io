@@ -21,18 +21,24 @@ class AuthService {
   /// Синхронизация с Supabase сессией
   void syncFromSession(User user) {
     _userId = user.id;
-    _displayName = user.userMetadata?['full_name'] as String? ??
+    _displayName =
+        user.userMetadata?['full_name'] as String? ??
         user.userMetadata?['name'] as String? ??
         user.email?.split('@').first ??
         'Пользователь';
     _email = user.email;
-    _photoUrl = user.userMetadata?['avatar_url'] as String? ??
+    _photoUrl =
+        user.userMetadata?['avatar_url'] as String? ??
         user.userMetadata?['picture'] as String?;
     _isSignedIn = user.id.isNotEmpty;
   }
 
   /// Обновить кешированные данные профиля после редактирования
-  void updateProfileInfo({String? displayName, String? email, String? photoUrl}) {
+  void updateProfileInfo({
+    String? displayName,
+    String? email,
+    String? photoUrl,
+  }) {
     if (displayName != null && displayName.trim().isNotEmpty) {
       _displayName = displayName.trim();
     }

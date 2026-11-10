@@ -40,7 +40,10 @@ class WorkoutExercise {
     List<String> technique = [];
     final rawTech = json['technique'] ?? json['steps'] ?? json['how_to'];
     if (rawTech is List) {
-      technique = rawTech.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
+      technique = rawTech
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
     } else if (rawTech is String && rawTech.trim().isNotEmpty) {
       technique = rawTech
           .split(RegExp(r'\n+|\.\s'))
@@ -51,28 +54,32 @@ class WorkoutExercise {
 
     return WorkoutExercise(
       name: json['name']?.toString() ?? 'Упражнение',
-      muscle: json['muscle']?.toString() ??
+      muscle:
+          json['muscle']?.toString() ??
           json['muscle_group']?.toString() ??
           json['группа_мышц']?.toString() ??
           'Общее',
-      equipment: json['equipment']?.toString() ??
+      equipment:
+          json['equipment']?.toString() ??
           json['inventory']?.toString() ??
           'Гантели',
       sets: _toInt(json['sets'] ?? json['set'] ?? json['подходы'], 3),
-      reps: json['reps']?.toString() ??
+      reps:
+          json['reps']?.toString() ??
           json['repetitions']?.toString() ??
           json['повторения']?.toString() ??
           '10-12',
       rest: json['rest']?.toString() ?? json['отдых']?.toString() ?? '60 сек',
-      difficulty: json['difficulty']?.toString() ??
+      difficulty:
+          json['difficulty']?.toString() ??
           json['сложность']?.toString() ??
           'Средний',
       calories: _toInt(json['calories'] ?? json['kcal'], 150),
-      description: json['description']?.toString() ??
-          json['описание']?.toString() ??
-          '',
+      description:
+          json['description']?.toString() ?? json['описание']?.toString() ?? '',
       technique: technique,
-      tips: json['tips']?.toString() ??
+      tips:
+          json['tips']?.toString() ??
           json['tip']?.toString() ??
           json['совет']?.toString() ??
           '',
@@ -102,11 +109,13 @@ class WorkoutDay {
         .toList();
 
     return WorkoutDay(
-      day: json['day']?.toString() ??
+      day:
+          json['day']?.toString() ??
           json['name']?.toString() ??
           json['день']?.toString() ??
           '',
-      focus: json['focus']?.toString() ??
+      focus:
+          json['focus']?.toString() ??
           json['muscle_group']?.toString() ??
           json['цель']?.toString() ??
           '',

@@ -4,16 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class GoogleAuthStep extends StatefulWidget {
   final VoidCallback onSuccess;
   final VoidCallback? onSkip;
 
-  const GoogleAuthStep({
-    super.key,
-    required this.onSuccess,
-    this.onSkip,
-  });
+  const GoogleAuthStep({super.key, required this.onSuccess, this.onSkip});
 
   @override
   State<GoogleAuthStep> createState() => _GoogleAuthStepState();
@@ -75,7 +72,7 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
         if (!mounted) return;
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Ошибка авторизации. Попробуйте ещё раз.';
+          _errorMessage = AppLocalizations.of(context)!.authError;
         });
       },
     );
@@ -87,7 +84,7 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
       if (!mounted || _isRedirecting) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Время ожидания истекло. Попробуйте ещё раз.';
+        _errorMessage = AppLocalizations.of(context)!.authTimeout;
       });
     });
   }
@@ -128,8 +125,7 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
       _loadingTimeout?.cancel();
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Не удалось войти через Google. '
-            'Проверьте настройки Google провайдера в Supabase Dashboard.';
+        _errorMessage = AppLocalizations.of(context)!.authGoogleFailed;
       });
     }
   }
@@ -159,12 +155,17 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
         const SizedBox(height: 40),
         CircularProgressIndicator(color: tc.primary),
         const SizedBox(height: 32),
-        Text('Авторизация...',
-            style: GoogleFonts.notoSerif(
-                fontSize: 20, fontWeight: FontWeight.w900, color: tc.text)),
+        Text(
+          AppLocalizations.of(context)!.authGoogleSigningIn,
+          style: GoogleFonts.notoSerif(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: tc.text,
+          ),
+        ),
         const SizedBox(height: 12),
         Text(
-          'Откроется окно браузера для входа через Google',
+          AppLocalizations.of(context)!.authGoogleBrowserHint,
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(color: tc.textSecondary, fontSize: 14),
         ),
@@ -176,9 +177,10 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
             side: BorderSide(color: tc.divider),
             minimumSize: const Size(200, 48),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          child: const Text('Отмена'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
       ],
     );
@@ -190,13 +192,18 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
       children: [
         Icon(Icons.account_circle_outlined, size: 80, color: tc.textHint),
         const SizedBox(height: 40),
-        Text('Почти готово!',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.notoSerif(
-                fontSize: 32, fontWeight: FontWeight.w900, color: tc.text)),
+        Text(
+          AppLocalizations.of(context)!.authAlmostDone,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.notoSerif(
+            fontSize: 32,
+            fontWeight: FontWeight.w900,
+            color: tc.text,
+          ),
+        ),
         const SizedBox(height: 16),
         Text(
-          'Войди через Google, чтобы сохранить свой прогресс',
+          AppLocalizations.of(context)!.authGoogleSubtitle,
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(color: tc.textSecondary, fontSize: 15),
         ),
@@ -219,13 +226,14 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
         ElevatedButton.icon(
           onPressed: _handleSignIn,
           icon: const Icon(Icons.g_mobiledata, size: 26, color: Colors.blue),
-          label: const Text('Продолжить с Google'),
+          label: Text(AppLocalizations.of(context)!.authContinueWithGoogle),
           style: ElevatedButton.styleFrom(
             backgroundColor: tc.card,
             foregroundColor: tc.text,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
             side: BorderSide(color: tc.divider),
             elevation: 0,
           ),
@@ -234,8 +242,10 @@ class _GoogleAuthStepState extends State<GoogleAuthStep> {
         if (widget.onSkip != null)
           TextButton(
             onPressed: widget.onSkip,
-            child:
-                Text('Пропустить', style: TextStyle(color: tc.textHint)),
+            child: Text(
+              AppLocalizations.of(context)!.onboardingSkip,
+              style: TextStyle(color: tc.textHint),
+            ),
           ),
       ],
     );

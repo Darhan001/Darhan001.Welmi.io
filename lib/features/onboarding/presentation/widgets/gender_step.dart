@@ -35,11 +35,17 @@ class GenderStep extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                  child: _buildGenderCard('Мужской', Icons.male, Gender.male, tc)),
+                child: _buildGenderCard('Мужской', Icons.male, Gender.male, tc),
+              ),
               const SizedBox(width: 16),
               Expanded(
-                  child:
-                      _buildGenderCard('Женский', Icons.female, Gender.female, tc)),
+                child: _buildGenderCard(
+                  'Женский',
+                  Icons.female,
+                  Gender.female,
+                  tc,
+                ),
+              ),
             ],
           ),
         ],
@@ -47,7 +53,12 @@ class GenderStep extends StatelessWidget {
     );
   }
 
-  Widget _buildGenderCard(String label, IconData icon, Gender gender, ThemeColors tc) {
+  Widget _buildGenderCard(
+    String label,
+    IconData icon,
+    Gender gender,
+    ThemeColors tc,
+  ) {
     final isSelected = selectedGender == gender;
     return GestureDetector(
       onTap: () => onGenderChanged(gender),
@@ -56,23 +67,20 @@ class GenderStep extends StatelessWidget {
         decoration: BoxDecoration(
           color: tc.card,
           borderRadius: BorderRadius.circular(24),
-          border: isSelected
-              ? Border.all(color: tc.primary, width: 2)
-              : null,
+          border: isSelected ? Border.all(color: tc.primary, width: 2) : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 40,
-                color: isSelected ? tc.primary : tc.textHint),
+            Icon(icon, size: 40, color: isSelected ? tc.primary : tc.textHint),
             const SizedBox(height: 16),
             Text(
               label,
               style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: isSelected ? tc.primary : tc.textSecondary),
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: isSelected ? tc.primary : tc.textSecondary,
+              ),
             ),
           ],
         ),

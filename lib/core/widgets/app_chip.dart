@@ -29,19 +29,25 @@ class AppChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? tc.isDark
-                  ? tc.primary
-                  : tc.successBg
+                    ? tc.primary
+                    : tc.successBg
               : tc.card,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: selected
                 ? tc.isDark
-                    ? tc.success
-                    : tc.green
+                      ? tc.success
+                      : tc.green
                 : tc.border.withValues(alpha: 0.5),
           ),
           boxShadow: selected
-              ? [BoxShadow(color: tc.shadow(0.05), blurRadius: 8, offset: const Offset(0, 3))]
+              ? [
+                  BoxShadow(
+                    color: tc.shadow(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
               : null,
         ),
         child: Row(
@@ -51,7 +57,9 @@ class AppChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? (tc.isDark ? tc.success : tc.greenDark) : tc.textSecondary,
+                color: selected
+                    ? (tc.isDark ? tc.success : tc.greenDark)
+                    : tc.textSecondary,
               ),
               const SizedBox(width: 6),
             ],
@@ -60,7 +68,9 @@ class AppChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? (tc.isDark ? tc.success : tc.greenDark) : tc.textSecondary,
+                color: selected
+                    ? (tc.isDark ? tc.success : tc.greenDark)
+                    : tc.textSecondary,
               ),
             ),
           ],

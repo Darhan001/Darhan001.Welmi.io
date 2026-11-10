@@ -2746,11 +2746,11 @@ abstract class AppLocalizations {
   /// **'Reps in set {count}'**
   String repsInSet(Object count);
 
-  /// No description provided for @weightInKg.
+  /// No description provided for @weightInSet.
   ///
   /// In en, this message translates to:
-  /// **'Weight in set {count} (kg)'**
-  String weightInKg(Object count);
+  /// **'Weight in set {count} ({unit})'**
+  String weightInSet(Object count, Object unit);
 
   /// No description provided for @exampleReps.
   ///
@@ -3363,6 +3363,486 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a height between 100 and 250 cm'**
   String get heightInvalid;
+
+  /// No description provided for @voiceErrorLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition for this language is not installed. Add it in the Google voice typing settings.'**
+  String get voiceErrorLanguage;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak, I am listening…'**
+  String get voiceListening;
+
+  /// No description provided for @biometricTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Welmi'**
+  String get biometricTitle;
+
+  /// No description provided for @biometricReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your identity to open Welmi'**
+  String get biometricReason;
+
+  /// No description provided for @biometricHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch the fingerprint sensor'**
+  String get biometricHint;
+
+  /// No description provided for @notifClearDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get notifClearDelivered;
+
+  /// No description provided for @notifClearedDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications cleared. Reminders stay on.'**
+  String get notifClearedDelivered;
+
+  /// No description provided for @voiceSayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Say again'**
+  String get voiceSayAgain;
+
+  /// No description provided for @addToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to diary'**
+  String get addToDiary;
+
+  /// No description provided for @voiceDoneRecognize.
+  ///
+  /// In en, this message translates to:
+  /// **'Done, recognize'**
+  String get voiceDoneRecognize;
+
+  /// No description provided for @scannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI scanner'**
+  String get scannerTitle;
+
+  /// No description provided for @scannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal photo → calories and macros'**
+  String get scannerSubtitle;
+
+  /// No description provided for @scannerTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of your food'**
+  String get scannerTakePhoto;
+
+  /// No description provided for @scannerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi AI will estimate calories, protein, fat and carbs'**
+  String get scannerHint;
+
+  /// No description provided for @scannerAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing photo...'**
+  String get scannerAnalyzing;
+
+  /// No description provided for @scannerNotRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi AI couldn\'t recognize the food. Try another photo.'**
+  String get scannerNotRecognized;
+
+  /// No description provided for @scannerAiError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the AI. Check your connection.'**
+  String get scannerAiError;
+
+  /// No description provided for @scannerCameraError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the camera'**
+  String get scannerCameraError;
+
+  /// No description provided for @scannerGalleryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the gallery'**
+  String get scannerGalleryError;
+
+  /// No description provided for @scannerRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get scannerRetake;
+
+  /// No description provided for @scannerToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'To diary'**
+  String get scannerToDiary;
+
+  /// No description provided for @scannerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added: {kcal} kcal'**
+  String scannerAdded(Object kcal);
+
+  /// No description provided for @gramsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get gramsShort;
+
+  /// No description provided for @activityStepsToGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} steps to goal'**
+  String activityStepsToGoal(Object steps);
+
+  /// No description provided for @activityGoalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached! 🎉'**
+  String get activityGoalReached;
+
+  /// No description provided for @activityStepsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'steps'**
+  String get activityStepsUnit;
+
+  /// No description provided for @activityGoalSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} steps'**
+  String activityGoalSteps(Object steps);
+
+  /// No description provided for @activityDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get activityDistance;
+
+  /// No description provided for @activityEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get activityEnergy;
+
+  /// No description provided for @activityGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get activityGoal;
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get minutesShort;
+
+  /// No description provided for @activityHealthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull steps and calories automatically'**
+  String get activityHealthSubtitle;
+
+  /// No description provided for @activitySyncShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get activitySyncShort;
+
+  /// No description provided for @activityTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip of the day'**
+  String get activityTipTitle;
+
+  /// No description provided for @activityTipLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Move more! Try to reach at least 8,000 steps today 🚶'**
+  String get activityTipLow;
+
+  /// No description provided for @activityTipMid.
+  ///
+  /// In en, this message translates to:
+  /// **'Good, but you can do more! Add a 15-minute walk 🌳'**
+  String get activityTipMid;
+
+  /// No description provided for @activityTipHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! Almost at your goal! 💪'**
+  String get activityTipHigh;
+
+  /// No description provided for @activityTipDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached! You\'re amazing! 🎉'**
+  String get activityTipDone;
+
+  /// No description provided for @activityLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load activity. Check your connection.'**
+  String get activityLoadError;
+
+  /// No description provided for @healthInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Health Connect to sync your steps'**
+  String get healthInstallHint;
+
+  /// No description provided for @healthSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced: {steps} steps · {kcal} kcal'**
+  String healthSynced(Object kcal, Object steps);
+
+  /// No description provided for @healthSleepSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' · sleep {hours} h'**
+  String healthSleepSuffix(Object hours);
+
+  /// No description provided for @healthNotAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Health data access was not granted'**
+  String get healthNotAuthorized;
+
+  /// No description provided for @healthUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is only available on a phone'**
+  String get healthUnsupported;
+
+  /// No description provided for @healthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get data from Health Connect'**
+  String get healthError;
+
+  /// No description provided for @historyRecentDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent days'**
+  String get historyRecentDays;
+
+  /// No description provided for @historyEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet'**
+  String get historyEmptyTitle;
+
+  /// No description provided for @historyEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your steps, water or a workout'**
+  String get historyEmptySubtitle;
+
+  /// No description provided for @historyLogButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get historyLogButton;
+
+  /// No description provided for @historyLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load history. Check your connection.'**
+  String get historyLoadError;
+
+  /// No description provided for @waterAddedMl.
+  ///
+  /// In en, this message translates to:
+  /// **'+{ml} ml of water'**
+  String waterAddedMl(Object ml);
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @waterMlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ml of water'**
+  String get waterMlLabel;
+
+  /// No description provided for @historySteps30.
+  ///
+  /// In en, this message translates to:
+  /// **'steps in 30 days'**
+  String get historySteps30;
+
+  /// No description provided for @historyWater14.
+  ///
+  /// In en, this message translates to:
+  /// **'water in 14 days'**
+  String get historyWater14;
+
+  /// No description provided for @historyActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'active days'**
+  String get historyActiveDays;
+
+  /// No description provided for @litersValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} L'**
+  String litersValue(Object value);
+
+  /// No description provided for @weekLostValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost {amount}'**
+  String weekLostValue(Object amount);
+
+  /// No description provided for @weekGainedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Gained {amount}'**
+  String weekGainedValue(Object amount);
+
+  /// No description provided for @currentWeightUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Current weight ({unit})'**
+  String currentWeightUnit(Object unit);
+
+  /// No description provided for @weightEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No weight entries yet'**
+  String get weightEmptyTitle;
+
+  /// No description provided for @weightEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record your weight to track progress toward your goal'**
+  String get weightEmptySubtitle;
+
+  /// No description provided for @waterRemainingMl.
+  ///
+  /// In en, this message translates to:
+  /// **'{ml} ml left'**
+  String waterRemainingMl(Object ml);
+
+  /// No description provided for @waterOfGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'of {goal} ml'**
+  String waterOfGoal(Object goal);
+
+  /// No description provided for @mlValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{ml} ml'**
+  String mlValue(Object ml);
+
+  /// No description provided for @waterWeekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Water this week'**
+  String get waterWeekTitle;
+
+  /// No description provided for @waterDrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Drunk today'**
+  String get waterDrunk;
+
+  /// No description provided for @feedbackCategoryBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get feedbackCategoryBug;
+
+  /// No description provided for @feedbackCategoryIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea'**
+  String get feedbackCategoryIdea;
+
+  /// No description provided for @supportOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the app. Contact us: {contact}'**
+  String supportOpenFailed(Object contact);
+
+  /// No description provided for @authGoogleSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get authGoogleSigningIn;
+
+  /// No description provided for @authGoogleBrowserHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A browser window will open to sign in with Google'**
+  String get authGoogleBrowserHint;
+
+  /// No description provided for @authAlmostDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done!'**
+  String get authAlmostDone;
+
+  /// No description provided for @authGoogleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google to save your progress'**
+  String get authGoogleSubtitle;
+
+  /// No description provided for @authContinueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get authContinueWithGoogle;
+
+  /// No description provided for @authGoogleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in with Google. Please try again later.'**
+  String get authGoogleFailed;
+
+  /// No description provided for @recipeSignInToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to add the dish to your diary'**
+  String get recipeSignInToAdd;
+
+  /// No description provided for @recipeAddedToMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe added to “{meal}”'**
+  String recipeAddedToMeal(String meal);
+
+  /// No description provided for @recipeAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the recipe. Check your connection.'**
+  String get recipeAddFailed;
+
+  /// No description provided for @recipeServingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'1 serving · Welmi recipe'**
+  String get recipeServingInfo;
 }
 
 class _AppLocalizationsDelegate

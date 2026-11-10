@@ -27,8 +27,11 @@ void main() {
         );
       }
       final paths = recipes.map((r) => r.imagePath!).toList();
-      expect(paths.toSet().length, paths.length,
-          reason: 'Два блюда не должны делить одну фотографию');
+      expect(
+        paths.toSet().length,
+        paths.length,
+        reason: 'Два блюда не должны делить одну фотографию',
+      );
     });
 
     test('запись TheMealDB хранит свой idMeal и своё фото', () {
@@ -50,22 +53,31 @@ void main() {
     test('файлы фотографий существуют и являются JPEG не меньше 480 px', () {
       for (final recipe in recipes) {
         final file = File(recipe.imagePath!);
-        expect(file.existsSync(), isTrue,
-            reason: 'Нет файла ${recipe.imagePath} для «${recipe.title}»');
+        expect(
+          file.existsSync(),
+          isTrue,
+          reason: 'Нет файла ${recipe.imagePath} для «${recipe.title}»',
+        );
         final bytes = file.readAsBytesSync();
         expect(bytes.length, greaterThan(1024), reason: recipe.imagePath);
         expect(bytes[0], 0xFF, reason: '${recipe.imagePath} не JPEG');
         expect(bytes[1], 0xD8, reason: '${recipe.imagePath} не JPEG');
 
         final size = _jpegSize(bytes);
-        expect(size, isNotNull, reason: 'Не удалось прочитать ${recipe.imagePath}');
+        expect(
+          size,
+          isNotNull,
+          reason: 'Не удалось прочитать ${recipe.imagePath}',
+        );
         expect(size!.width, greaterThanOrEqualTo(480));
         expect(size.height, greaterThanOrEqualTo(360));
       }
     });
 
     test('SOURCES.md связывает каждый idMeal с файлом и strMealThumb', () {
-      final sources = File('assets/images/recipes/SOURCES.md').readAsStringSync();
+      final sources = File(
+        'assets/images/recipes/SOURCES.md',
+      ).readAsStringSync();
       for (final recipe in recipes.where((r) => r.mealDbId != null)) {
         expect(sources, contains(recipe.mealDbId!));
         expect(sources, contains(recipe.imagePath!.split('/').last));
@@ -91,7 +103,9 @@ void main() {
     test('КБЖУ согласованы с калорийностью и помечены как оценка', () {
       for (final recipe in recipes) {
         final fromMacros =
-            recipe.proteinGrams * 4 + recipe.fatGrams * 9 + recipe.carbsGrams * 4;
+            recipe.proteinGrams * 4 +
+            recipe.fatGrams * 9 +
+            recipe.carbsGrams * 4;
         expect(
           (fromMacros - recipe.calories).abs(),
           lessThan(recipe.calories * .12),
@@ -141,8 +155,11 @@ void main() {
       final paths = recipes.map((r) => r.imagePath).toSet();
       for (final category in seedRecipeCategories) {
         expect(category.imagePath, isNotNull, reason: category.name);
-        expect(paths, contains(category.imagePath),
-            reason: 'Категория ${category.name} показывает не фото рецепта');
+        expect(
+          paths,
+          contains(category.imagePath),
+          reason: 'Категория ${category.name} показывает не фото рецепта',
+        );
       }
     });
   });

@@ -34,7 +34,9 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
     final initialTarget = widget.targetWeight.round();
     _selectedIndex = _weightOptions.indexOf(initialTarget);
     if (_selectedIndex < 0) _selectedIndex = 30;
-    _scrollController = FixedExtentScrollController(initialItem: _selectedIndex);
+    _scrollController = FixedExtentScrollController(
+      initialItem: _selectedIndex,
+    );
   }
 
   @override
@@ -47,7 +49,9 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
     final diff = (widget.currentWeight - widget.targetWeight).round();
-    final diffText = diff > 0 ? '-$diff кг от текущего веса' : '+${diff.abs()} кг от текущего веса';
+    final diffText = diff > 0
+        ? '-$diff кг от текущего веса'
+        : '+${diff.abs()} кг от текущего веса';
 
     return Column(
       children: [
@@ -83,8 +87,7 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
                 onSelectedItemChanged: (index) {
                   setState(() {
                     _selectedIndex = index;
-                    widget.onTargetChanged(
-                        _weightOptions[index].toDouble());
+                    widget.onTargetChanged(_weightOptions[index].toDouble());
                   });
                 },
                 children: _weightOptions.map((w) {
@@ -102,7 +105,9 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: tc.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+            color: tc.isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -113,9 +118,10 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
               Text(
                 diffText,
                 style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: tc.textSecondary,
-                    fontWeight: FontWeight.w500),
+                  fontSize: 12,
+                  color: tc.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

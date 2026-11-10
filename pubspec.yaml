@@ -1,5 +1,5 @@
 name: lumina
-description: "A new Flutter project."
+description: "Welmi — питание, вода, активность, вес и тренировки."
 publish_to: 'none'
 version: 1.0.1+1
 
@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  cupertino_icons: ^1.0.8
   google_fonts: ^6.1.0
   mobile_scanner: ^7.1.0
   supabase_flutter: ^2.8.0
@@ -36,9 +35,11 @@ dependencies:
   record: ^7.1.1
   in_app_purchase: ^3.3.1
   in_app_purchase_android: ^0.5.3
-  contribution_heatmap: 0.6.0
   fl_chart: ^0.68.0
   flutter_tts: ^4.2.5
+  speech_to_text: ^7.5.0
+  local_auth_android: ^1.0.56
+  local_auth_darwin: ^1.6.1
 
 dev_dependencies:
   flutter_test:

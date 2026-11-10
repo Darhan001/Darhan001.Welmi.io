@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/utils/number_input.dart';
+import 'package:lumina/core/widgets/app_button.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
+import 'package:lumina/features/food_database/presentation/widgets/food_portion_details.dart';
+import 'package:lumina/features/food_database/presentation/widgets/food_sheet_frame.dart';
 
 /// Нижний шит выбора порции: показывает ценность на 100 г, пересчитывает
 /// её на введённые граммы и возвращает готовую запись для дневника.
@@ -37,6 +40,8 @@ class FoodPortionSheet extends StatefulWidget {
 }
 
 class _FoodPortionSheetState extends State<FoodPortionSheet> {
+  static const _presets = [50, 100, 150, 200, 250];
+
   late final TextEditingController _gramsController;
   String? _error;
 
@@ -61,26 +66,25 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
   }
 
   double? get _grams {
-    final parsed = double.tryParse(
-      _gramsController.text.trim().replaceAll(',', '.'),
-    );
-    if (parsed == null || !parsed.isFinite || parsed <= 0 || parsed > 5000) {
-      return null;
-    }
+    final parsed = parseDecimalInput(_gramsController.text);
+    if (parsed == null || parsed <= 0 || parsed > 5000) return null;
     return parsed;
   }
 
-  FoodPortion? get _portion {
-    final grams = _grams;
-    return grams == null ? null : widget.product.portionOf(grams);
+  void _selectPreset(int grams) {
+    _gramsController.text = '$grams';
+    _gramsController.selection = TextSelection.collapsed(
+      offset: _gramsController.text.length,
+    );
   }
 
   void _submit() {
-    final portion = _portion;
-    if (portion == null) {
+    final grams = _grams;
+    if (grams == null) {
       setState(() => _error = 'Укажи массу порции от 1 до 5000 г.');
       return;
     }
+    final portion = widget.product.portionOf(grams);
     if (portion.calories == null) {
       setState(
         () => _error =
@@ -97,353 +101,131 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
     final product = widget.product;
-    final portion = _portion;
+    final grams = _grams;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: tc.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: tc.inactive,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Text(
-                'Порция',
-                style: GoogleFonts.notoSerif(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: tc.text,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                product.name,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: tc.text,
-                ),
-              ),
-              if (product.subtitle.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  product.subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: tc.textSecondary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                _per100Label(product),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: tc.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 22),
-              TextField(
-                controller: _gramsController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: tc.text,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Масса порции',
-                  suffixText: 'г',
-                  filled: true,
-                  fillColor: tc.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  labelStyle: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: tc.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [50, 100, 150, 200, 250]
-                    .map(
-                      (grams) => ChoiceChip(
-                        label: Text('$grams г'),
-                        selected: _grams == grams.toDouble(),
-                        onSelected: (_) {
-                          _gramsController.text = '$grams';
-                          _gramsController.selection = TextSelection.collapsed(
-                            offset: _gramsController.text.length,
-                          );
-                        },
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _grams == grams.toDouble()
-                              ? tc.textOnPrimary
-                              : tc.textSecondary,
-                        ),
-                        selectedColor: tc.primary,
-                        backgroundColor: tc.card,
-                        side: BorderSide.none,
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 20),
-              if (!product.hasNutrition)
-                _buildNoDataCard(tc)
-              else if (portion == null)
-                _buildHint(tc, 'Введи массу, чтобы увидеть расчёт.')
-              else
-                _buildPortionCard(portion, tc),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  style: TextStyle(
-                    color: tc.error,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tc.primary,
-                    foregroundColor: tc.textOnPrimary,
-                    disabledBackgroundColor: tc.disabled,
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Добавить в дневник',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: tc.textOnPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Center(
-                child: Text(
-                  'Данные: Open Food Facts (открытая база)',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: tc.textHint,
-                  ),
-                ),
-              ),
-            ],
+    return FoodSheetFrame(
+      children: [
+        Text(
+          'Порция',
+          style: GoogleFonts.notoSerif(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: tc.text,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPortionCard(FoodPortion portion, ThemeColors tc) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: tc.card,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${portion.isCaloriesEstimated ? '≈' : ''}${portion.calories ?? '—'}',
-                style: GoogleFonts.inter(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  color: tc.text,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'ккал',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: tc.textSecondary,
-                ),
-              ),
-            ],
+        const SizedBox(height: 8),
+        Text(
+          product.name,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: tc.text,
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _macro('Белки', portion.proteinGrams, tc),
-              const SizedBox(width: 8),
-              _macro('Жиры', portion.fatGrams, tc),
-              const SizedBox(width: 8),
-              _macro('Углеводы', portion.carbsGrams, tc),
-            ],
-          ),
-          if (portion.isCaloriesEstimated) ...[
-            const SizedBox(height: 10),
-            Text(
-              'Калорийность рассчитана из БЖУ: в базе её нет.',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: tc.textHint,
-              ),
-            ),
-          ] else if (!widget.product.hasCompleteMacros) ...[
-            const SizedBox(height: 10),
-            Text(
-              'В базе заполнены не все нутриенты — «—» означает «нет данных».',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: tc.textHint,
-              ),
-            ),
-          ],
+        ),
+        if (product.subtitle.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(product.subtitle, style: _secondaryStyle(tc)),
         ],
-      ),
-    );
-  }
-
-  Widget _macro(String label, double? value, ThemeColors tc) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: tc.background,
-          borderRadius: BorderRadius.circular(14),
+        const SizedBox(height: 6),
+        Text(per100Label(product), style: _secondaryStyle(tc)),
+        const SizedBox(height: 22),
+        TextField(
+          controller: _gramsController,
+          keyboardType: NutritionTextField.decimalKeyboard,
+          inputFormatters: NutritionTextField.decimalFormatters,
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: tc.text,
+          ),
+          decoration: InputDecoration(
+            labelText: 'Масса порции',
+            suffixText: 'г',
+            filled: true,
+            fillColor: tc.card,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            labelStyle: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: tc.textSecondary,
+            ),
+          ),
         ),
-        child: Column(
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-                color: tc.inactive,
+            for (final preset in _presets)
+              ChoiceChip(
+                label: Text('$preset г'),
+                selected: grams == preset.toDouble(),
+                onSelected: (_) => _selectPreset(preset),
+                labelStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: grams == preset.toDouble()
+                      ? tc.textOnPrimary
+                      : tc.textSecondary,
+                ),
+                selectedColor: tc.primary,
+                backgroundColor: tc.card,
+                side: BorderSide.none,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value == null ? '—' : '${formatNutrient(value)} г',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: tc.text,
-              ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNoDataCard(ThemeColors tc) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: tc.errorBg,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline_rounded, color: tc.error, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'В Open Food Facts у этого продукта нет пищевой ценности. '
-              'Добавь запись вручную из дневника.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: tc.text,
-                height: 1.35,
-              ),
+        const SizedBox(height: 20),
+        if (!product.hasNutrition)
+          const FoodNoNutritionCard()
+        else if (grams == null)
+          Text('Введи массу, чтобы увидеть расчёт.', style: _secondaryStyle(tc))
+        else
+          FoodPortionCard(
+            portion: product.portionOf(grams),
+            hasCompleteMacros: product.hasCompleteMacros,
+          ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _error!,
+            style: TextStyle(
+              color: tc.error,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
-      ),
+        const SizedBox(height: 20),
+        AppButton(
+          text: 'Добавить в дневник',
+          size: AppButtonSize.lg,
+          onPressed: _submit,
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: Text(
+            'Данные: Open Food Facts (открытая база)',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: tc.textHint,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHint(ThemeColors tc, String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: tc.textSecondary,
-      ),
-    );
-  }
-
-  String _per100Label(FoodProduct product) {
-    if (!product.hasNutrition) return 'Пищевая ценность: нет данных';
-    final parts = <String>[
-      if (product.kcalPer100g != null)
-        '${formatNutrient(product.kcalPer100g)} ккал',
-      if (product.proteinPer100g != null)
-        'Б ${formatNutrient(product.proteinPer100g)} г',
-      if (product.fatPer100g != null)
-        'Ж ${formatNutrient(product.fatPer100g)} г',
-      if (product.carbsPer100g != null)
-        'У ${formatNutrient(product.carbsPer100g)} г',
-    ];
-    return 'На 100 г: ${parts.join(' · ')}';
-  }
+  TextStyle _secondaryStyle(ThemeColors tc) => TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: tc.textSecondary,
+  );
 }

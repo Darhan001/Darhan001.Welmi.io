@@ -23,8 +23,9 @@ const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 // Необязательные — приложение работает и без них.
-const String geminiNutritionApiKey =
-    String.fromEnvironment('GEMINI_NUTRITION_API_KEY');
+const String geminiNutritionApiKey = String.fromEnvironment(
+  'GEMINI_NUTRITION_API_KEY',
+);
 const String openRouterApiKey = String.fromEnvironment('OPENROUTER_API_KEY');
 const String scannerApiKey = String.fromEnvironment('SCANNER_API_KEY');
 const String sentryDsn = String.fromEnvironment('SENTRY_DSN');

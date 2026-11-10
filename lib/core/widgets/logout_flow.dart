@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
+import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/widgets/app_snackbar.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
@@ -46,6 +47,11 @@ Future<void> confirmAndSignOut(BuildContext context) async {
     ),
   );
   if (confirmed != true || !context.mounted) return;
+
+  // Токен устройства отвязываем ДО выхода: после signOut запрос идёт уже
+  // без сессии, RLS молча отклоняет delete, и push прежнего пользователя
+  // продолжали бы приходить на это устройство.
+  await PushNotificationService().unregisterAllTokens();
 
   try {
     await AuthService().signOut();

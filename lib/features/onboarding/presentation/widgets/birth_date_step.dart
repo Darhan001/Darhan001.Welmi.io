@@ -28,7 +28,11 @@ class BirthDateStep extends StatelessWidget {
           Text(
             'Эта информация поможет нам точнее\nрассчитать твою норму калорий',
             textAlign: TextAlign.center,
-            style: TextStyle(color: tc.textSecondary, fontSize: 14, height: 1.4),
+            style: TextStyle(
+              color: tc.textSecondary,
+              fontSize: 14,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 60),
           Expanded(

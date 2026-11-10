@@ -221,8 +221,10 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
               top: 12,
               left: 12,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(20),
@@ -291,8 +293,11 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
               color: widget.highlightColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(widget.muscleIcon,
-                size: 28, color: widget.highlightColor),
+            child: Icon(
+              widget.muscleIcon,
+              size: 28,
+              color: widget.highlightColor,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
@@ -315,13 +320,17 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
                 color: widget.highlightColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: widget.highlightColor.withValues(alpha: 0.4)),
+                  color: widget.highlightColor.withValues(alpha: 0.4),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.refresh_rounded,
-                      size: 15, color: widget.highlightColor),
+                  Icon(
+                    Icons.refresh_rounded,
+                    size: 15,
+                    color: widget.highlightColor,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Попробовать снова',

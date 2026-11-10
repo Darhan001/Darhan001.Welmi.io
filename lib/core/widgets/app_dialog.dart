@@ -47,14 +47,22 @@ class AppDialog {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               cancelLabel,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: tc.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: tc.textSecondary,
+              ),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               confirmLabel,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: confirmColor),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: confirmColor,
+              ),
             ),
           ),
         ],
@@ -83,7 +91,9 @@ class AppBottomSheet {
           child: Container(
             decoration: BoxDecoration(
               color: tc.card,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.max,

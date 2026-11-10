@@ -11,17 +11,21 @@
 /// Правила сервиса, которые соблюдает клиент:
 ///  * кастомный User-Agent с названием приложения и контактом;
 ///  * не более 10 поисковых запросов в минуту (поиск только по кнопке,
-///    не «по мере ввода»);
+///    не «по мере ввода» — поэтому debounce не нужен);
 ///  * не более 15 запросов продукта в минуту;
 ///  * результаты по штрихкоду кэшируются в рамках сессии.
+///
+/// Разбор ответов — в [OpenFoodFactsParser].
 library;
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:lumina/features/food_database/data/open_food_facts_parser.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
 
 /// Ошибка обращения к Open Food Facts с готовым для показа сообщением.
@@ -60,13 +64,12 @@ class OpenFoodFactsService {
   /// 15 запросов в минуту => минимум 4 секунды между запросами продукта.
   static const Duration _productInterval = Duration(seconds: 4);
 
-  static const String _searchFields =
+  static const String _fields =
       'code,product_name,product_name_ru,product_name_en,generic_name,'
       'brands,nutriments,quantity,serving_size,nutriscore_grade';
 
-  static const String _productFields =
-      'code,product_name,product_name_ru,product_name_en,generic_name,'
-      'brands,nutriments,quantity,serving_size,nutriscore_grade';
+  static const String _rateLimitedMessage =
+      'Open Food Facts ограничил частоту запросов. Подожди минуту и повтори.';
 
   DateTime? _lastSearchAt;
   DateTime? _lastProductAt;
@@ -92,30 +95,22 @@ class OpenFoodFactsService {
       'q': normalized,
       'page': '${math.max(1, page)}',
       'page_size': '${pageSize.clamp(1, 50)}',
-      'fields': _searchFields,
+      'fields': _fields,
     });
 
     final response = await _request(uri);
-    if (response.statusCode == 429) {
-      throw const OpenFoodFactsException(
-        'Open Food Facts ограничил частоту запросов. Подожди минуту и повтори.',
-      );
-    }
-    if (response.statusCode != 200) {
-      throw OpenFoodFactsException(
-        'Open Food Facts временно недоступен (код ${response.statusCode}).',
-      );
-    }
+    _throwOnHttpError(response);
 
-    final json = _decode(response);
-    final hits = json['hits'];
+    final hits = _decode(response)['hits'];
     if (hits is! List) return const [];
 
     final products = <FoodProduct>[];
     final seen = <String>{};
     for (final hit in hits) {
       if (hit is! Map) continue;
-      final product = parseSearchHit(Map<String, dynamic>.from(hit));
+      final product = OpenFoodFactsParser.parseSearchHit(
+        OpenFoodFactsParser.asJsonMap(hit),
+      );
       if (product == null) continue;
       if (seen.add(product.barcode)) products.add(product);
     }
@@ -134,21 +129,12 @@ class OpenFoodFactsService {
     _lastProductAt = DateTime.now();
 
     final uri = Uri.https(_productHost, '/api/v3/product/$barcode.json', {
-      'fields': _productFields,
+      'fields': _fields,
     });
 
     final response = await _request(uri);
     if (response.statusCode == 404) return null;
-    if (response.statusCode == 429) {
-      throw const OpenFoodFactsException(
-        'Open Food Facts ограничил частоту запросов. Подожди минуту и повтори.',
-      );
-    }
-    if (response.statusCode != 200) {
-      throw OpenFoodFactsException(
-        'Open Food Facts временно недоступен (код ${response.statusCode}).',
-      );
-    }
+    _throwOnHttpError(response);
 
     final json = _decode(response);
     if (json['status'] == 'failure') return null;
@@ -156,8 +142,8 @@ class OpenFoodFactsService {
     final rawProduct = json['product'];
     if (rawProduct is! Map) return null;
 
-    final product = parseProduct(
-      Map<String, dynamic>.from(rawProduct),
+    final product = OpenFoodFactsParser.parseProduct(
+      OpenFoodFactsParser.asJsonMap(rawProduct),
       fallbackBarcode: barcode,
     );
     if (product != null) {
@@ -169,67 +155,18 @@ class OpenFoodFactsService {
     return product;
   }
 
-  /// Разбор одного результата поиска. Возвращает `null`, если в записи нет
-  /// штрихкода или названия — такие результаты бесполезны в дневнике.
-  static FoodProduct? parseSearchHit(Map<String, dynamic> hit) {
-    final barcode = _text(hit['code']);
-    final name = _firstText(hit, const [
-      'product_name',
-      'product_name_ru',
-      'product_name_en',
-      'generic_name',
-    ]);
-    if (barcode == null || name == null) return null;
+  /// Разбор результата поиска — см. [OpenFoodFactsParser.parseSearchHit].
+  static FoodProduct? parseSearchHit(Map<String, dynamic> hit) =>
+      OpenFoodFactsParser.parseSearchHit(hit);
 
-    final nutriments = _map(hit['nutriments']);
-    return FoodProduct(
-      barcode: barcode,
-      name: name,
-      brand: _brand(hit['brands']),
-      kcalPer100g: _energyKcal(nutriments),
-      proteinPer100g: _number(nutriments['proteins_100g']),
-      fatPer100g: _number(nutriments['fat_100g']),
-      carbsPer100g: _number(nutriments['carbohydrates_100g']),
-      quantity: _text(hit['quantity']),
-      servingSize: _text(hit['serving_size']),
-      nutriscoreGrade: _text(hit['nutriscore_grade']),
-    );
-  }
-
-  /// Разбор продукта из ответа `/api/v3/product/{barcode}.json`.
-  ///
-  /// Если название отсутствует, подставляется «Продукт {штрихкод}»:
-  /// так пользователь видит, что запись найдена, но данных мало.
+  /// Разбор продукта по штрихкоду — см. [OpenFoodFactsParser.parseProduct].
   static FoodProduct? parseProduct(
     Map<String, dynamic> product, {
     String? fallbackBarcode,
-  }) {
-    final barcode = _text(product['code']) ?? fallbackBarcode;
-    if (barcode == null || barcode.isEmpty) return null;
-
-    final name =
-        _firstText(product, const [
-          'product_name',
-          'product_name_ru',
-          'product_name_en',
-          'generic_name',
-        ]) ??
-        'Продукт $barcode';
-
-    final nutriments = _map(product['nutriments']);
-    return FoodProduct(
-      barcode: barcode,
-      name: name,
-      brand: _brand(product['brands']),
-      kcalPer100g: _energyKcal(nutriments),
-      proteinPer100g: _number(nutriments['proteins_100g']),
-      fatPer100g: _number(nutriments['fat_100g']),
-      carbsPer100g: _number(nutriments['carbohydrates_100g']),
-      quantity: _text(product['quantity']),
-      servingSize: _text(product['serving_size']),
-      nutriscoreGrade: _text(product['nutriscore_grade']),
-    );
-  }
+  }) => OpenFoodFactsParser.parseProduct(
+    product,
+    fallbackBarcode: fallbackBarcode,
+  );
 
   // ────────────────────────────────────────────────────────────
   // HTTP
@@ -244,13 +181,26 @@ class OpenFoodFactsService {
       throw const OpenFoodFactsException(
         'Open Food Facts не ответил вовремя. Проверь интернет и повтори.',
       );
-    } on http.ClientException {
+    } on http.ClientException catch (e) {
+      debugPrint('Open Food Facts: нет связи: $e');
       throw const OpenFoodFactsException(
         'Нет связи с Open Food Facts. Проверь интернет и повтори.',
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Open Food Facts: ошибка запроса: $e');
       throw const OpenFoodFactsException(
         'Не удалось загрузить данные из Open Food Facts. Попробуй ещё раз.',
+      );
+    }
+  }
+
+  void _throwOnHttpError(http.Response response) {
+    if (response.statusCode == 429) {
+      throw const OpenFoodFactsException(_rateLimitedMessage);
+    }
+    if (response.statusCode != 200) {
+      throw OpenFoodFactsException(
+        'Open Food Facts временно недоступен (код ${response.statusCode}).',
       );
     }
   }
@@ -258,8 +208,7 @@ class OpenFoodFactsService {
   Map<String, dynamic> _decode(http.Response response) {
     try {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      if (decoded is Map<String, dynamic>) return decoded;
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      if (decoded is Map) return OpenFoodFactsParser.asJsonMap(decoded);
     } on FormatException {
       // Ниже вернём понятную ошибку.
     }
@@ -278,71 +227,5 @@ class OpenFoodFactsService {
       'Слишком много запросов. Повтори через ${wait.inSeconds + 1} с.',
       retryAfter: wait,
     );
-  }
-
-  // ────────────────────────────────────────────────────────────
-  // Парсинг значений (данные в базе неполные и разнотипные)
-  // ────────────────────────────────────────────────────────────
-
-  static Map<String, dynamic> _map(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    return const {};
-  }
-
-  static String? _text(dynamic value) {
-    if (value is String) {
-      final trimmed = value.trim();
-      return trimmed.isEmpty ? null : trimmed;
-    }
-    if (value is num) return value.toString();
-    return null;
-  }
-
-  static String? _firstText(Map<String, dynamic> map, List<String> keys) {
-    for (final key in keys) {
-      final value = _text(map[key]);
-      if (value != null) return value;
-    }
-    return null;
-  }
-
-  /// В поиске `brands` — массив, в ответе продукта — строка через запятую.
-  static String? _brand(dynamic value) {
-    if (value is List) {
-      for (final entry in value) {
-        final text = _text(entry);
-        if (text != null) return text;
-      }
-      return null;
-    }
-    final text = _text(value);
-    if (text == null) return null;
-    return text.split(',').first.trim();
-  }
-
-  static double? _number(dynamic value) {
-    double? parsed;
-    if (value is num) {
-      parsed = value.toDouble();
-    } else if (value is String) {
-      parsed = double.tryParse(value.replaceAll(',', '.'));
-    }
-    if (parsed == null || !parsed.isFinite || parsed < 0) return null;
-    // В базе встречаются float32-артефакты вида 4.69999980926514.
-    // Двух знаков после запятой для нутриентов достаточно.
-    return (parsed * 100).roundToDouble() / 100;
-  }
-
-  /// Калорийность на 100 г. Если в базе только килоджоули — переводим.
-  static double? _energyKcal(Map<String, dynamic> nutriments) {
-    final kcal = _number(nutriments['energy-kcal_100g']);
-    if (kcal != null) return kcal;
-
-    final kj =
-        _number(nutriments['energy-kj_100g']) ??
-        _number(nutriments['energy_100g']);
-    if (kj != null) return (kj / 4.184 * 100).roundToDouble() / 100;
-    return null;
   }
 }

@@ -36,7 +36,9 @@ class _AboutPageState extends State<AboutPage> {
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF9F7F2),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF9F7F2),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -62,16 +64,22 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                         ],
                       ),
-                      child: Icon(Icons.arrow_back, size: 22, color: isDark ? Colors.white : Colors.black),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 22,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text(loc.aboutApp,
+                  Text(
+                    loc.aboutApp,
                     style: GoogleFonts.notoSerif(
                       fontWeight: FontWeight.w900,
                       fontSize: 20,
                       color: isDark ? Colors.white : Colors.black,
-                    )),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 40),
@@ -93,11 +101,15 @@ class _AboutPageState extends State<AboutPage> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF75A47F).withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFF75A47F,
+                          ).withValues(alpha: 0.15),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -172,31 +184,51 @@ class _AboutPageState extends State<AboutPage> {
                   Icons.description_outlined,
                   loc.privacyPolicy,
                   isDark,
-                  () => Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const PrivacyPolicyPage(),
-                  )),
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PrivacyPolicyPage(),
+                    ),
+                  ),
                 ),
                 _buildDivider(isDark),
                 _buildLinkRow(
                   Icons.gavel_outlined,
                   loc.termsOfUse,
                   isDark,
-                  () => Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const TermsOfUsePage(),
-                  )),
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TermsOfUsePage()),
+                  ),
                 ),
               ]),
               const SizedBox(height: 20),
 
               // Features card
               _buildCard(isDark, [
-                _buildFeatureRow(Icons.restaurant_outlined, loc.featureFoodScanner, isDark),
+                _buildFeatureRow(
+                  Icons.restaurant_outlined,
+                  loc.featureFoodScanner,
+                  isDark,
+                ),
                 _buildDivider(isDark),
-                _buildFeatureRow(Icons.calendar_month_outlined, loc.featureMealPlans, isDark),
+                _buildFeatureRow(
+                  Icons.calendar_month_outlined,
+                  loc.featureMealPlans,
+                  isDark,
+                ),
                 _buildDivider(isDark),
-                _buildFeatureRow(Icons.analytics_outlined, loc.featureMacroAnalytics, isDark),
+                _buildFeatureRow(
+                  Icons.analytics_outlined,
+                  loc.featureMacroAnalytics,
+                  isDark,
+                ),
                 _buildDivider(isDark),
-                _buildFeatureRow(Icons.block_outlined, loc.featureNoAds, isDark),
+                _buildFeatureRow(
+                  Icons.block_outlined,
+                  loc.featureNoAds,
+                  isDark,
+                ),
               ]),
               const SizedBox(height: 40),
 
@@ -244,25 +276,34 @@ class _AboutPageState extends State<AboutPage> {
           Icon(icon, size: 20, color: isDark ? Colors.white54 : Colors.black38),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(label,
+            child: Text(
+              label,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
                 color: isDark ? Colors.white70 : Colors.black54,
-              )),
+              ),
+            ),
           ),
-          Text(value,
+          Text(
+            value,
             style: GoogleFonts.inter(
               color: isDark ? Colors.white38 : Colors.black26,
               fontWeight: FontWeight.w600,
               fontSize: 13,
-            )),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLinkRow(IconData icon, String title, bool isDark, VoidCallback onTap) {
+  Widget _buildLinkRow(
+    IconData icon,
+    String title,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -270,17 +311,27 @@ class _AboutPageState extends State<AboutPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: isDark ? Colors.white54 : Colors.black38),
+            Icon(
+              icon,
+              size: 20,
+              color: isDark ? Colors.white54 : Colors.black38,
+            ),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(title,
+              child: Text(
+                title,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: isDark ? Colors.white : Colors.black,
-                )),
+                ),
+              ),
             ),
-            Icon(Icons.chevron_right, size: 20, color: isDark ? Colors.white10 : Colors.black12),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: isDark ? Colors.white10 : Colors.black12,
+            ),
           ],
         ),
       ),
@@ -302,12 +353,14 @@ class _AboutPageState extends State<AboutPage> {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(title,
+            child: Text(
+              title,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
                 color: isDark ? Colors.white70 : Colors.black54,
-              )),
+              ),
+            ),
           ),
         ],
       ),

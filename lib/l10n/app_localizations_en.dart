@@ -1434,8 +1434,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String weightInKg(Object count) {
-    return 'Weight in set $count (kg)';
+  String weightInSet(Object count, Object unit) {
+    return 'Weight in set $count ($unit)';
   }
 
   @override
@@ -1792,4 +1792,286 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heightInvalid => 'Enter a height between 100 and 250 cm';
+
+  @override
+  String get voiceErrorLanguage =>
+      'Speech recognition for this language is not installed. Add it in the Google voice typing settings.';
+
+  @override
+  String get voiceListening => 'Speak, I am listening…';
+
+  @override
+  String get biometricTitle => 'Sign in to Welmi';
+
+  @override
+  String get biometricReason => 'Confirm your identity to open Welmi';
+
+  @override
+  String get biometricHint => 'Touch the fingerprint sensor';
+
+  @override
+  String get notifClearDelivered => 'Clear';
+
+  @override
+  String get notifClearedDelivered =>
+      'Notifications cleared. Reminders stay on.';
+
+  @override
+  String get voiceSayAgain => 'Say again';
+
+  @override
+  String get addToDiary => 'Add to diary';
+
+  @override
+  String get voiceDoneRecognize => 'Done, recognize';
+
+  @override
+  String get scannerTitle => 'AI scanner';
+
+  @override
+  String get scannerSubtitle => 'Meal photo → calories and macros';
+
+  @override
+  String get scannerTakePhoto => 'Take a photo of your food';
+
+  @override
+  String get scannerHint =>
+      'Welmi AI will estimate calories, protein, fat and carbs';
+
+  @override
+  String get scannerAnalyzing => 'Analyzing photo...';
+
+  @override
+  String get scannerNotRecognized =>
+      'Welmi AI couldn\'t recognize the food. Try another photo.';
+
+  @override
+  String get scannerAiError => 'Couldn\'t reach the AI. Check your connection.';
+
+  @override
+  String get scannerCameraError => 'Couldn\'t open the camera';
+
+  @override
+  String get scannerGalleryError => 'Couldn\'t open the gallery';
+
+  @override
+  String get scannerRetake => 'Retake';
+
+  @override
+  String get scannerToDiary => 'To diary';
+
+  @override
+  String scannerAdded(Object kcal) {
+    return 'Added: $kcal kcal';
+  }
+
+  @override
+  String get gramsShort => 'g';
+
+  @override
+  String activityStepsToGoal(Object steps) {
+    return '$steps steps to goal';
+  }
+
+  @override
+  String get activityGoalReached => 'Goal reached! 🎉';
+
+  @override
+  String get activityStepsUnit => 'steps';
+
+  @override
+  String activityGoalSteps(Object steps) {
+    return '$steps steps';
+  }
+
+  @override
+  String get activityDistance => 'Distance';
+
+  @override
+  String get activityEnergy => 'Energy';
+
+  @override
+  String get activityGoal => 'Goal';
+
+  @override
+  String get minutesShort => 'min';
+
+  @override
+  String get activityHealthSubtitle => 'Pull steps and calories automatically';
+
+  @override
+  String get activitySyncShort => 'Sync';
+
+  @override
+  String get activityTipTitle => 'Tip of the day';
+
+  @override
+  String get activityTipLow =>
+      'Move more! Try to reach at least 8,000 steps today 🚶';
+
+  @override
+  String get activityTipMid =>
+      'Good, but you can do more! Add a 15-minute walk 🌳';
+
+  @override
+  String get activityTipHigh => 'Great! Almost at your goal! 💪';
+
+  @override
+  String get activityTipDone => 'Goal reached! You\'re amazing! 🎉';
+
+  @override
+  String get activityLoadError =>
+      'Couldn\'t load activity. Check your connection.';
+
+  @override
+  String get healthInstallHint => 'Install Health Connect to sync your steps';
+
+  @override
+  String healthSynced(Object kcal, Object steps) {
+    return 'Synced: $steps steps · $kcal kcal';
+  }
+
+  @override
+  String healthSleepSuffix(Object hours) {
+    return ' · sleep $hours h';
+  }
+
+  @override
+  String get healthNotAuthorized => 'Health data access was not granted';
+
+  @override
+  String get healthUnsupported => 'Sync is only available on a phone';
+
+  @override
+  String get healthError => 'Couldn\'t get data from Health Connect';
+
+  @override
+  String get historyRecentDays => 'Recent days';
+
+  @override
+  String get historyEmptyTitle => 'No entries yet';
+
+  @override
+  String get historyEmptySubtitle => 'Log your steps, water or a workout';
+
+  @override
+  String get historyLogButton => 'Log';
+
+  @override
+  String get historyLoadError =>
+      'Couldn\'t load history. Check your connection.';
+
+  @override
+  String waterAddedMl(Object ml) {
+    return '+$ml ml of water';
+  }
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get waterMlLabel => 'ml of water';
+
+  @override
+  String get historySteps30 => 'steps in 30 days';
+
+  @override
+  String get historyWater14 => 'water in 14 days';
+
+  @override
+  String get historyActiveDays => 'active days';
+
+  @override
+  String litersValue(Object value) {
+    return '$value L';
+  }
+
+  @override
+  String weekLostValue(Object amount) {
+    return 'Lost $amount';
+  }
+
+  @override
+  String weekGainedValue(Object amount) {
+    return 'Gained $amount';
+  }
+
+  @override
+  String currentWeightUnit(Object unit) {
+    return 'Current weight ($unit)';
+  }
+
+  @override
+  String get weightEmptyTitle => 'No weight entries yet';
+
+  @override
+  String get weightEmptySubtitle =>
+      'Record your weight to track progress toward your goal';
+
+  @override
+  String waterRemainingMl(Object ml) {
+    return '$ml ml left';
+  }
+
+  @override
+  String waterOfGoal(Object goal) {
+    return 'of $goal ml';
+  }
+
+  @override
+  String mlValue(Object ml) {
+    return '$ml ml';
+  }
+
+  @override
+  String get waterWeekTitle => 'Water this week';
+
+  @override
+  String get waterDrunk => 'Drunk today';
+
+  @override
+  String get feedbackCategoryBug => 'Bug';
+
+  @override
+  String get feedbackCategoryIdea => 'Idea';
+
+  @override
+  String supportOpenFailed(Object contact) {
+    return 'Couldn\'t open the app. Contact us: $contact';
+  }
+
+  @override
+  String get authGoogleSigningIn => 'Signing in…';
+
+  @override
+  String get authGoogleBrowserHint =>
+      'A browser window will open to sign in with Google';
+
+  @override
+  String get authAlmostDone => 'Almost done!';
+
+  @override
+  String get authGoogleSubtitle => 'Sign in with Google to save your progress';
+
+  @override
+  String get authContinueWithGoogle => 'Continue with Google';
+
+  @override
+  String get authGoogleFailed =>
+      'Couldn\'t sign in with Google. Please try again later.';
+
+  @override
+  String get recipeSignInToAdd => 'Sign in to add the dish to your diary';
+
+  @override
+  String recipeAddedToMeal(String meal) {
+    return 'Recipe added to “$meal”';
+  }
+
+  @override
+  String get recipeAddFailed =>
+      'Couldn\'t add the recipe. Check your connection.';
+
+  @override
+  String get recipeServingInfo => '1 serving · Welmi recipe';
 }

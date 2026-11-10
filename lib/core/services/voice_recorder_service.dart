@@ -94,8 +94,13 @@ class VoiceRecorderService {
     final path = _filePath;
     _filePath = null;
     if (path != null) {
-      final file = File(path);
-      if (await file.exists()) await file.delete();
+      // Ошибка удаления временного файла не должна ломать отмену записи.
+      try {
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      } catch (e) {
+        debugPrint('⚠️ Voice temp file delete error: $e');
+      }
     }
   }
 

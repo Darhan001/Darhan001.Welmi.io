@@ -12,7 +12,9 @@ class PrivacyPolicyPage extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF9F7F2),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF9F7F2),
       body: SafeArea(
         child: Column(
           children: [
@@ -36,17 +38,23 @@ class PrivacyPolicyPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(Icons.arrow_back, size: 22, color: isDark ? Colors.white : Colors.black),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 22,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Text(loc.privacyPolicy,
+                    child: Text(
+                      loc.privacyPolicy,
                       style: GoogleFonts.notoSerif(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
                         color: isDark ? Colors.white : Colors.black,
-                      )),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -61,16 +69,52 @@ class PrivacyPolicyPage extends StatelessWidget {
                   children: [
                     _buildHeader(loc.privacyPolicyIntro, isDark),
                     const SizedBox(height: 20),
-                    _buildSection(loc.privacyDataTitle, loc.privacyDataContent, isDark),
-                    _buildSection(loc.privacyUsageTitle, loc.privacyUsageContent, isDark),
-                    _buildSection(loc.privacyStorageTitle, loc.privacyStorageContent, isDark),
-                    _buildSection(loc.privacySharingTitle, loc.privacySharingContent, isDark),
-                    _buildSection(loc.privacyRightsTitle, loc.privacyRightsContent, isDark),
-                    _buildSection(loc.securityTitle, loc.privacySecurityContent, isDark),
-                    _buildSection(loc.privacyChildrenTitle, loc.privacyChildrenContent, isDark),
-                    _buildSection(loc.privacyChangesTitle, loc.privacyChangesContent, isDark),
+                    _buildSection(
+                      loc.privacyDataTitle,
+                      loc.privacyDataContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacyUsageTitle,
+                      loc.privacyUsageContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacyStorageTitle,
+                      loc.privacyStorageContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacySharingTitle,
+                      loc.privacySharingContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacyRightsTitle,
+                      loc.privacyRightsContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.securityTitle,
+                      loc.privacySecurityContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacyChildrenTitle,
+                      loc.privacyChildrenContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.privacyChangesTitle,
+                      loc.privacyChangesContent,
+                      isDark,
+                    ),
                     const SizedBox(height: 20),
-                    _buildSection(loc.contactTitle, loc.privacyContactContent, isDark),
+                    _buildSection(
+                      loc.contactTitle,
+                      loc.privacyContactContent,
+                      isDark,
+                    ),
                     const SizedBox(height: 30),
                     Center(
                       child: Text(

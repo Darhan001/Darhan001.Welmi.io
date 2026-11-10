@@ -24,14 +24,19 @@ class RecipeRepository {
           )
           .eq('is_published', true)
           .order('title');
-      final remote = (rows as List).map((raw) {
-        final row = Map<String, dynamic>.from(raw as Map);
-        final category = row['recipe_categories'];
-        row['category'] = category is Map ? category['name'] : row['category'];
-        row['ingredients'] = row.remove('recipe_ingredients') ?? const [];
-        row['steps'] = row.remove('recipe_steps') ?? const [];
-        return Recipe.fromJson(row);
-      }).where((r) => r.title.trim().isNotEmpty).toList();
+      final remote = (rows as List)
+          .map((raw) {
+            final row = Map<String, dynamic>.from(raw as Map);
+            final category = row['recipe_categories'];
+            row['category'] = category is Map
+                ? category['name']
+                : row['category'];
+            row['ingredients'] = row.remove('recipe_ingredients') ?? const [];
+            row['steps'] = row.remove('recipe_steps') ?? const [];
+            return Recipe.fromJson(row);
+          })
+          .where((r) => r.title.trim().isNotEmpty)
+          .toList();
 
       if (remote.isEmpty) return bundled;
 

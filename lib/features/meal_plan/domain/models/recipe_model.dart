@@ -238,8 +238,7 @@ class Recipe {
       sodiumMg: toDouble(json['sodium_mg'] ?? 200.0),
       cookingTimeMinutes: (json['cooking_time_minutes'] as num?)?.toInt() ?? 20,
       servings: (json['servings'] as num?)?.toInt() ?? 1,
-      servingWeightGrams:
-          (json['serving_weight_grams'] as num?)?.toInt() ?? 0,
+      servingWeightGrams: (json['serving_weight_grams'] as num?)?.toInt() ?? 0,
       nutritionIsEstimate: json['nutrition_is_estimate'] != false,
       tags:
           (json['tags'] as List?)?.map((e) => e.toString()).toList() ??

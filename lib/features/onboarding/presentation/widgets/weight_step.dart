@@ -65,15 +65,23 @@ class _WeightStepState extends State<WeightStep> {
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            Text('$_displayWeight',
-                style: GoogleFonts.inter(
-                    fontSize: 80, fontWeight: FontWeight.w900, color: tc.text)),
+            Text(
+              '$_displayWeight',
+              style: GoogleFonts.inter(
+                fontSize: 80,
+                fontWeight: FontWeight.w900,
+                color: tc.text,
+              ),
+            ),
             const SizedBox(width: 4),
-            Text('кг',
-                style: GoogleFonts.inter(
-                    fontSize: 24,
-                    color: tc.textSecondary,
-                    fontWeight: FontWeight.w500)),
+            Text(
+              'кг',
+              style: GoogleFonts.inter(
+                fontSize: 24,
+                color: tc.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
         const Spacer(),
@@ -111,7 +119,9 @@ class _WeightStepState extends State<WeightStep> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: tc.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+        color: tc.isDark
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -123,15 +133,23 @@ class _WeightStepState extends State<WeightStep> {
               color: tc.primary,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(u1,
-                style:
-                    TextStyle(color: tc.textOnPrimary, fontWeight: FontWeight.bold)),
+            child: Text(
+              u1,
+              style: TextStyle(
+                color: tc.textOnPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(u2,
-                style: TextStyle(
-                    color: tc.textSecondary, fontWeight: FontWeight.w600)),
+            child: Text(
+              u2,
+              style: TextStyle(
+                color: tc.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -162,43 +180,41 @@ class WeightRulerPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     double centerX = size.width / 2;
-    
+
     // Рисуем указатель (центральную линию) сверху
-    canvas.drawLine(
-      Offset(centerX, 0),
-      Offset(centerX, 30),
-      centerLinePaint,
-    );
+    canvas.drawLine(Offset(centerX, 0), Offset(centerX, 30), centerLinePaint);
 
     // Масштаб: 1 кг = 10 пикселей
     const double pixelsPerUnit = 10;
 
-    int minWeight = (currentWeight - (size.width / 2 / pixelsPerUnit)).floor() - 1;
-    int maxWeight = (currentWeight + (size.width / 2 / pixelsPerUnit)).ceil() + 1;
+    int minWeight =
+        (currentWeight - (size.width / 2 / pixelsPerUnit)).floor() - 1;
+    int maxWeight =
+        (currentWeight + (size.width / 2 / pixelsPerUnit)).ceil() + 1;
 
     for (int w = minWeight; w <= maxWeight; w++) {
       if (w < 30 || w > 250) continue;
 
       double x = centerX + (w - currentWeight) * pixelsPerUnit;
-      
+
       if (x < 0 || x > size.width) continue;
 
       bool isMajor = w % 10 == 0;
       bool isMedium = w % 5 == 0;
-      
+
       double tickHeight = isMajor ? 45 : (isMedium ? 30 : 20);
       if (isDark) {
-        paint.color = isMajor ? Colors.white54 : (isMedium ? Colors.white38 : Colors.white24);
+        paint.color = isMajor
+            ? Colors.white54
+            : (isMedium ? Colors.white38 : Colors.white24);
       } else {
-        paint.color = isMajor ? Colors.black38 : (isMedium ? Colors.black26 : Colors.black12);
+        paint.color = isMajor
+            ? Colors.black38
+            : (isMedium ? Colors.black26 : Colors.black12);
       }
       paint.strokeWidth = isMajor ? 2 : 1.5;
 
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, tickHeight),
-        paint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, tickHeight), paint);
 
       if (isMajor) {
         final textPainter = TextPainter(

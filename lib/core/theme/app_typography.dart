@@ -14,8 +14,9 @@ class AppTypography {
   static TextTheme build(Brightness brightness) {
     final bool dark = brightness == Brightness.dark;
     final Color text = dark ? AppColors.darkText : AppColors.textPrimary;
-    final Color secondary =
-        dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final Color secondary = dark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
     final Color hint = dark ? AppColors.darkTextHint : AppColors.textHint;
 
     return GoogleFonts.notoSerifTextTheme().copyWith(
@@ -80,16 +81,8 @@ class AppTypography {
       ),
 
       // ── Body / Body Small ──
-      bodyLarge: GoogleFonts.inter(
-        fontSize: 16,
-        height: 1.5,
-        color: text,
-      ),
-      bodyMedium: GoogleFonts.inter(
-        fontSize: 15,
-        height: 1.5,
-        color: text,
-      ),
+      bodyLarge: GoogleFonts.inter(fontSize: 16, height: 1.5, color: text),
+      bodyMedium: GoogleFonts.inter(fontSize: 15, height: 1.5, color: text),
       bodySmall: GoogleFonts.inter(
         fontSize: 13,
         height: 1.45,
@@ -123,64 +116,35 @@ class AppTypography {
     FontWeight? weight,
     double? size,
   }) {
-    return Theme.of(context)
-        .textTheme
-        .bodyMedium!
-        .copyWith(color: color, fontWeight: weight, fontSize: size);
+    return Theme.of(context).textTheme.bodyMedium!.copyWith(
+      color: color,
+      fontWeight: weight,
+      fontSize: size,
+    );
   }
 
   /// Заголовок уровня H1.
-  static TextStyle h1(
-    BuildContext context, {
-    Color? color,
-  }) {
-    return Theme.of(context)
-        .textTheme
-        .headlineLarge!
-        .copyWith(color: color);
+  static TextStyle h1(BuildContext context, {Color? color}) {
+    return Theme.of(context).textTheme.headlineLarge!.copyWith(color: color);
   }
 
   /// Заголовок уровня H2.
-  static TextStyle h2(
-    BuildContext context, {
-    Color? color,
-  }) {
-    return Theme.of(context)
-        .textTheme
-        .headlineMedium!
-        .copyWith(color: color);
+  static TextStyle h2(BuildContext context, {Color? color}) {
+    return Theme.of(context).textTheme.headlineMedium!.copyWith(color: color);
   }
 
   /// Заголовок уровня H3.
-  static TextStyle h3(
-    BuildContext context, {
-    Color? color,
-  }) {
-    return Theme.of(context)
-        .textTheme
-        .headlineSmall!
-        .copyWith(color: color);
+  static TextStyle h3(BuildContext context, {Color? color}) {
+    return Theme.of(context).textTheme.headlineSmall!.copyWith(color: color);
   }
 
   /// Крупный Display-заголовок.
-  static TextStyle display(
-    BuildContext context, {
-    Color? color,
-  }) {
-    return Theme.of(context)
-        .textTheme
-        .displayMedium!
-        .copyWith(color: color);
+  static TextStyle display(BuildContext context, {Color? color}) {
+    return Theme.of(context).textTheme.displayMedium!.copyWith(color: color);
   }
 
   /// Подпись (caption).
-  static TextStyle caption(
-    BuildContext context, {
-    Color? color,
-  }) {
-    return Theme.of(context)
-        .textTheme
-        .bodySmall!
-        .copyWith(color: color);
+  static TextStyle caption(BuildContext context, {Color? color}) {
+    return Theme.of(context).textTheme.bodySmall!.copyWith(color: color);
   }
 }

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/models/onboarding_data.dart';
 import 'package:lumina/core/services/auth_service.dart';
-import 'package:lumina/services/notification_service.dart';
+import 'package:lumina/core/services/notifications/notification_service.dart';
 import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/widgets/app_button.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/features/onboarding/presentation/widgets/welcome_step.dart';
 import 'package:lumina/features/onboarding/presentation/widgets/goal_step.dart';
 import 'package:lumina/features/onboarding/presentation/widgets/gender_step.dart';
@@ -29,7 +31,7 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   int _currentPage = 0;
-  final int _totalSteps = 11; 
+  final int _totalSteps = 11;
   final OnboardingData _data = OnboardingData();
   final AuthService _auth = AuthService();
 
@@ -45,9 +47,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     // Профиль уже создан → теперь можно сохранить push-токен
     // (FK device_tokens.user_id → profiles.id).
     if (!kIsWeb) PushNotificationService().registerTokenIfNeeded();
-    Navigator.of(context).pushReplacement(
-      smoothPageRoute(const MainShell()),
-    );
+    Navigator.of(context).pushReplacement(smoothPageRoute(const MainShell()));
   }
 
   Future<void> _requestNotifications() async {
@@ -83,7 +83,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: _buildStep(key: ValueKey(_currentPage)),
               ),
             ),
-            _buildBottomButton(tc),
+            _buildBottomButton(),
           ],
         ),
       ),
@@ -101,8 +101,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         GenderStep(
           selectedGender: _data.gender,
-          onGenderChanged: (gender) =>
-              setState(() => _data.gender = gender),
+          onGenderChanged: (gender) => setState(() => _data.gender = gender),
         ),
         HeightStep(
           height: _data.height,
@@ -110,38 +109,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         WeightStep(
           weight: _data.currentWeight,
-          onWeightChanged: (w) =>
-              setState(() => _data.currentWeight = w),
+          onWeightChanged: (w) => setState(() => _data.currentWeight = w),
         ),
         TargetWeightStep(
           currentWeight: _data.currentWeight,
           targetWeight: _data.targetWeight,
-          onTargetChanged: (w) =>
-              setState(() => _data.targetWeight = w),
+          onTargetChanged: (w) => setState(() => _data.targetWeight = w),
         ),
         BirthDateStep(
           birthDate: _data.birthDate,
-          onDateChanged: (d) =>
-              setState(() => _data.birthDate = d),
+          onDateChanged: (d) => setState(() => _data.birthDate = d),
         ),
         ActivityStep(
           selectedActivity: _data.activityLevel,
-          onActivityChanged: (a) =>
-              setState(() => _data.activityLevel = a),
+          onActivityChanged: (a) => setState(() => _data.activityLevel = a),
         ),
         GoalSpeedStep(
           goalSpeed: _data.goalSpeed,
-          onSpeedChanged: (s) =>
-              setState(() => _data.goalSpeed = s),
+          onSpeedChanged: (s) => setState(() => _data.goalSpeed = s),
         ),
-        GoogleAuthStep(
-          onSuccess: _nextPage,
-          onSkip: _nextPage,
-        ),
-        CalculationStep(
-          data: _data,
-          onComplete: _onLoadingComplete,
-        ),
+        GoogleAuthStep(onSuccess: _nextPage, onSkip: _nextPage),
+        CalculationStep(data: _data, onComplete: _onLoadingComplete),
       ][_currentPage],
     );
   }
@@ -163,15 +151,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 )
               else
                 const SizedBox(width: 24),
-              
+
               if (_currentPage == 7)
                 GestureDetector(
                   onTap: _nextPage,
-                  child: Text('Пропустить',
-                      style: GoogleFonts.inter(
-                          color: tc.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500)),
+                  child: Text(
+                    'Пропустить',
+                    style: GoogleFonts.inter(
+                      color: tc.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 )
               else
                 const SizedBox(),
@@ -179,23 +170,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
               Text(
                 '${_currentPage + 1} из $_totalSteps',
                 style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: tc.textSecondary,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 11,
+                  color: tc.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Stack(
             children: [
-              Container(
-                  height: 2,
-                  width: double.infinity,
-                  color: tc.divider),
+              Container(height: 2, width: double.infinity, color: tc.divider),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
                 height: 2,
-                width: MediaQuery.of(context).size.width *
+                width:
+                    MediaQuery.of(context).size.width *
                     ((_currentPage + 1) / _totalSteps),
                 color: tc.primary,
               ),
@@ -206,46 +196,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildBottomButton(ThemeColors tc) {
+  Widget _buildBottomButton() {
     if (_currentPage == 9 || _currentPage == 10) return const SizedBox.shrink();
 
-    String text = 'Далее';
-    bool showArrow = false;
-
-    if (_currentPage == 0) text = 'Начать';
-    if (_currentPage == 1) {
-      text = 'Цель';
-      showArrow = true;
-    }
-    if (_currentPage == 8) text = 'Готово';
-
-    final bool canProceed = _canGoNext();
+    final loc = AppLocalizations.of(context)!;
+    final text = switch (_currentPage) {
+      0 => loc.onboardingStart,
+      1 => loc.onboardingGoalButton,
+      8 => loc.onboardingDone,
+      _ => loc.onboardingNext,
+    };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: ElevatedButton(
-        onPressed: canProceed ? _nextPage : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canProceed ? tc.primary : tc.divider,
-          foregroundColor: tc.textOnPrimary,
-          disabledBackgroundColor: tc.divider,
-          minimumSize: const Size(double.infinity, 60),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30)),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(text,
-                style: GoogleFonts.inter(
-                    fontSize: 18, fontWeight: FontWeight.w700)),
-            if (showArrow) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward, size: 20, color: tc.textOnPrimary),
-            ]
-          ],
-        ),
+      child: AppButton(
+        text: text,
+        size: AppButtonSize.lg,
+        trailingIcon: _currentPage == 1 ? Icons.arrow_forward : null,
+        onPressed: _canGoNext() ? _nextPage : null,
       ),
     );
   }

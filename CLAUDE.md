@@ -17,9 +17,10 @@ Flutter-приложение (Dart SDK ^3.12.2) для питания, воды,
 
 ## Структура
 
-- `lib/core/` — конфиг (`config/app_config.dart`), сервисы (`services/`), общие виджеты и тема.
+- `lib/main.dart` → `lib/app/` — запуск (`bootstrap.dart`), корневой виджет (`welmi_app.dart`), экран блокировки, push-маршруты.
+- `lib/core/` — конфиг (`config/app_config.dart`), сервисы (`services/`, AI — `services/ai/`, уведомления — `services/notifications/`), модели, общие виджеты и тема.
+- `lib/core/theme/` — дизайн-система: цвета в `app_palette.dart`, формы и размеры в `app_tokens.dart`, сборка ThemeData в `app_theme.dart`, режим темы в `theme_mode_controller.dart`.
 - `lib/features/<feature>/{data,domain,presentation}` — фичи. Новый код следует этой раскладке.
-- `lib/services/` — локальные уведомления (`notification_service.dart`).
 - `supabase/` — миграции (`migrations/`), Edge Functions (`functions/`).
 
 ## Правила кода
@@ -28,6 +29,7 @@ Flutter-приложение (Dart SDK ^3.12.2) для питания, воды,
 - Ошибки сервисов — типизированные исключения (`AiUnavailableException`, `VoiceTranscriptionException`, `VoiceRecordException`), а не строки или `null`. Сообщения пользователю строятся в UI из локализации.
 - Голос: запись — `VoiceRecorderService`, озвучивание — `SpeechOutputService`. Не дублировать `AudioRecorder` в виджетах.
 - Снекбары — только через `AppSnackbar`.
+- Цвета — через `ThemeColors.of(context)` / `AppPalette.of(context)`, кнопки — `AppButton` / `AppIconButton`. Не задавать на экранах свои стили кнопок и `Colors.black` там, где есть токен.
 - Числа от пользователя — через `parseDecimalInput` (`core/utils/number_input.dart`): на ru/ky-клавиатуре разделитель — запятая.
 - Вес и расстояние хранятся в метрике; показ и ввод — через `UnitsService` и расширение `UnitsFormat` (`loc.formatWeight`, `loc.weightUnitLabel`). Не писать `'… кг'` вручную.
 - Выход из аккаунта — только `confirmAndSignOut` (`core/widgets/logout_flow.dart`).

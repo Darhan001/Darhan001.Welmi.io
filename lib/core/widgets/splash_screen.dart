@@ -140,7 +140,9 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          AppColors.iconGreen.withValues(alpha: isDark ? 0.15 : 0.3),
+                          AppColors.iconGreen.withValues(
+                            alpha: isDark ? 0.15 : 0.3,
+                          ),
                           AppColors.iconGreen.withValues(alpha: 0.05),
                           Colors.transparent,
                         ],
@@ -176,10 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF75A47F),
-                              Color(0xFF5A8A64),
-                            ],
+                            colors: [Color(0xFF75A47F), Color(0xFF5A8A64)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

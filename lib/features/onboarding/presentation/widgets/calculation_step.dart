@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lumina/core/models/onboarding_data.dart' show OnboardingData, Gender;
+import 'package:lumina/core/models/onboarding_data.dart'
+    show OnboardingData, Gender;
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
@@ -37,9 +38,10 @@ class _CalculationStepState extends State<CalculationStep>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _startCalculation();
   }
@@ -210,14 +212,16 @@ class _CalculationStepState extends State<CalculationStep>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value,
+        Text(
+          value,
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w900,
             fontSize: 18,
             color: tc.green,
           ),
         ),
-        Text(label,
+        Text(
+          label,
           style: TextStyle(
             fontSize: 10,
             color: tc.textSecondary,
@@ -228,7 +232,12 @@ class _CalculationStepState extends State<CalculationStep>
     );
   }
 
-  Widget _buildPulseRing(double size, double opacity, double maxScale, ThemeColors tc) {
+  Widget _buildPulseRing(
+    double size,
+    double opacity,
+    double maxScale,
+    ThemeColors tc,
+  ) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -243,7 +252,7 @@ class _CalculationStepState extends State<CalculationStep>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: tc.green.withValues(alpha:currentOpacity.clamp(0, 1)),
+                color: tc.green.withValues(alpha: currentOpacity.clamp(0, 1)),
                 width: 1.5,
               ),
             ),

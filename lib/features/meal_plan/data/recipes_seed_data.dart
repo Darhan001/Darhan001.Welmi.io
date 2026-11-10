@@ -108,7 +108,8 @@ const _catalog = <_SeedRecipe>[
     description: 'Яйца, запечённые в томатном соусе с перцем и фетой.',
     category: 'Завтрак',
     photoFile: '52963_shakshuka.jpg',
-    imageUrl: 'https://www.themealdb.com/images/media/meals/g373701551450225.jpg',
+    imageUrl:
+        'https://www.themealdb.com/images/media/meals/g373701551450225.jpg',
     imageCredit: _mealDbCredit,
     calories: 300,
     protein: 16,
@@ -213,7 +214,8 @@ const _catalog = <_SeedRecipe>[
     slug: 'eggs-benedict-salmon',
     mealDbId: '52962',
     title: 'Яйца Бенедикт с лососем',
-    description: 'Маффин, слабосолёный лосось, пашот и сливочный соус голландез.',
+    description:
+        'Маффин, слабосолёный лосось, пашот и сливочный соус голландез.',
     category: 'Завтрак',
     photoFile: '52962_eggs_benedict_salmon.jpg',
     imageUrl: 'https://www.themealdb.com/images/media/meals/1550440197.jpg',
@@ -281,7 +283,8 @@ const _catalog = <_SeedRecipe>[
   _SeedRecipe(
     slug: 'syrniki',
     title: 'Сырники с ягодами',
-    description: 'Творожные сырники с ягодами — собственный проверенный рецепт.',
+    description:
+        'Творожные сырники с ягодами — собственный проверенный рецепт.',
     category: 'Завтрак',
     photoFile: 'syrniki.jpg',
     imageUrl: '',
@@ -1064,8 +1067,7 @@ const _catalog = <_SeedRecipe>[
 ];
 
 /// Рецепты, сгруппированные по категориям для горизонтальных чипов.
-List<Recipe> buildSeedRecipes() =>
-    List.unmodifiable(_catalog.map(_toRecipe));
+List<Recipe> buildSeedRecipes() => List.unmodifiable(_catalog.map(_toRecipe));
 
 Recipe _toRecipe(_SeedRecipe seed) {
   final minutes = seed.minutes;
@@ -1080,7 +1082,9 @@ Recipe _toRecipe(_SeedRecipe seed) {
   }.toList();
 
   return Recipe(
-    id: seed.mealDbId == null ? 'welmi-${seed.slug}' : 'mealdb-${seed.mealDbId}',
+    id: seed.mealDbId == null
+        ? 'welmi-${seed.slug}'
+        : 'mealdb-${seed.mealDbId}',
     mealDbId: seed.mealDbId,
     title: seed.title,
     description: seed.description,

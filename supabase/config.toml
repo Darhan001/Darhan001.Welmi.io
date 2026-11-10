@@ -3,3 +3,11 @@
 # authenticated user access tokens with Supabase Auth. This preserves guest flow
 # for projects whose client key uses the newer publishable-key format.
 verify_jwt = false
+
+[functions.store-notifications]
+# Google Play RTDN (Pub/Sub push) and App Store Server Notifications cannot
+# send a Supabase JWT. The function authenticates them itself: Google via the
+# Pub/Sub OIDC token (audience + service account), Apple via the signed JWS.
+# With the default verify_jwt = true the gateway rejected every store webhook
+# with 401, so renewals, cancellations and refunds were never applied.
+verify_jwt = false

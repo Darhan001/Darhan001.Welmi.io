@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/speech_output_service.dart';
+import 'package:lumina/core/services/speech_recognition_service.dart';
 import 'package:lumina/core/widgets/voice_messages.dart';
 import 'package:lumina/l10n/app_localizations_ru.dart';
 
@@ -74,6 +75,50 @@ void main() {
       expect(
         voiceTranscriptionMessage(loc, VoiceTranscriptionFailure.noApiKey),
         loc.voiceErrorUnavailable,
+      );
+    });
+  });
+
+  group('распознавание на устройстве', () {
+    test('коды ошибок Android/iOS сопоставляются с причинами', () {
+      expect(
+        mapSpeechErrorCode('error_permission'),
+        SpeechRecognitionFailure.permissionDenied,
+      );
+      expect(
+        mapSpeechErrorCode('error_no_match'),
+        SpeechRecognitionFailure.noSpeech,
+      );
+      expect(
+        mapSpeechErrorCode('error_speech_timeout'),
+        SpeechRecognitionFailure.noSpeech,
+      );
+      expect(
+        mapSpeechErrorCode('error_network_timeout'),
+        SpeechRecognitionFailure.network,
+      );
+      expect(
+        mapSpeechErrorCode('error_language_unavailable'),
+        SpeechRecognitionFailure.languageUnsupported,
+      );
+      expect(
+        mapSpeechErrorCode('error_unknown_new_code'),
+        SpeechRecognitionFailure.other,
+      );
+    });
+
+    test('каждая причина даёт отдельное понятное сообщение', () {
+      final loc = AppLocalizationsRu();
+      final messages = SpeechRecognitionFailure.values
+          .map((f) => speechRecognitionMessage(loc, f))
+          .toSet();
+      expect(messages, hasLength(SpeechRecognitionFailure.values.length));
+      expect(
+        speechRecognitionMessage(
+          loc,
+          SpeechRecognitionFailure.permissionDenied,
+        ),
+        loc.voiceErrorPermissionSettings,
       );
     });
   });

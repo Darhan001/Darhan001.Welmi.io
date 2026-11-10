@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumina/core/services/units_service.dart';
 import 'package:lumina/core/widgets/app_app_bar.dart';
-import 'package:lumina/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:lumina/features/notifications/presentation/view_models/reminder_schedule.dart';
 import 'package:lumina/features/weight/presentation/widgets/record_weight_sheet.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 import 'package:lumina/l10n/app_localizations_ru.dart';
-import 'package:lumina/services/notification_service.dart';
+import 'package:lumina/core/services/notifications/notification_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _app(Widget home) => MaterialApp(

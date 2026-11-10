@@ -1,54 +1,57 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
-import 'theme_provider.dart';
+import 'app_palette.dart';
 
-/// Helper для получения цветов, адаптированных под текущую тему (светлая/тёмная)
+/// Короткий доступ к цветам текущей темы.
+///
+/// Значения берутся из [AppPalette], подключённой к теме, поэтому правка
+/// палитры в одном месте меняет все экраны.
 ///
 /// Использование:
 ///   final tc = ThemeColors.of(context);
 ///   Container(color: tc.card, child: Text('...', style: TextStyle(color: tc.text)));
 class ThemeColors {
-  final bool isDark;
+  const ThemeColors._(this.palette);
 
-  const ThemeColors({required this.isDark});
+  /// Цвета без контекста (тесты, код вне дерева виджетов).
+  ThemeColors({required bool isDark})
+    : palette = isDark ? AppPalette.dark : AppPalette.light;
+
+  factory ThemeColors.of(BuildContext context) =>
+      ThemeColors._(AppPalette.of(context));
+
+  final AppPalette palette;
+
+  bool get isDark => palette.isDark;
 
   // Backgrounds
-  Color get background => isDark ? AppColors.darkBackground : const Color(0xFFF9F7F2);
-  Color get card => isDark ? AppColors.darkCard : Colors.white;
-  Color get surface => isDark ? AppColors.darkSurface : const Color(0xFFF0F0F0);
+  Color get background => palette.background;
+  Color get card => palette.card;
+  Color get surface => palette.surface;
 
   // Text
-  Color get text => isDark ? AppColors.darkText : Colors.black87;
-  Color get textSecondary => isDark ? AppColors.darkTextSecondary : Colors.black38;
-  Color get textHint => isDark ? AppColors.darkTextHint : Colors.black26;
-  Color get textOnPrimary => Colors.white;
+  Color get text => palette.text;
+  Color get textSecondary => palette.textSecondary;
+  Color get textHint => palette.textHint;
+  Color get textOnPrimary => palette.textOnPrimary;
 
   // UI elements
-  Color get primary => isDark ? AppColors.iconGreenDark : Colors.black;
-  Color get divider => isDark ? AppColors.darkDivider : Colors.black12;
-  Color get border => isDark ? AppColors.darkBorder : Colors.black;
-  Color get inactive => isDark ? AppColors.darkTextHint : Colors.black26;
+  Color get primary => palette.primary;
+  Color get divider => palette.divider;
+  Color get border => palette.border;
+  Color get inactive => palette.inactive;
 
   // Brand
-  Color get green => AppColors.iconGreen;
-  Color get greenDark => AppColors.iconGreenDark;
+  Color get green => palette.green;
+  Color get greenDark => palette.greenDark;
 
   // Semantic (success / warning / error / disabled)
-  Color get success => isDark ? AppColors.darkSuccess : AppColors.success;
-  Color get successBg =>
-      isDark ? AppColors.darkSurface : AppColors.brandLight;
-  Color get warning => isDark ? AppColors.darkWarning : AppColors.warning;
-  Color get error => isDark ? AppColors.darkError : AppColors.error;
-  Color get errorBg => isDark ? const Color(0xFF3A2A2A) : const Color(0xFFFDECEA);
-  Color get disabled => isDark ? AppColors.darkDisabled : AppColors.disabled;
+  Color get success => palette.success;
+  Color get successBg => palette.successBg;
+  Color get warning => palette.warning;
+  Color get error => palette.error;
+  Color get errorBg => palette.errorBg;
+  Color get disabled => palette.disabled;
 
   // Shadows — lighter in dark mode for subtlety
-  Color shadow(double opacity) =>
-      Colors.black.withValues(alpha: isDark ? opacity * 0.5 : opacity);
-
-  /// Получить ThemeColors из BuildContext
-  factory ThemeColors.of(BuildContext context) {
-    final isDark = ThemeProvider.isDark(context);
-    return ThemeColors(isDark: isDark);
-  }
+  Color shadow(double opacity) => palette.shadow(opacity);
 }

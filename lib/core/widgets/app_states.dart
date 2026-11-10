@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/widgets/app_button.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Единый индикатор загрузки.
 class AppLoading extends StatelessWidget {
@@ -74,35 +76,41 @@ class AppEmptyState extends StatelessWidget {
                 color: tc.successBg.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 44, color: tc.green.withValues(alpha: 0.6)),
+              child: Icon(
+                icon,
+                size: 44,
+                color: tc.green.withValues(alpha: 0.6),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: tc.text),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: tc.text,
+              ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, height: 1.5, color: tc.textSecondary),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: tc.textSecondary,
+                ),
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              AppButton(
+                text: actionLabel!,
+                icon: Icons.add_rounded,
                 onPressed: onAction,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(actionLabel!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: tc.primary,
-                  foregroundColor: tc.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  elevation: 0,
-                ),
+                fullWidth: false,
               ),
             ],
           ],
@@ -117,7 +125,7 @@ class AppErrorState extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
 
-  const AppErrorState({super.key, this.message = 'Что-то пошло не так', this.onRetry});
+  const AppErrorState({super.key, required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -136,26 +144,30 @@ class AppErrorState extends StatelessWidget {
                 color: tc.errorBg,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.error_outline_rounded, size: 36, color: tc.error),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 36,
+                color: tc.error,
+              ),
             ),
             const SizedBox(height: 20),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: tc.textSecondary),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: tc.textSecondary,
+              ),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 20),
-              OutlinedButton.icon(
+              AppButton(
+                text: AppLocalizations.of(context)!.retry,
+                icon: Icons.refresh_rounded,
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Попробовать снова'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: tc.text,
-                  side: BorderSide(color: tc.border.withValues(alpha: 0.5)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
+                variant: AppButtonVariant.outline,
+                fullWidth: false,
               ),
             ],
           ],

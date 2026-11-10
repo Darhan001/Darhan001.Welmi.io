@@ -14,7 +14,8 @@ class ThemeProvider extends InheritedWidget {
 
   /// Получить ThemeProvider из контекста
   static ThemeProvider of(BuildContext context) {
-    final provider = context.dependOnInheritedWidgetOfExactType<ThemeProvider>();
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<ThemeProvider>();
     assert(provider != null, 'No ThemeProvider found in context');
     return provider!;
   }

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/features/meal_plan/data/recipes_seed_data.dart';
 import 'package:lumina/features/meal_plan/domain/models/recipe_model.dart';
 import 'package:lumina/features/meal_plan/presentation/pages/meal_plan_page.dart';
+import 'package:lumina/features/meal_plan/presentation/pages/recipe_detail_page.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -97,8 +98,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('карточка открывает рецепт с фото и пометкой об оценке КБЖУ',
-      (tester) async {
+  testWidgets('карточка открывает рецепт с фото и пометкой об оценке КБЖУ', (
+    tester,
+  ) async {
     await pumpRecipes(tester, const Size(420, 900));
 
     await tester.tap(find.text('Блины гречневые'));
@@ -106,16 +108,14 @@ void main() {
 
     expect(find.text('Блины гречневые'), findsOneWidget);
     expect(find.textContaining('Фото: TheMealDB'), findsOneWidget);
-    expect(
-      find.textContaining('КБЖУ — оценочные значения'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('КБЖУ — оценочные значения'), findsOneWidget);
     expect(find.textContaining('порция 230 г'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('кнопка «Спросить» отправляет рецепт в чат одним сообщением',
-      (tester) async {
+  testWidgets('кнопка «Спросить» отправляет рецепт в чат одним сообщением', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(420, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -143,8 +143,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('без фото показывается placeholder, а не чужое блюдо',
-      (tester) async {
+  testWidgets('без фото показывается placeholder, а не чужое блюдо', (
+    tester,
+  ) async {
     const recipe = Recipe(
       id: 'welmi-no-photo',
       title: 'Блюдо без фото',
@@ -183,8 +184,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('на широком экране сетка перестраивается без ошибок вёрстки',
-      (tester) async {
+  testWidgets('на широком экране сетка перестраивается без ошибок вёрстки', (
+    tester,
+  ) async {
     await pumpRecipes(tester, const Size(1024, 900));
     expect(find.text('Сырники с ягодами'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -193,9 +195,15 @@ void main() {
 
 /// `Image.asset` с `cacheWidth` оборачивает провайдер в [ResizeImage].
 List<String> _visibleAssets(WidgetTester tester) {
-  return tester.widgetList<Image>(find.byType(Image)).map((image) {
-    final provider = image.image;
-    final unwrapped = provider is ResizeImage ? provider.imageProvider : provider;
-    return unwrapped is AssetImage ? unwrapped.assetName : null;
-  }).whereType<String>().toList();
+  return tester
+      .widgetList<Image>(find.byType(Image))
+      .map((image) {
+        final provider = image.image;
+        final unwrapped = provider is ResizeImage
+            ? provider.imageProvider
+            : provider;
+        return unwrapped is AssetImage ? unwrapped.assetName : null;
+      })
+      .whereType<String>()
+      .toList();
 }

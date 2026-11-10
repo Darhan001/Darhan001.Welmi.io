@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/daily_tracker.dart';
 import 'package:lumina/core/services/supabase_service.dart';
-import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/core/services/widget_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/app_app_bar.dart';
 import 'package:lumina/core/widgets/app_card.dart';
-import 'package:lumina/core/widgets/app_chip.dart';
 import 'package:lumina/core/widgets/app_states.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
+import 'package:lumina/features/water/presentation/widgets/water_glass_card.dart';
+import 'package:lumina/features/water/presentation/widgets/water_quick_add.dart';
+import 'package:lumina/features/water/presentation/widgets/water_week_chart.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
 class WaterPage extends StatefulWidget {
@@ -21,8 +23,16 @@ class WaterPage extends StatefulWidget {
 class _WaterPageState extends State<WaterPage> {
   final DailyTracker _tracker = DailyTracker();
   final SupabaseService _supabase = SupabaseService();
-  List<double> _weeklyData = [0, 0, 0, 0, 0, 0, 0];
+  List<({DateTime day, int ml})> _week = _emptyWeek();
   bool _isLoading = true;
+
+  static List<({DateTime day, int ml})> _emptyWeek() {
+    final today = DateUtils.dateOnly(DateTime.now());
+    return [
+      for (var i = 6; i >= 0; i--)
+        (day: today.subtract(Duration(days: i)), ml: 0),
+    ];
+  }
 
   @override
   void initState() {
@@ -37,313 +47,152 @@ class _WaterPageState extends State<WaterPage> {
     if (mounted) setState(() => _isLoading = false);
   }
 
+  /// Вода за 7 дней одним запросом (раньше — 7 запросов по очереди).
   Future<void> _loadWeeklyData() async {
     final userId = AuthService().userId;
     if (userId == null) return;
-
-    final now = DateTime.now();
-    final weekData = <double>[];
-
-    for (int i = 6; i >= 0; i--) {
-      final day = now.subtract(Duration(days: i));
-      try {
-        final total = await _supabase.getDailyWaterTotal(userId, day);
-        weekData.add(total.toDouble());
-      } catch (_) {
-        weekData.add(0);
-      }
+    final week = _emptyWeek();
+    try {
+      final totals = await _supabase.getWaterTotalsByDay(
+        userId,
+        from: week.first.day,
+        to: week.last.day,
+      );
+      String keyOf(DateTime d) => d.toIso8601String().substring(0, 10);
+      if (!mounted) return;
+      setState(() {
+        _week = [
+          for (final d in week) (day: d.day, ml: totals[keyOf(d.day)] ?? 0),
+        ];
+      });
+    } catch (e) {
+      // Неделя — второстепенный блок: оставляем нули, сегодня берём из трекера.
+      debugPrint('⚠️ Water week load error: $e');
     }
+  }
 
-    if (mounted) setState(() => _weeklyData = weekData);
+  Future<void> _addWater(int ml) async {
+    hapticTap();
+    await _tracker.addWater(ml);
+    // После добавления обновляем недельные данные и виджет на рабочем столе
+    _loadWeeklyData();
+    WidgetService().updateAll();
   }
 
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
 
-    return ListenableBuilder(
-      listenable: _tracker,
-      builder: (context, _) {
-        final progress = _tracker.waterProgress;
-        final currentWater = _tracker.totalWaterMl;
-        final dailyGoal = _tracker.goalWaterMl;
-        final remaining = (dailyGoal - currentWater).clamp(0, dailyGoal);
-
-        return Scaffold(
-          backgroundColor: tc.background,
-          body: SafeArea(
-            child: _isLoading
-                ? const AppLoading()
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        AppAppBar(                           title: AppLocalizations.of(context)!.water,
-                          actions: [
-                            AppBarActionButton(
-                              icon: Icons.refresh_rounded,
-                              onTap: _loadData,
-                            ),
-                          ],
+    return Scaffold(
+      backgroundColor: tc.background,
+      body: SafeArea(
+        child: _isLoading
+            ? const AppLoading()
+            : ListenableBuilder(
+                listenable: _tracker,
+                builder: (context, _) => ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                  children: [
+                    AppAppBar(
+                      title: loc.water,
+                      actions: [
+                        AppBarActionButton(
+                          icon: Icons.refresh_rounded,
+                          tooltip: loc.refresh,
+                          onTap: _loadData,
                         ),
-                        const SizedBox(height: 24),
-                        _buildWaterGlass(
-                            tc, progress, currentWater, remaining, dailyGoal),
-                        const SizedBox(height: 24),
-                        _buildQuickAddRow(tc),
-                        const SizedBox(height: 24),
-                        _buildWeeklyChart(tc),
-                        const SizedBox(height: 24),
-                        _buildStatsRow(tc, currentWater, dailyGoal),
-                        const SizedBox(height: 100),
                       ],
                     ),
-                  ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildWaterGlass(ThemeColors tc, double progress, int current,
-      int remaining, int goal) {
-    return AppCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Text(
-            progress >= 1.0
-                ? 'Цель достигнута! 🎉'                 : AppLocalizations.of(context)!.remainingKcal(remaining),
-            style: TextStyle(
-                fontSize: 13,
-                color: progress >= 1.0 ? tc.success : tc.textSecondary,
-                fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 24),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 180,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: tc.isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFF0F7FF),
-                  borderRadius: BorderRadius.circular(40),
-                  border: Border.all(
-                      color: tc.isDark
-                          ? Colors.white10
-                          : Colors.black.withValues(alpha: 0.06),
-                      width: 2),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(38),
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 500),
-                        height: 220 * progress,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Color(0xFF75A47F), Color(0xFF4A8C5C)],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('$current',
-                      style: const TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white)),
-                  Text('из $goal мл',
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white70)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickAddRow(ThemeColors tc) {
-    return Row(
-      children: [
-        Expanded(
-            child: _buildAddButton(tc, 100, '100 мл', Icons.water_drop)),
-        const SizedBox(width: 12),
-        Expanded(             child: _buildAddButton(tc, 250, AppLocalizations.of(context)!.glass, Icons.opacity)),
-        const SizedBox(width: 12),
-        Expanded(
-            child:                 _buildAddButton(tc, 500, AppLocalizations.of(context)!.bottle, Icons.local_drink, dark: true)),
-      ],
-    );
-  }
-
-  Widget _buildAddButton(ThemeColors tc, int ml, String label, IconData icon,
-      {bool dark = false}) {
-    final bool isDarkBtn = dark && tc.isDark;
-    return AppCard(
-      onTap: () async {
-        hapticTap();
-        await _tracker.addWater(ml);
-        // После добавления обновляем недельные данные и виджет на рабочем столе
-        _loadWeeklyData();
-        WidgetService().updateAll();
-      },
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-      color: dark ? (tc.isDark ? Colors.white : Colors.black) : null,
-      child: Column(
-        children: [
-          Icon(icon,
-              size: 22,
-              color: dark
-                  ? (isDarkBtn ? Colors.black : Colors.white)
-                  : tc.green),
-          const SizedBox(height: 10),
-          Text('+$ml',
-              style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  color: dark
-                      ? (isDarkBtn ? Colors.black : Colors.white)
-                      : tc.text)),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 10,
-                  color: dark ? Colors.white70 : tc.textHint,
-                  fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeeklyChart(ThemeColors tc) {
-    final maxVal = _weeklyData
-        .reduce((a, b) => a > b ? a : b)
-        .clamp(1.0, double.infinity);
-    final dayNames = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-
-    return AppCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(AppLocalizations.of(context)!.weightDynamics,
-                  style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15,
-                      color: tc.text)),
-              AppBadge(
-                text:
-                    '${(_weeklyData.reduce((a, b) => a + b) / 1000).toStringAsFixed(1)} л',
-                icon: Icons.water_drop,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(7, (i) {
-              final val = _weeklyData[i];
-              final height = (val / maxVal * 120).clamp(4.0, 120.0);
-              final isToday = i == DateTime.now().weekday - 1;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${val.toInt()}',
-                      style: TextStyle(
-                          fontSize: 9,
-                          color: tc.textHint,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 32,
-                    height: height,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          tc.green,
-                          tc.greenDark.withValues(alpha: 0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      border: isToday
-                          ? Border.all(color: tc.green, width: 2)
-                          : null,
+                    const SizedBox(height: 24),
+                    WaterGlassCard(
+                      currentMl: _tracker.totalWaterMl,
+                      goalMl: _tracker.goalWaterMl,
+                      progress: _tracker.waterProgress,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(dayNames[i],
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight:
-                              isToday ? FontWeight.w800 : FontWeight.w600,
-                          color: isToday ? tc.green : tc.textHint)),
-                ],
-              );
-            }),
-          ),
-        ],
+                    const SizedBox(height: 24),
+                    WaterQuickAddRow(onAdd: _addWater),
+                    const SizedBox(height: 24),
+                    WaterWeekChart(days: _week),
+                    const SizedBox(height: 24),
+                    _buildStatsRow(tc, loc),
+                  ],
+                ),
+              ),
       ),
     );
   }
 
-  Widget _buildStatsRow(ThemeColors tc, int current, int goal) {
-    final cups = (current / 250).round();
-    final weekTotal = _weeklyData.reduce((a, b) => a + b).toInt();
+  Widget _buildStatsRow(ThemeColors tc, AppLocalizations loc) {
+    final current = _tracker.totalWaterMl;
+    final weekTotal = _week.fold<int>(0, (sum, d) => sum + d.ml);
     return Row(
       children: [
-        Expanded(             child: _buildStatCard(tc, AppLocalizations.of(context)!.weightLost, '$current мл',
-                Icons.water_drop, tc.success)),
+        Expanded(
+          child: _StatCard(
+            loc.waterDrunk,
+            loc.mlValue(current),
+            Icons.water_drop,
+            tc.success,
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(             child: _buildStatCard(tc, AppLocalizations.of(context)!.glass, '$cups',
-                Icons.opacity, tc.green)),
+        Expanded(
+          child: _StatCard(
+            loc.glass,
+            '${(current / 250).round()}',
+            Icons.opacity,
+            tc.green,
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(             child: _buildStatCard(tc, AppLocalizations.of(context)!.weekChange('7'), '$weekTotal мл',
-                Icons.calendar_view_week, tc.success)),
+        Expanded(
+          child: _StatCard(
+            loc.weekChange('7'),
+            loc.mlValue(weekTotal),
+            Icons.calendar_view_week,
+            tc.success,
+          ),
+        ),
       ],
     );
   }
+}
 
-  Widget _buildStatCard(ThemeColors tc, String label, String value,
-      IconData icon, Color color) {
+class _StatCard extends StatelessWidget {
+  const _StatCard(this.label, this.value, this.icon, this.color);
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = ThemeColors.of(context);
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Icon(icon, size: 20, color: color),
           const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: tc.text)),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 9,
-                  color: tc.textHint,
-                  fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: tc.text,
+            ),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 9,
+              color: tc.textHint,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

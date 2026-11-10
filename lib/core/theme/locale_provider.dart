@@ -56,3 +56,7 @@ class LocaleProvider extends ChangeNotifier {
     }
   }
 }
+
+/// Единственный экземпляр языка приложения: его слушает корневой
+/// `MaterialApp`, а меняет экран настроек.
+final localeProvider = LocaleProvider();

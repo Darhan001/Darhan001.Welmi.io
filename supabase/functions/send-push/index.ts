@@ -32,19 +32,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-/** Роль из JWT (anon | authenticated | service_role) без проверки подписи —
- *  только для разграничения аноним/сервер; реальную проверку делает getUser(). */
-function decodeJwtRole(token: string): string | null {
-  try {
-    const payload = token.split('.')[1];
-    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const json = JSON.parse(atob(b64));
-    return typeof json.role === 'string' ? json.role : null;
-  } catch {
-    return null;
-  }
-}
-
 function json(obj: unknown, status = 200): Response {
   return new Response(JSON.stringify(obj), {
     status,
@@ -58,7 +45,15 @@ Deno.serve(async (req) => {
   try {
     const { user_id, title, body, route, channel } = await req.json();
     if (!user_id) return json({ error: 'user_id обязателен' }, 400);
-    if (!title || !body) return json({ error: 'title и body обязательны' }, 400);
+    if (typeof title !== 'string' || typeof body !== 'string' || !title || !body) {
+      return json({ error: 'title и body обязательны' }, 400);
+    }
+    if (title.length > 120 || body.length > 1000) {
+      return json({ error: 'title/body слишком длинные' }, 400);
+    }
+    if (route != null && (typeof route !== 'string' || route.length > 40)) {
+      return json({ error: 'route некорректен' }, 400);
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -71,8 +66,13 @@ Deno.serve(async (req) => {
       return json({ error: 'Authorization header обязателен' }, 401);
     }
 
-    const jwtRole = decodeJwtRole(authHeader.slice(7));
-    if (jwtRole !== 'service_role') {
+    // Серверный вызов признаётся только по самому service-ключу. Раньше
+    // роль читалась из JWT без проверки подписи: при деплое с
+    // --no-verify-jwt поддельный токен {"role":"service_role"} позволял
+    // слать push любому пользователю, а ключи вида sb_secret_… (не JWT)
+    // вовсе не распознавались как серверные.
+    const isServiceCall = authHeader.slice(7) === serviceKey;
+    if (!isServiceCall) {
       const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
       const client = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
@@ -110,6 +110,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, sent, failed, total: tokens?.length ?? 0 });
   } catch (e) {
     console.error('❌ send-push error:', e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return json({ error: 'Push delivery failed' }, 500);
   }
 });

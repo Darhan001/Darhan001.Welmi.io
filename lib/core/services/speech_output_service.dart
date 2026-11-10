@@ -52,15 +52,22 @@ class SpeechOutputService {
   SpeechVoice? get selectedVoice => _selectedVoice;
 
   bool _initialized = false;
+  bool _disposed = false;
+
+  /// Обработчики движка срабатывают и после [dispose] (например, отмена
+  /// речи при закрытии экрана) — тогда уже освобождённый notifier не трогаем.
+  void _setSpeaking(String? text) {
+    if (!_disposed) speakingText.value = text;
+  }
 
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
-    _tts.setCompletionHandler(() => speakingText.value = null);
-    _tts.setCancelHandler(() => speakingText.value = null);
+    _tts.setCompletionHandler(() => _setSpeaking(null));
+    _tts.setCancelHandler(() => _setSpeaking(null));
     _tts.setErrorHandler((message) {
       debugPrint('⚠️ TTS error: $message');
-      speakingText.value = null;
+      _setSpeaking(null);
     });
     await _tts.awaitSpeakCompletion(false);
     await _restoreVoice();
@@ -93,31 +100,47 @@ class SpeechOutputService {
   }
 
   /// Озвучивает [text] на языке [languageCode]. Предыдущая речь прерывается.
+  ///
+  /// Любой сбой движка (в том числе `PlatformException`) приходит как
+  /// [SpeechOutputException], чтобы экран обрабатывал один тип ошибки.
   Future<void> speak(String text, {required String languageCode}) async {
-    await init();
-    await _tts.stop();
-    final locale = _selectedVoice?.languageCode == languageCode
-        ? _selectedVoice!.locale
-        : _localeFor(languageCode);
-    final langResult = await _tts.setLanguage(locale);
-    if (!_isOk(langResult)) {
-      throw SpeechOutputException('Синтез речи для языка "$locale" недоступен');
-    }
-    final voice = _selectedVoice;
-    if (voice != null && voice.languageCode == languageCode) {
-      await _tts.setVoice({'name': voice.name, 'locale': voice.locale});
-    }
-    speakingText.value = text;
-    final result = await _tts.speak(text);
-    if (!_isOk(result)) {
-      speakingText.value = null;
-      throw const SpeechOutputException('Синтезатор речи не запустился');
+    try {
+      await init();
+      await _tts.stop();
+      final locale = _selectedVoice?.languageCode == languageCode
+          ? _selectedVoice!.locale
+          : _localeFor(languageCode);
+      final langResult = await _tts.setLanguage(locale);
+      if (!_isOk(langResult)) {
+        throw SpeechOutputException(
+          'Синтез речи для языка "$locale" недоступен',
+        );
+      }
+      final voice = _selectedVoice;
+      if (voice != null && voice.languageCode == languageCode) {
+        await _tts.setVoice({'name': voice.name, 'locale': voice.locale});
+      }
+      _setSpeaking(text);
+      final result = await _tts.speak(text);
+      if (!_isOk(result)) {
+        throw const SpeechOutputException('Синтезатор речи не запустился');
+      }
+    } on SpeechOutputException {
+      _setSpeaking(null);
+      rethrow;
+    } catch (e) {
+      _setSpeaking(null);
+      throw SpeechOutputException('Ошибка синтезатора речи: $e');
     }
   }
 
   Future<void> stop() async {
-    await _tts.stop();
-    speakingText.value = null;
+    try {
+      await _tts.stop();
+    } catch (e) {
+      debugPrint('⚠️ TTS stop error: $e');
+    }
+    _setSpeaking(null);
   }
 
   Future<void> _restoreVoice() async {
@@ -139,7 +162,12 @@ class SpeechOutputService {
   };
 
   void dispose() {
-    _tts.stop();
+    if (_disposed) return;
+    _disposed = true;
+    _tts.stop().catchError((Object e) {
+      debugPrint('⚠️ TTS stop error: $e');
+      return null;
+    });
     speakingText.dispose();
   }
 }

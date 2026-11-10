@@ -23,7 +23,7 @@ class WelcomeStep extends StatelessWidget {
                   color: tc.shadow(0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
-                )
+                ),
               ],
             ),
             child: Icon(Icons.restaurant_menu, size: 32, color: tc.text),

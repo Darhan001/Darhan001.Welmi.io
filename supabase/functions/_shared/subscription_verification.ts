@@ -16,6 +16,8 @@ export type VerifiedSubscription = {
   startedAt: string | null;
   expiresAt: string | null;
   autoRenewEnabled: boolean | null;
+  /** Google Play: obfuscatedExternalProfileId, set by the app to the Welmi user id. */
+  externalProfileId?: string | null;
 };
 
 export const MONTHLY_ID = 'welmi_premium_monthly';
@@ -97,6 +99,8 @@ export async function verifyGooglePlay(
     startedAt: purchase.startTime ?? null,
     expiresAt: Number.isFinite(expiryMs) ? new Date(expiryMs).toISOString() : null,
     autoRenewEnabled: line.autoRenewingPlan?.autoRenewEnabled ?? null,
+    externalProfileId:
+      purchase.externalAccountIdentifiers?.obfuscatedExternalProfileId ?? null,
   };
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lumina/core/theme/app_tokens.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 
 /// Стандартное текстовое поле приложения (тема-aware).
@@ -37,6 +38,7 @@ class AppTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final radius = AppTokens.of(context).inputRadius;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,22 +74,24 @@ class AppTextField extends StatelessWidget {
             suffixIcon: suffix,
             filled: true,
             fillColor: tc.surface.withValues(alpha: 0.6),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               borderSide: BorderSide(color: tc.border.withValues(alpha: 0.5)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               borderSide: BorderSide(color: tc.green, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               borderSide: BorderSide(color: tc.error),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               borderSide: BorderSide(color: tc.error, width: 1.5),
             ),
           ),

@@ -29,7 +29,11 @@ class GoalStep extends StatelessWidget {
           Text(
             'Выбери главное направление, чтобы мы могли\nнастроить план питания.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: tc.textSecondary, fontSize: 14, height: 1.4),
+            style: TextStyle(
+              color: tc.textSecondary,
+              fontSize: 14,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 40),
           _buildOptionCard(
@@ -59,7 +63,12 @@ class GoalStep extends StatelessWidget {
   }
 
   Widget _buildOptionCard(
-      String title, String subtitle, IconData icon, GoalType goal, ThemeColors tc) {
+    String title,
+    String subtitle,
+    IconData icon,
+    GoalType goal,
+    ThemeColors tc,
+  ) {
     final isSelected = selectedGoal == goal;
     return GestureDetector(
       onTap: () => onGoalChanged(goal),
@@ -69,9 +78,7 @@ class GoalStep extends StatelessWidget {
         decoration: BoxDecoration(
           color: tc.card,
           borderRadius: BorderRadius.circular(24),
-          border: isSelected
-              ? Border.all(color: tc.primary, width: 2)
-              : null,
+          border: isSelected ? Border.all(color: tc.primary, width: 2) : null,
         ),
         child: Row(
           children: [
@@ -83,9 +90,11 @@ class GoalStep extends StatelessWidget {
                     : tc.green.withValues(alpha: tc.isDark ? 0.2 : 0.3),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon,
-                  color: isSelected ? tc.textOnPrimary : tc.green,
-                  size: 24),
+              child: Icon(
+                icon,
+                color: isSelected ? tc.textOnPrimary : tc.green,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -95,13 +104,19 @@ class GoalStep extends StatelessWidget {
                   Text(
                     title,
                     style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w800, fontSize: 18, color: tc.text),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      color: tc.text,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
-                        color: tc.textSecondary, fontSize: 13, height: 1.3),
+                      color: tc.textSecondary,
+                      fontSize: 13,
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),

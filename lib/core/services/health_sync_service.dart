@@ -23,6 +23,8 @@ class HealthSyncResult {
 
   const HealthSyncResult(
     this.status, {
+    // Без данных — нули: при ошибке или отсутствии разрешений UI не должен
+    // показывать выдуманные шаги, калории или сон.
     this.steps = 0,
     this.calories = 0,
     this.sleepHours = 0,
@@ -42,13 +44,13 @@ class HealthSyncService {
   /// разрешений с неподдерживаемым типом на Android молча возвращает false
   /// (диалог даже не открывается), поэтому тип дистанции выбираем по платформе.
   static List<HealthDataType> get _readTypes => [
-        HealthDataType.STEPS,
-        HealthDataType.ACTIVE_ENERGY_BURNED,
-        Platform.isIOS
-            ? HealthDataType.DISTANCE_WALKING_RUNNING
-            : HealthDataType.DISTANCE_DELTA,
-        HealthDataType.SLEEP_ASLEEP,
-      ];
+    HealthDataType.STEPS,
+    HealthDataType.ACTIVE_ENERGY_BURNED,
+    Platform.isIOS
+        ? HealthDataType.DISTANCE_WALKING_RUNNING
+        : HealthDataType.DISTANCE_DELTA,
+    HealthDataType.SLEEP_ASLEEP,
+  ];
 
   /// Проверить, установлено ли Health Connect на устройстве
   Future<bool> isHealthConnectAvailable() async {
@@ -134,7 +136,11 @@ class HealthSyncService {
             case HealthDataType.ACTIVE_ENERGY_BURNED:
               calories += numValue.toDouble();
               break;
+            // iOS отдаёт DISTANCE_WALKING_RUNNING, Health Connect —
+            // DISTANCE_DELTA (оба в метрах). Раньше второй тип не
+            // учитывался, и на Android дистанция всегда была 0.
             case HealthDataType.DISTANCE_WALKING_RUNNING:
+            case HealthDataType.DISTANCE_DELTA:
               distance += numValue.toDouble() / 1000;
               break;
             case HealthDataType.SLEEP_ASLEEP:
@@ -147,13 +153,24 @@ class HealthSyncService {
         }
       }
 
-      await SupabaseService().saveActivityLog(ActivityLog(
-        userId: userId,
-        date: start,
-        steps: steps,
-        caloriesBurned: calories,
-        distanceKm: distance,
-      ));
+      // Сумма точек STEPS дублирует шаги, записанные несколькими
+      // источниками (телефон + часы). Агрегат платформы дедуплицирует их.
+      try {
+        final aggregated = await _health.getTotalStepsInInterval(start, now);
+        if (aggregated != null) steps = aggregated;
+      } catch (e) {
+        debugPrint('⚠️ Health steps aggregate unavailable: $e');
+      }
+
+      await SupabaseService().saveActivityLog(
+        ActivityLog(
+          userId: userId,
+          date: start,
+          steps: steps,
+          caloriesBurned: calories,
+          distanceKm: distance,
+        ),
+      );
 
       debugPrint('✅ Health Connect: Синхронизировано $steps шагов');
       return HealthSyncResult(

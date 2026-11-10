@@ -1441,8 +1441,8 @@ class AppLocalizationsKy extends AppLocalizations {
   }
 
   @override
-  String weightInKg(Object count) {
-    return '$count жол-жободогу салмак (кг)';
+  String weightInSet(Object count, Object unit) {
+    return '$count жол-жободогу салмак ($unit)';
   }
 
   @override
@@ -1799,4 +1799,290 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get heightInvalid => 'Боюңузду 100дөн 250 смге чейин киргизиңиз';
+
+  @override
+  String get voiceErrorLanguage =>
+      'Бул тилди таануу орнотулган эмес. Аны Google үн менен киргизүү жөндөөлөрүнө кошуңуз.';
+
+  @override
+  String get voiceListening => 'Сүйлөңүз, мен угуп жатам…';
+
+  @override
+  String get biometricTitle => 'Welmi’ге кирүү';
+
+  @override
+  String get biometricReason => 'Welmi’ни ачуу үчүн өздүгүңүздү ырастаңыз';
+
+  @override
+  String get biometricHint => 'Манжаңызды сканерге тийгизиңиз';
+
+  @override
+  String get notifClearDelivered => 'Тазалоо';
+
+  @override
+  String get notifClearedDelivered =>
+      'Билдирмелер тазаланды. Эскертмелер иштей берет.';
+
+  @override
+  String get voiceSayAgain => 'Кайра айтуу';
+
+  @override
+  String get addToDiary => 'Күндөлүккө кошуу';
+
+  @override
+  String get voiceDoneRecognize => 'Даяр, таануу';
+
+  @override
+  String get scannerTitle => 'AI-сканер';
+
+  @override
+  String get scannerSubtitle => 'Тамактын сүрөтү → калория жана БЖУ';
+
+  @override
+  String get scannerTakePhoto => 'Тамакты сүрөткө тарт';
+
+  @override
+  String get scannerHint =>
+      'Welmi AI калорияны, белокту, майды жана углеводду аныктайт';
+
+  @override
+  String get scannerAnalyzing => 'Сүрөт талдоодо...';
+
+  @override
+  String get scannerNotRecognized =>
+      'Welmi AI тамакты тааный албады. Башка сүрөттү байкап көр.';
+
+  @override
+  String get scannerAiError => 'AI менен байланыш катасы. Интернетти текшер.';
+
+  @override
+  String get scannerCameraError => 'Камераны ачуу мүмкүн болгон жок';
+
+  @override
+  String get scannerGalleryError => 'Галереяны ачуу мүмкүн болгон жок';
+
+  @override
+  String get scannerRetake => 'Кайрадан';
+
+  @override
+  String get scannerToDiary => 'Күндөлүккө';
+
+  @override
+  String scannerAdded(Object kcal) {
+    return 'Кошулду: $kcal ккал';
+  }
+
+  @override
+  String get gramsShort => 'г';
+
+  @override
+  String activityStepsToGoal(Object steps) {
+    return 'Максатка $steps кадам калды';
+  }
+
+  @override
+  String get activityGoalReached => 'Максатка жеттиң! 🎉';
+
+  @override
+  String get activityStepsUnit => 'кадам';
+
+  @override
+  String activityGoalSteps(Object steps) {
+    return '$steps кадам';
+  }
+
+  @override
+  String get activityDistance => 'Аралык';
+
+  @override
+  String get activityEnergy => 'Энергия';
+
+  @override
+  String get activityGoal => 'Максат';
+
+  @override
+  String get minutesShort => 'мүн';
+
+  @override
+  String get activityHealthSubtitle =>
+      'Кадамдарды жана калорияларды автоматтык түрдө алуу';
+
+  @override
+  String get activitySyncShort => 'Синхр.';
+
+  @override
+  String get activityTipTitle => 'Күндүн кеңеши';
+
+  @override
+  String get activityTipLow =>
+      'Көбүрөөк кыймылда! Бүгүн жок дегенде 8000 кадам басууга аракет кыл 🚶';
+
+  @override
+  String get activityTipMid => 'Жакшы, бирок дагы болот! 15 мүнөт сейилде 🌳';
+
+  @override
+  String get activityTipHigh => 'Сонун! Максатка аз калды! 💪';
+
+  @override
+  String get activityTipDone => 'Максатка жеттиң! Сен укмушсуң! 🎉';
+
+  @override
+  String get activityLoadError =>
+      'Активдүүлүктү жүктөө мүмкүн болгон жок. Интернетти текшер.';
+
+  @override
+  String get healthInstallHint =>
+      'Кадамдарды синхрондоо үчүн Health Connect колдонмосун орнот';
+
+  @override
+  String healthSynced(Object kcal, Object steps) {
+    return 'Синхрондолду: $steps кадам · $kcal ккал';
+  }
+
+  @override
+  String healthSleepSuffix(Object hours) {
+    return ' · уйку $hours с';
+  }
+
+  @override
+  String get healthNotAuthorized =>
+      'Ден соолук маалыматтарына уруксат алынган жок';
+
+  @override
+  String get healthUnsupported => 'Синхрондоо телефондо гана жеткиликтүү';
+
+  @override
+  String get healthError =>
+      'Health Connect\'тен маалымат алуу мүмкүн болгон жок';
+
+  @override
+  String get historyRecentDays => 'Акыркы күндөр';
+
+  @override
+  String get historyEmptyTitle => 'Азырынча жазуулар жок';
+
+  @override
+  String get historyEmptySubtitle => 'Кадамдарды, сууну же машыгууну жаз';
+
+  @override
+  String get historyLogButton => 'Жазуу';
+
+  @override
+  String get historyLoadError =>
+      'Тарыхты жүктөө мүмкүн болгон жок. Интернетти текшер.';
+
+  @override
+  String waterAddedMl(Object ml) {
+    return '+$ml мл суу';
+  }
+
+  @override
+  String get refresh => 'Жаңыртуу';
+
+  @override
+  String get waterMlLabel => 'мл суу';
+
+  @override
+  String get historySteps30 => '30 күндө кадам';
+
+  @override
+  String get historyWater14 => '14 күндө суу';
+
+  @override
+  String get historyActiveDays => 'активдүү күн';
+
+  @override
+  String litersValue(Object value) {
+    return '$value л';
+  }
+
+  @override
+  String weekLostValue(Object amount) {
+    return 'Жоготулду $amount';
+  }
+
+  @override
+  String weekGainedValue(Object amount) {
+    return 'Кошулду $amount';
+  }
+
+  @override
+  String currentWeightUnit(Object unit) {
+    return 'Учурдагы салмак ($unit)';
+  }
+
+  @override
+  String get weightEmptyTitle => 'Азырынча салмак жазуулары жок';
+
+  @override
+  String get weightEmptySubtitle =>
+      'Максатка жылышыңды көрүү үчүн салмагыңды жаз';
+
+  @override
+  String waterRemainingMl(Object ml) {
+    return '$ml мл калды';
+  }
+
+  @override
+  String waterOfGoal(Object goal) {
+    return '$goal мл ичинен';
+  }
+
+  @override
+  String mlValue(Object ml) {
+    return '$ml мл';
+  }
+
+  @override
+  String get waterWeekTitle => 'Жумадагы суу';
+
+  @override
+  String get waterDrunk => 'Бүгүн ичилди';
+
+  @override
+  String get feedbackCategoryBug => 'Ката';
+
+  @override
+  String get feedbackCategoryIdea => 'Идея';
+
+  @override
+  String supportOpenFailed(Object contact) {
+    return 'Колдонмону ачуу мүмкүн болгон жок. Бизге жазыңыз: $contact';
+  }
+
+  @override
+  String get authGoogleSigningIn => 'Авторизация…';
+
+  @override
+  String get authGoogleBrowserHint =>
+      'Google аркылуу кирүү үчүн браузер терезеси ачылат';
+
+  @override
+  String get authAlmostDone => 'Дээрлик даяр!';
+
+  @override
+  String get authGoogleSubtitle =>
+      'Прогрессиңизди сактоо үчүн Google аркылуу кириңиз';
+
+  @override
+  String get authContinueWithGoogle => 'Google менен улантуу';
+
+  @override
+  String get authGoogleFailed =>
+      'Google аркылуу кирүү мүмкүн болгон жок. Кийинчерээк кайталаңыз.';
+
+  @override
+  String get recipeSignInToAdd => 'Тамакты күндөлүккө кошуу үчүн кириңиз';
+
+  @override
+  String recipeAddedToMeal(String meal) {
+    return 'Рецепт «$meal» бөлүмүнө кошулду';
+  }
+
+  @override
+  String get recipeAddFailed =>
+      'Рецептти кошуу мүмкүн болгон жок. Байланышты текшериңиз.';
+
+  @override
+  String get recipeServingInfo => '1 порция · Welmi рецепти';
 }

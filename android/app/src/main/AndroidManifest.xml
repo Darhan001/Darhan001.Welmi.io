@@ -3,7 +3,7 @@
         android:label="Welmi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
         
         <!-- Настройки для flutter_local_notifications -->
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
@@ -99,15 +99,16 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     
-    <!-- Разрешения для ГАЛЕРЕИ -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    
-    <!-- Разрешения для Health Connect -->
+    <!-- Галерея: image_picker открывает системный выбор фото и получает
+         доступ только к выбранному файлу, поэтому READ_MEDIA_IMAGES /
+         READ_EXTERNAL_STORAGE не нужны (Google Play ограничивает их
+         для приложений без постоянного доступа к медиатеке). -->
+
+    <!-- Health Connect: только типы, которые читает HealthSyncService
+         (шаги, активные калории, дистанция, сон). -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
-    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -122,8 +123,21 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- Поддержка: письмо и Telegram (url_launcher, Android 11+) -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="tg"/>
+        </intent>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
+        <!-- Распознавание речи системным сервисом (speech_to_text, Android 11+) -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
         <package android:name="com.google.android.apps.healthdata" />
     </queries>

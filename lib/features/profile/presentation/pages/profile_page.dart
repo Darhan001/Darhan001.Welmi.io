@@ -73,8 +73,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final currentWeight = _userData.latestWeight;
     final targetWeight = _userData.goalWeight;
     final hasWeightGoal = currentWeight != null && targetWeight != null;
-    final weightDiff =
-        hasWeightGoal ? (currentWeight - targetWeight).abs() : 0.0;
+    final weightDiff = hasWeightGoal
+        ? (currentWeight - targetWeight).abs()
+        : 0.0;
     final isLosing = hasWeightGoal && targetWeight < currentWeight;
 
     return Scaffold(
@@ -85,190 +86,271 @@ class _ProfilePageState extends State<ProfilePage> {
             : ListenableBuilder(
                 listenable: _userData,
                 builder: (context, _) => SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.push(
-                              context,
-                              smoothPageRoute(const SettingsPage()),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: tc.card,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: tc.shadow(0.04),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(Icons.settings_outlined,
-                                size: 22, color: tc.text),
-                          ),
-                        ),
-                        Text('Мой профиль',
-                            style: GoogleFonts.notoSerif(
-                                fontWeight: FontWeight.w900, fontSize: 18, color: tc.text)),
-                        GestureDetector(
-                          onTap: () async {
-                            final result = await Navigator.push<bool>(
-                              context,
-                              smoothPageRoute(const EditProfilePage()),
-                            );
-                            if (result == true && mounted) {
-                              _loadData();
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: tc.primary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Icons.edit_outlined,
-                                size: 18, color: tc.textOnPrimary),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    // Profile Header — реальные данные из Google
-                    photoUrl != null
-                        ? CircleAvatar(
-                            radius: 50,
-                            backgroundImage: NetworkImage(photoUrl),
-                          )
-                        : CircleAvatar(
-                            radius: 50,
-                            backgroundColor: tc.primary,
-                            child: Text(initial,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold)),
-                          ),
-                    const SizedBox(height: 16),
-                    Text(name,
-                        style: GoogleFonts.notoSerif(
-                            fontSize: 22, fontWeight: FontWeight.w900, color: tc.text)),
-                    if (email != null && email.isNotEmpty)
-                      Text(email,
-                          style: TextStyle(color: tc.textHint, fontSize: 12)),
-                    const SizedBox(height: 40),
-                    // Weight Goal Card — реальные данные из Supabase
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: tc.card,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Цель веса',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: tc.text)),
-                          const SizedBox(height: 20),
-                          if (!hasWeightGoal)
-                            Text(
-                              loc.aiInsightStartTracking,
-                              style: TextStyle(fontSize: 13, color: tc.textSecondary),
-                            )
-                          else
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildWeightInfo('Текущий', loc.formatWeight(currentWeight), tc),
-                                _buildWeightInfo(
-                                  isLosing ? 'Осталось сбросить' : 'Осталось набрать',
-                                  loc.formatWeight(weightDiff),
-                                  tc,
-                                  isHighlight: true,
-                                ),
-                                _buildWeightInfo('Целевой', loc.formatWeight(targetWeight), tc),
-                              ],
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.push(
+                                context,
+                                smoothPageRoute(const SettingsPage()),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: tc.card,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: tc.shadow(0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.settings_outlined,
+                                size: 22,
+                                color: tc.text,
+                              ),
                             ),
+                          ),
+                          Text(
+                            'Мой профиль',
+                            style: GoogleFonts.notoSerif(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 18,
+                              color: tc.text,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final result = await Navigator.push<bool>(
+                                context,
+                                smoothPageRoute(const EditProfilePage()),
+                              );
+                              if (result == true && mounted) {
+                                _loadData();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: tc.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: tc.textOnPrimary,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    // Settings List
-                    _buildProfileItem(
-                        Icons.settings_outlined, 'Настройки', tc, onTap: () {
-                      hapticTap();
-                      Navigator.push(
-                          context, smoothPageRoute(const SettingsPage()));
-                    }),
-                    _buildProfileItem(Icons.straighten_outlined, loc.measurementUnits, tc,
-                        trailing: '${loc.weightUnitLabel} · ${loc.distanceUnitLabel}',
-                        onTap: _showUnitsSettings),
-                    AnimatedBuilder(
-                      animation: SubscriptionService.instance,
-                      builder: (context, _) => _buildProfileItem(
-                        Icons.star_outline,
-                        'Подписка',
-                        tc,
-                        trailing: SubscriptionService.instance.state.isPremium
-                            ? 'Активна'
-                            : 'Выбрать',
-                        onTap: () {
-                          hapticTap();
-                          Navigator.push(context,
-                              smoothPageRoute(const SubscriptionPage()));
-                        },
+                      const SizedBox(height: 40),
+                      // Profile Header — реальные данные из Google
+                      photoUrl != null
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundImage: NetworkImage(photoUrl),
+                            )
+                          : CircleAvatar(
+                              radius: 50,
+                              backgroundColor: tc.primary,
+                              child: Text(
+                                initial,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                      const SizedBox(height: 16),
+                      Text(
+                        name,
+                        style: GoogleFonts.notoSerif(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: tc.text,
+                        ),
                       ),
-                    ),
-                    _buildProfileItem(Icons.help_outline, 'Поддержка', tc,
+                      if (email != null && email.isNotEmpty)
+                        Text(
+                          email,
+                          style: TextStyle(color: tc.textHint, fontSize: 12),
+                        ),
+                      const SizedBox(height: 40),
+                      // Weight Goal Card — реальные данные из Supabase
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: tc.card,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Цель веса',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: tc.text,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            if (!hasWeightGoal)
+                              Text(
+                                loc.aiInsightStartTracking,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: tc.textSecondary,
+                                ),
+                              )
+                            else
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildWeightInfo(
+                                    'Текущий',
+                                    loc.formatWeight(currentWeight),
+                                    tc,
+                                  ),
+                                  _buildWeightInfo(
+                                    isLosing
+                                        ? 'Осталось сбросить'
+                                        : 'Осталось набрать',
+                                    loc.formatWeight(weightDiff),
+                                    tc,
+                                    isHighlight: true,
+                                  ),
+                                  _buildWeightInfo(
+                                    'Целевой',
+                                    loc.formatWeight(targetWeight),
+                                    tc,
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      // Settings List
+                      _buildProfileItem(
+                        Icons.settings_outlined,
+                        'Настройки',
+                        tc,
                         onTap: () {
                           hapticTap();
                           Navigator.push(
-                              context, smoothPageRoute(const SupportPage()));
-                        }),
-                    const SizedBox(height: 40),
-                    TextButton(
-                      onPressed: () => confirmAndSignOut(context),
-                      child: Text(loc.drawerLogout,
+                            context,
+                            smoothPageRoute(const SettingsPage()),
+                          );
+                        },
+                      ),
+                      _buildProfileItem(
+                        Icons.straighten_outlined,
+                        loc.measurementUnits,
+                        tc,
+                        trailing:
+                            '${loc.weightUnitLabel} · ${loc.distanceUnitLabel}',
+                        onTap: _showUnitsSettings,
+                      ),
+                      AnimatedBuilder(
+                        animation: SubscriptionService.instance,
+                        builder: (context, _) => _buildProfileItem(
+                          Icons.star_outline,
+                          'Подписка',
+                          tc,
+                          trailing: SubscriptionService.instance.state.isPremium
+                              ? 'Активна'
+                              : 'Выбрать',
+                          onTap: () {
+                            hapticTap();
+                            Navigator.push(
+                              context,
+                              smoothPageRoute(const SubscriptionPage()),
+                            );
+                          },
+                        ),
+                      ),
+                      _buildProfileItem(
+                        Icons.help_outline,
+                        'Поддержка',
+                        tc,
+                        onTap: () {
+                          hapticTap();
+                          Navigator.push(
+                            context,
+                            smoothPageRoute(const SupportPage()),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 40),
+                      TextButton(
+                        onPressed: () => confirmAndSignOut(context),
+                        child: Text(
+                          loc.drawerLogout,
                           style: const TextStyle(
-                              color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(height: 100),
-                  ],
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
                 ),
               ),
-          ),
-        ),
+      ),
     );
   }
 
-  Widget _buildWeightInfo(String label, String val, ThemeColors tc, {bool isHighlight = false}) {
+  Widget _buildWeightInfo(
+    String label,
+    String val,
+    ThemeColors tc, {
+    bool isHighlight = false,
+  }) {
     return Column(
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 10, color: tc.textHint, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: tc.textHint,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 6),
-        Text(val,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: isHighlight ? const Color(0xFF75A47F) : tc.text,
-            )),
+        Text(
+          val,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: isHighlight ? const Color(0xFF75A47F) : tc.text,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildProfileItem(IconData icon, String title, ThemeColors tc,
-      {String? trailing, VoidCallback? onTap}) {
+  Widget _buildProfileItem(
+    IconData icon,
+    String title,
+    ThemeColors tc, {
+    String? trailing,
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -283,8 +365,14 @@ class _ProfilePageState extends State<ProfilePage> {
             Icon(icon, size: 22, color: tc.textSecondary),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(title,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: tc.text)),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: tc.text,
+                ),
+              ),
             ),
             if (trailing != null)
               Container(
@@ -293,9 +381,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: const Color(0xFFE8F3E5),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(trailing,
-                    style: const TextStyle(
-                        color: Color(0xFF75A47F), fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(
+                  trailing,
+                  style: const TextStyle(
+                    color: Color(0xFF75A47F),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             Icon(Icons.chevron_right, size: 20, color: tc.textHint),
           ],

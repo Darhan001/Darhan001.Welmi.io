@@ -32,10 +32,22 @@ class WidgetService {
           '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       await HomeWidget.saveWidgetData<String>('widget_date', today);
-      await HomeWidget.saveWidgetData<int>('widget_water_ml', tracker.totalWaterMl);
-      await HomeWidget.saveWidgetData<int>('widget_water_goal', tracker.goalWaterMl);
-      await HomeWidget.saveWidgetData<int>('widget_calories', tracker.totalCalories);
-      await HomeWidget.saveWidgetData<int>('widget_calories_goal', tracker.goalCalories);
+      await HomeWidget.saveWidgetData<int>(
+        'widget_water_ml',
+        tracker.totalWaterMl,
+      );
+      await HomeWidget.saveWidgetData<int>(
+        'widget_water_goal',
+        tracker.goalWaterMl,
+      );
+      await HomeWidget.saveWidgetData<int>(
+        'widget_calories',
+        tracker.totalCalories,
+      );
+      await HomeWidget.saveWidgetData<int>(
+        'widget_calories_goal',
+        tracker.goalCalories,
+      );
 
       await HomeWidget.updateWidget(androidName: androidWidgetName);
     } catch (e) {

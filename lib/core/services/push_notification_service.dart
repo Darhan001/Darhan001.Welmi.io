@@ -121,7 +121,8 @@ class PushNotificationService {
       // гарантированно показывались.
       final android = FlutterLocalNotificationsPlugin()
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await android?.createNotificationChannel(
         const AndroidNotificationChannel(
           kPushChannelId,
@@ -133,11 +134,7 @@ class PushNotificationService {
 
       // Разрешение (Android 13+). Если отказали — push всё равно придут,
       // но не покажутся. Мягко просим, не блокируем.
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
 
       // Foreground: приложение открыто — показываем сами.
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -169,7 +166,7 @@ class PushNotificationService {
 
   void _handleTap(RemoteMessage message) {
     final route = message.data['route'] as String?;
-    debugPrint('🔔 Push tapped: route=$route, data=${message.data}');
+    debugPrint('🔔 Push tapped: route=$route');
     onRouteTap?.call(route);
   }
 
@@ -183,20 +180,21 @@ class PushNotificationService {
     if (userId == null || userId.isEmpty) return;
 
     try {
-      await Supabase.instance.client.from('device_tokens').upsert(
-        {
-          'user_id': userId,
-          'token': token,
-          'platform': 'android',
-          'enabled': true,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'token',
-      );
-      debugPrint('📲 FCM token saved for user $userId');
+      await Supabase.instance.client.from('device_tokens').upsert({
+        'user_id': userId,
+        'token': token,
+        'platform': defaultTargetPlatform == TargetPlatform.iOS
+            ? 'ios'
+            : 'android',
+        'enabled': true,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'token');
+      debugPrint('📲 FCM token saved');
     } catch (e) {
       // Таблица может ещё не существовать — не роняем приложение.
-      debugPrint('⚠️ Token save error (проверь, что создана таблица device_tokens): $e');
+      debugPrint(
+        '⚠️ Token save error (проверь, что создана таблица device_tokens): $e',
+      );
     }
   }
 
@@ -214,14 +212,21 @@ class PushNotificationService {
   /// Удалить токен ТЕКУЩЕГО устройства при выходе из аккаунта.
   /// Важно: не удаляем чужие устройства пользователя — иначе после выхода
   /// на одном телефоне push перестанут приходить на второй.
+  ///
+  /// Вызывается до `signOut`, пока запрос ещё идёт с сессией пользователя.
+  /// Если FCM на устройстве не инициализирован, этот телефон токен не
+  /// регистрировал — удалять нечего (раньше в этом случае удалялись токены
+  /// всех устройств пользователя).
   Future<void> unregisterAllTokens() async {
     final userId = AuthService().userId;
-    if (userId == null || userId.isEmpty) return;
+    if (userId == null || userId.isEmpty || !_isFcmAvailable) return;
     try {
       String? token;
       try {
         token = await FirebaseMessaging.instance.getToken();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('⚠️ FCM getToken on sign-out failed: $e');
+      }
 
       if (token != null && token.isNotEmpty) {
         await Supabase.instance.client
@@ -230,12 +235,13 @@ class PushNotificationService {
             .eq('token', token);
         debugPrint('📴 FCM token removed (this device)');
       } else {
-        // Не удалось узнать токен (нет сети) — fallback: удаляем все свои.
+        // Токен этого устройства узнать не удалось (нет сети) — удаляем все
+        // свои, чтобы push прежнего аккаунта точно не пришли сюда.
         await Supabase.instance.client
             .from('device_tokens')
             .delete()
             .eq('user_id', userId);
-        debugPrint('📴 FCM tokens removed for user $userId');
+        debugPrint('📴 FCM tokens removed for current user');
       }
     } catch (e) {
       debugPrint('⚠️ Token delete error: $e');

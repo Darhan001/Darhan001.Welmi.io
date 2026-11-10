@@ -93,15 +93,23 @@ class _HeightStepState extends State<HeightStep> {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text('$_displayHeight',
-                          style: GoogleFonts.inter(
-                              fontSize: 80, fontWeight: FontWeight.w900, color: tc.text)),
+                      Text(
+                        '$_displayHeight',
+                        style: GoogleFonts.inter(
+                          fontSize: 80,
+                          fontWeight: FontWeight.w900,
+                          color: tc.text,
+                        ),
+                      ),
                       const SizedBox(width: 4),
-                      Text('см',
-                          style: GoogleFonts.inter(
-                              fontSize: 24,
-                              color: tc.textSecondary,
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        'см',
+                        style: GoogleFonts.inter(
+                          fontSize: 24,
+                          color: tc.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -118,7 +126,9 @@ class _HeightStepState extends State<HeightStep> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: tc.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+        color: tc.isDark
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -130,15 +140,23 @@ class _HeightStepState extends State<HeightStep> {
               color: tc.primary,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(u1,
-                style:
-                    TextStyle(color: tc.textOnPrimary, fontWeight: FontWeight.bold)),
+            child: Text(
+              u1,
+              style: TextStyle(
+                color: tc.textOnPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(u2,
-                style: TextStyle(
-                    color: tc.textSecondary, fontWeight: FontWeight.w600)),
+            child: Text(
+              u2,
+              style: TextStyle(
+                color: tc.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -169,7 +187,7 @@ class HeightRulerPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     double centerY = size.height / 2;
-    
+
     // Рисуем указатель (центральную линию)
     canvas.drawLine(
       Offset(size.width - 30, centerY),
@@ -187,17 +205,21 @@ class HeightRulerPainter extends CustomPainter {
       if (cm < 100 || cm > 250) continue;
 
       double y = centerY - (cm - currentHeight) * pixelsPerCm;
-      
+
       if (y < 0 || y > size.height) continue;
 
       bool isMajor = cm % 10 == 0;
       bool isMedium = cm % 5 == 0;
-      
+
       double tickWidth = isMajor ? 45 : (isMedium ? 30 : 20);
       if (isDark) {
-        paint.color = isMajor ? Colors.white54 : (isMedium ? Colors.white38 : Colors.white24);
+        paint.color = isMajor
+            ? Colors.white54
+            : (isMedium ? Colors.white38 : Colors.white24);
       } else {
-        paint.color = isMajor ? Colors.black38 : (isMedium ? Colors.black26 : Colors.black12);
+        paint.color = isMajor
+            ? Colors.black38
+            : (isMedium ? Colors.black26 : Colors.black12);
       }
       paint.strokeWidth = isMajor ? 2 : 1.5;
 
@@ -215,7 +237,10 @@ class HeightRulerPainter extends CustomPainter {
         textPainter.layout();
         textPainter.paint(
           canvas,
-          Offset(size.width - tickWidth - textPainter.width - 12, y - textPainter.height / 2),
+          Offset(
+            size.width - tickWidth - textPainter.width - 12,
+            y - textPainter.height / 2,
+          ),
         );
       }
     }
@@ -240,8 +265,11 @@ class RulerPainter extends CustomPainter {
     if (vertical) {
       for (double i = 0; i <= size.height; i += 15) {
         double width = (i % 75 == 0) ? 40 : 20;
-        canvas.drawLine(Offset(size.width / 2 - width / 2, i),
-            Offset(size.width / 2 + width / 2, i), paint);
+        canvas.drawLine(
+          Offset(size.width / 2 - width / 2, i),
+          Offset(size.width / 2 + width / 2, i),
+          paint,
+        );
       }
     } else {
       for (double i = 0; i <= size.width; i += 15) {

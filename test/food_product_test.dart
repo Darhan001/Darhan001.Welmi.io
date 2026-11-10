@@ -56,10 +56,9 @@ void main() {
     });
 
     test('продукт без названия получает запасное имя со штрихкодом', () {
-      final product = OpenFoodFactsService.parseProduct(
-        {'code': '4000000000000'},
-        fallbackBarcode: '4000000000000',
-      );
+      final product = OpenFoodFactsService.parseProduct({
+        'code': '4000000000000',
+      }, fallbackBarcode: '4000000000000');
 
       expect(product, isNotNull);
       expect(product!.name, contains('4000000000000'));

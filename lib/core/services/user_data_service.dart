@@ -170,8 +170,9 @@ class UserDataService extends ChangeNotifier {
     }
     ActivityLevel? activityLevel;
     if (data.activityLevel != null) {
-      activityLevel = ActivityLevel.values
-          .firstWhere((e) => e.name == data.activityLevel!.name);
+      activityLevel = ActivityLevel.values.firstWhere(
+        (e) => e.name == data.activityLevel!.name,
+      );
     }
 
     final profile = UserProfile(
@@ -248,11 +249,9 @@ class UserDataService extends ChangeNotifier {
     await _supabase.addWeightEntry(entry);
 
     _weightEntries.insert(0, entry);
-    _activeDays.add(DateTime(
-      entry.date.year,
-      entry.date.month,
-      entry.date.day,
-    ));
+    _activeDays.add(
+      DateTime(entry.date.year, entry.date.month, entry.date.day),
+    );
     _saveCache();
     notifyListeners();
   }
@@ -272,11 +271,13 @@ class UserDataService extends ChangeNotifier {
     } else {
       _measurements.insert(0, measurement);
     }
-    _activeDays.add(DateTime(
-      measurement.date.year,
-      measurement.date.month,
-      measurement.date.day,
-    ));
+    _activeDays.add(
+      DateTime(
+        measurement.date.year,
+        measurement.date.month,
+        measurement.date.day,
+      ),
+    );
     _saveCache();
     notifyListeners();
   }
@@ -295,11 +296,9 @@ class UserDataService extends ChangeNotifier {
     await _supabase.saveBodyFatEntry(entry);
 
     _bodyFatEntries.insert(0, entry);
-    _activeDays.add(DateTime(
-      entry.date.year,
-      entry.date.month,
-      entry.date.day,
-    ));
+    _activeDays.add(
+      DateTime(entry.date.year, entry.date.month, entry.date.day),
+    );
     _saveCache();
     notifyListeners();
   }

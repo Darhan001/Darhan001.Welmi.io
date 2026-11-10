@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:lumina/core/services/auth_service.dart';
 import 'package:lumina/features/profile/data/subscription_repository.dart';
 import 'package:lumina/features/profile/domain/models/subscription_state.dart';
@@ -129,9 +130,9 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     try {
-      final entitlement = await _repository.loadEntitlement(userId).timeout(
-        const Duration(seconds: 12),
-      );
+      final entitlement = await _repository
+          .loadEntitlement(userId)
+          .timeout(const Duration(seconds: 12));
       _setState(
         _state.copyWith(
           isPremium: entitlement.isActive,
@@ -228,9 +229,13 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> openSubscriptionManagement() async {
     final Uri uri;
     if (defaultTargetPlatform == TargetPlatform.android) {
-      uri = Uri.parse(
-        'https://play.google.com/store/account/subscriptions?sku=${_state.productId ?? premiumMonthlyProductId}&package=com.example.lumina',
-      );
+      // Имя пакета берём у установленного приложения, а не из константы:
+      // иначе ссылка ломается при смене applicationId.
+      final packageName = (await PackageInfo.fromPlatform()).packageName;
+      uri = Uri.https('play.google.com', '/store/account/subscriptions', {
+        'sku': _state.productId ?? premiumMonthlyProductId,
+        'package': packageName,
+      });
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       uri = Uri.parse('https://apps.apple.com/account/subscriptions');
     } else {

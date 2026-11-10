@@ -24,16 +24,32 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Возврат в приложение после входа через Google (Supabase OAuth,
+	     redirectTo: io.supabase.flutter://callback). Без схемы браузер не
+	     может открыть приложение, и вход на iOS не завершался. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.flutter</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Welmi использует камеру для сканирования штрихкодов продуктов.</string>
+	<string>Welmi использует камеру для сканирования штрихкодов продуктов и фотографий блюд, чтобы оценить их калорийность.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Welmi использует данные о здоровье (шаги, калории, сон), чтобы автоматически вести дневник активности.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Welmi записывает данные об активности в Apple Health.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Welmi использует микрофон, чтобы отправлять голосовые сообщения AI-помощнику.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Welmi распознаёт речь, чтобы превратить голосовое сообщение в текст для AI-помощника и дневника питания.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Welmi использует библиотеку фото для загрузки изображений блюд.</string>
 	<key>UIApplicationSceneManifest</key>

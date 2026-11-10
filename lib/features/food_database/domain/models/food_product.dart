@@ -20,6 +20,12 @@ String formatGrams(double grams) {
   return grams.toStringAsFixed(1);
 }
 
+/// Розничный штрихкод: только цифры, длина EAN-8, UPC-A, EAN-13 или ITF-14.
+bool isRetailBarcode(String value) {
+  if (!RegExp(r'^\d+$').hasMatch(value)) return false;
+  return const {8, 12, 13, 14}.contains(value.length);
+}
+
 /// Продукт из Open Food Facts с пищевой ценностью на 100 г.
 class FoodProduct {
   final String barcode;

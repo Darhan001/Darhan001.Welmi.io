@@ -14,8 +14,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('экран Premium не зависает на загрузке без магазина',
-      (tester) async {
+  testWidgets('экран Premium не зависает на загрузке без магазина', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         locale: Locale('ru'),

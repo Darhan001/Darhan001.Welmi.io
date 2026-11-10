@@ -38,6 +38,12 @@ Deno.serve(async (request) => {
         ? await verifyAppleTransaction(String(body.transactionId ?? ''), productId)
         : null;
     if (!verified) throw new Error('Unsupported store platform.');
+    // The app passes the Welmi user id as obfuscatedProfileId when buying on
+    // Google Play. A token bought under another account must not be linked to
+    // this one (e.g. a leaked or shared purchase token).
+    if (verified.externalProfileId && verified.externalProfileId !== user.id) {
+      throw new Error('Purchase belongs to another Welmi account.');
+    }
 
     await saveVerifiedSubscription(user.id, verified);
     return Response.json({ verified: true, status: verified.status, expiresAt: verified.expiresAt }, { headers: cors });

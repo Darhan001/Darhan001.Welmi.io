@@ -1441,8 +1441,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String weightInKg(Object count) {
-    return 'Вес в подходе $count (кг)';
+  String weightInSet(Object count, Object unit) {
+    return 'Вес в подходе $count ($unit)';
   }
 
   @override
@@ -1799,4 +1799,288 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get heightInvalid => 'Введи рост от 100 до 250 см';
+
+  @override
+  String get voiceErrorLanguage =>
+      'Распознавание этого языка не установлено. Добавь его в настройках голосового ввода Google.';
+
+  @override
+  String get voiceListening => 'Говори, я слушаю…';
+
+  @override
+  String get biometricTitle => 'Вход в Welmi';
+
+  @override
+  String get biometricReason => 'Подтверди личность, чтобы открыть Welmi';
+
+  @override
+  String get biometricHint => 'Приложи палец к сканеру';
+
+  @override
+  String get notifClearDelivered => 'Очистить';
+
+  @override
+  String get notifClearedDelivered =>
+      'Уведомления очищены. Напоминания продолжат работать.';
+
+  @override
+  String get voiceSayAgain => 'Сказать заново';
+
+  @override
+  String get addToDiary => 'Добавить в дневник';
+
+  @override
+  String get voiceDoneRecognize => 'Готово, распознать';
+
+  @override
+  String get scannerTitle => 'AI-сканер';
+
+  @override
+  String get scannerSubtitle => 'Фото блюда → калории и БЖУ';
+
+  @override
+  String get scannerTakePhoto => 'Сфотографируй еду';
+
+  @override
+  String get scannerHint =>
+      'Welmi AI определит калории, белки, жиры и углеводы';
+
+  @override
+  String get scannerAnalyzing => 'Анализируем фото...';
+
+  @override
+  String get scannerNotRecognized =>
+      'Welmi AI не удалось распознать еду. Попробуй другое фото.';
+
+  @override
+  String get scannerAiError => 'Ошибка связи с AI. Проверь интернет.';
+
+  @override
+  String get scannerCameraError => 'Не удалось открыть камеру';
+
+  @override
+  String get scannerGalleryError => 'Не удалось открыть галерею';
+
+  @override
+  String get scannerRetake => 'Заново';
+
+  @override
+  String get scannerToDiary => 'В дневник';
+
+  @override
+  String scannerAdded(Object kcal) {
+    return 'Добавлено: $kcal ккал';
+  }
+
+  @override
+  String get gramsShort => 'г';
+
+  @override
+  String activityStepsToGoal(Object steps) {
+    return '$steps шагов до цели';
+  }
+
+  @override
+  String get activityGoalReached => 'Цель достигнута! 🎉';
+
+  @override
+  String get activityStepsUnit => 'шагов';
+
+  @override
+  String activityGoalSteps(Object steps) {
+    return '$steps шагов';
+  }
+
+  @override
+  String get activityDistance => 'Дистанция';
+
+  @override
+  String get activityEnergy => 'Энергия';
+
+  @override
+  String get activityGoal => 'Цель';
+
+  @override
+  String get minutesShort => 'мин';
+
+  @override
+  String get activityHealthSubtitle => 'Подтянуть шаги и калории автоматически';
+
+  @override
+  String get activitySyncShort => 'Синхр.';
+
+  @override
+  String get activityTipTitle => 'Совет дня';
+
+  @override
+  String get activityTipLow =>
+      'Больше двигайся! Постарайся сделать хотя бы 8000 шагов сегодня 🚶';
+
+  @override
+  String get activityTipMid =>
+      'Хорошо, можно и больше! Добавь 15 мин прогулки 🌳';
+
+  @override
+  String get activityTipHigh => 'Отлично! Ещё немного до цели! 💪';
+
+  @override
+  String get activityTipDone => 'Цель достигнута! Ты невероятен! 🎉';
+
+  @override
+  String get activityLoadError =>
+      'Не удалось загрузить активность. Проверь интернет.';
+
+  @override
+  String get healthInstallHint =>
+      'Для синхронизации шагов установи приложение Health Connect';
+
+  @override
+  String healthSynced(Object kcal, Object steps) {
+    return 'Синхронизировано: $steps шагов · $kcal ккал';
+  }
+
+  @override
+  String healthSleepSuffix(Object hours) {
+    return ' · сон $hours ч';
+  }
+
+  @override
+  String get healthNotAuthorized => 'Доступ к данным здоровья не получен';
+
+  @override
+  String get healthUnsupported => 'Синхронизация доступна только на телефоне';
+
+  @override
+  String get healthError => 'Не удалось получить данные из Health Connect';
+
+  @override
+  String get historyRecentDays => 'Последние дни';
+
+  @override
+  String get historyEmptyTitle => 'Пока нет записей';
+
+  @override
+  String get historyEmptySubtitle => 'Запиши шаги, воду или тренировку';
+
+  @override
+  String get historyLogButton => 'Записать';
+
+  @override
+  String get historyLoadError =>
+      'Не удалось загрузить историю. Проверь интернет.';
+
+  @override
+  String waterAddedMl(Object ml) {
+    return '+$ml мл воды';
+  }
+
+  @override
+  String get refresh => 'Обновить';
+
+  @override
+  String get waterMlLabel => 'мл воды';
+
+  @override
+  String get historySteps30 => 'шагов за 30 дней';
+
+  @override
+  String get historyWater14 => 'воды за 14 дней';
+
+  @override
+  String get historyActiveDays => 'активных дней';
+
+  @override
+  String litersValue(Object value) {
+    return '$value л';
+  }
+
+  @override
+  String weekLostValue(Object amount) {
+    return 'Потеряно $amount';
+  }
+
+  @override
+  String weekGainedValue(Object amount) {
+    return 'Набрано $amount';
+  }
+
+  @override
+  String currentWeightUnit(Object unit) {
+    return 'Текущий вес ($unit)';
+  }
+
+  @override
+  String get weightEmptyTitle => 'Пока нет записей веса';
+
+  @override
+  String get weightEmptySubtitle =>
+      'Запиши вес, чтобы следить за прогрессом к цели';
+
+  @override
+  String waterRemainingMl(Object ml) {
+    return 'Осталось $ml мл';
+  }
+
+  @override
+  String waterOfGoal(Object goal) {
+    return 'из $goal мл';
+  }
+
+  @override
+  String mlValue(Object ml) {
+    return '$ml мл';
+  }
+
+  @override
+  String get waterWeekTitle => 'Вода за неделю';
+
+  @override
+  String get waterDrunk => 'Выпито сегодня';
+
+  @override
+  String get feedbackCategoryBug => 'Ошибка';
+
+  @override
+  String get feedbackCategoryIdea => 'Идея';
+
+  @override
+  String supportOpenFailed(Object contact) {
+    return 'Не удалось открыть приложение. Напишите нам: $contact';
+  }
+
+  @override
+  String get authGoogleSigningIn => 'Авторизация…';
+
+  @override
+  String get authGoogleBrowserHint =>
+      'Откроется окно браузера для входа через Google';
+
+  @override
+  String get authAlmostDone => 'Почти готово!';
+
+  @override
+  String get authGoogleSubtitle =>
+      'Войди через Google, чтобы сохранить свой прогресс';
+
+  @override
+  String get authContinueWithGoogle => 'Продолжить с Google';
+
+  @override
+  String get authGoogleFailed =>
+      'Не удалось войти через Google. Попробуйте позже.';
+
+  @override
+  String get recipeSignInToAdd => 'Войдите, чтобы добавить блюдо в дневник';
+
+  @override
+  String recipeAddedToMeal(String meal) {
+    return 'Рецепт добавлен в «$meal»';
+  }
+
+  @override
+  String get recipeAddFailed =>
+      'Не удалось добавить рецепт. Проверьте подключение.';
+
+  @override
+  String get recipeServingInfo => '1 порция · рецепт Welmi';
 }

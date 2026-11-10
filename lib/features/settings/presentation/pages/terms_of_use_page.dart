@@ -12,7 +12,9 @@ class TermsOfUsePage extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF9F7F2),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF9F7F2),
       body: SafeArea(
         child: Column(
           children: [
@@ -36,17 +38,23 @@ class TermsOfUsePage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(Icons.arrow_back, size: 22, color: isDark ? Colors.white : Colors.black),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 22,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Text(loc.termsOfUse,
+                    child: Text(
+                      loc.termsOfUse,
                       style: GoogleFonts.notoSerif(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
                         color: isDark ? Colors.white : Colors.black,
-                      )),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -61,18 +69,62 @@ class TermsOfUsePage extends StatelessWidget {
                   children: [
                     _buildHeader(loc.termsIntro, isDark),
                     const SizedBox(height: 20),
-                    _buildSection(loc.termsAcceptanceTitle, loc.termsAcceptanceContent, isDark),
-                    _buildSection(loc.termsServiceTitle, loc.termsServiceContent, isDark),
-                    _buildSection(loc.termsAccountTitle, loc.termsAccountContent, isDark),
-                    _buildSection(loc.termsSubscriptionTitle, loc.termsSubscriptionContent, isDark),
-                    _buildSection(loc.termsContentTitle, loc.termsContentContent, isDark),
-                    _buildSection(loc.termsProhibitedTitle, loc.termsProhibitedContent, isDark),
-                    _buildSection(loc.termsDisclaimerTitle, loc.termsDisclaimerContent, isDark),
-                    _buildSection(loc.termsLiabilityTitle, loc.termsLiabilityContent, isDark),
-                    _buildSection(loc.termsTerminationTitle, loc.termsTerminationContent, isDark),
-                    _buildSection(loc.termsChangesTitle, loc.termsChangesContent, isDark),
+                    _buildSection(
+                      loc.termsAcceptanceTitle,
+                      loc.termsAcceptanceContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsServiceTitle,
+                      loc.termsServiceContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsAccountTitle,
+                      loc.termsAccountContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsSubscriptionTitle,
+                      loc.termsSubscriptionContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsContentTitle,
+                      loc.termsContentContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsProhibitedTitle,
+                      loc.termsProhibitedContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsDisclaimerTitle,
+                      loc.termsDisclaimerContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsLiabilityTitle,
+                      loc.termsLiabilityContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsTerminationTitle,
+                      loc.termsTerminationContent,
+                      isDark,
+                    ),
+                    _buildSection(
+                      loc.termsChangesTitle,
+                      loc.termsChangesContent,
+                      isDark,
+                    ),
                     const SizedBox(height: 20),
-                    _buildSection(loc.contactTitle, loc.termsContactContent, isDark),
+                    _buildSection(
+                      loc.contactTitle,
+                      loc.termsContactContent,
+                      isDark,
+                    ),
                     const SizedBox(height: 30),
                     Center(
                       child: Text(

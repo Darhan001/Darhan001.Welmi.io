@@ -65,13 +65,15 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
                 Text(
                   '-${_currentValue.toStringAsFixed(1)} кг/нед',
                   style: GoogleFonts.inter(
-                      fontSize: 32, fontWeight: FontWeight.w900, color: tc.text),
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: tc.text,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Оптимально',
-                  style: TextStyle(
-                      color: tc.text, fontWeight: FontWeight.w700),
+                  style: TextStyle(color: tc.text, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 40),
                 SliderTheme(
@@ -82,7 +84,8 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
                     overlayColor: tc.shadow(0.1),
                     trackHeight: 2,
                     thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 10),
+                      enabledThumbRadius: 10,
+                    ),
                   ),
                   child: Slider(
                     value: _currentValue,
@@ -102,12 +105,14 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Медленно',
-                          style:
-                              TextStyle(color: tc.textSecondary, fontSize: 12)),
-                      Text('Быстро',
-                          style:
-                              TextStyle(color: tc.textSecondary, fontSize: 12)),
+                      Text(
+                        'Медленно',
+                        style: TextStyle(color: tc.textSecondary, fontSize: 12),
+                      ),
+                      Text(
+                        'Быстро',
+                        style: TextStyle(color: tc.textSecondary, fontSize: 12),
+                      ),
                     ],
                   ),
                 ),
