@@ -49,11 +49,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(18),
+            Padding(
+              padding: const EdgeInsets.all(18),
               child: Text(
-                'Добавить в приём пищи',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                AppLocalizations.of(ctx)!.recipeAddToMeal,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             for (final type in MealType.values)
@@ -126,7 +129,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         _cooking = false;
         _cookingStep = 0;
       });
-      showWelmiSnackbar(context, 'Приятного аппетита!');
+      showWelmiSnackbar(context, AppLocalizations.of(context)!.recipeBonAppetit);
       return;
     }
     setState(() => _cookingStep++);
@@ -135,6 +138,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final r = widget.recipe;
 
     return Scaffold(
@@ -194,7 +198,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   if (r.imageCredit != null && r.imageCredit!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'Фото: ${r.imageCredit}',
+                      loc.recipePhotoCredit(r.imageCredit!),
                       style: TextStyle(fontSize: 10.5, color: tc.textHint),
                     ),
                   ],
@@ -207,7 +211,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                         icon: _favorite
                             ? Icons.favorite
                             : Icons.favorite_border,
-                        label: 'Сохранить',
+                        label: loc.save,
                         onTap: () {
                           setState(() => _favorite = !_favorite);
                           widget.onFavorite();
@@ -218,8 +222,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                             ? Icons.check_circle
                             : Icons.soup_kitchen,
                         label: _cooking
-                            ? 'Шаг ${_cookingStep + 1}'
-                            : 'Готовить',
+                            ? loc.recipeStep(_cookingStep + 1)
+                            : loc.recipeCook,
                         onTap: () => setState(() {
                           _cooking = !_cooking;
                           _cookingStep = 0;
@@ -227,18 +231,18 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       ),
                       _ActionChip(
                         icon: Icons.add,
-                        label: 'В дневник',
+                        label: loc.scannerToDiary,
                         onTap: _addToDiary,
                       ),
                       _ActionChip(
                         icon: Icons.auto_awesome,
-                        label: 'Спросить',
+                        label: loc.recipeAsk,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => AiChatPage(
                               initialPrompt:
-                                  'Я готовлю рецепт «${r.title}» (${r.calories} ккал, Б ${r.proteinGrams} г, Ж ${r.fatGrams} г, У ${r.carbsGrams} г). Подскажи: ',
+                                  '${loc.recipeAskPrompt(r.title, r.calories, r.proteinGrams, r.fatGrams, r.carbsGrams)} ',
                             ),
                           ),
                         ),
@@ -247,7 +251,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   ),
                   const SizedBox(height: 26),
                   Text(
-                    'Калории и нутриенты',
+                    loc.recipeNutritionTitle,
                     style: GoogleFonts.notoSerif(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -259,43 +263,42 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     children: [
                       _Nutrient(
                         value: '${r.calories}',
-                        label: 'ккал',
+                        label: loc.kcal,
                         color: RecipeDesign.green,
                       ),
                       _Nutrient(
-                        value: '${r.proteinGrams.round()} г',
-                        label: 'Белки',
+                        value: loc.gramsValue(r.proteinGrams.round()),
+                        label: loc.nutrientProtein,
                         color: RecipeDesign.protein,
                       ),
                       _Nutrient(
-                        value: '${r.fatGrams.round()} г',
-                        label: 'Жиры',
+                        value: loc.gramsValue(r.fatGrams.round()),
+                        label: loc.nutrientFat,
                         color: RecipeDesign.fat,
                       ),
                       _Nutrient(
-                        value: '${r.carbsGrams.round()} г',
-                        label: 'Углеводы',
+                        value: loc.gramsValue(r.carbsGrams.round()),
+                        label: loc.nutrientCarbs,
                         color: RecipeDesign.carbs,
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Клетчатка ${r.fiberGrams.round()} г · Сахар ${r.sugarGrams.round()} г · Натрий ${r.sodiumMg.round()} мг'
-                    '${r.servingWeightGrams > 0 ? ' · порция ${r.servingWeightGrams} г' : ''}',
+                    '${loc.recipeMicros(r.fiberGrams.round(), r.sugarGrams.round(), r.sodiumMg.round())}'
+                    '${r.servingWeightGrams > 0 ? ' · ${loc.foodServingPrefix(loc.gramsValue(r.servingWeightGrams))}' : ''}',
                     style: TextStyle(fontSize: 12, color: tc.textSecondary),
                   ),
                   if (r.nutritionIsEstimate) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'КБЖУ — оценочные значения на порцию по составу рецепта. '
-                      'TheMealDB не публикует пищевую ценность.',
+                      loc.recipeNutritionDisclaimer,
                       style: TextStyle(fontSize: 10.5, color: tc.textHint),
                     ),
                   ],
                   const SizedBox(height: 26),
                   Text(
-                    'Ингредиенты · ${r.servings} порция',
+                    loc.recipeIngredients(r.servings),
                     style: GoogleFonts.notoSerif(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -335,7 +338,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Приготовление',
+                    loc.recipeCooking,
                     style: GoogleFonts.notoSerif(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -356,7 +359,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Шаг ${_cookingStep + 1} из ${r.steps.length}',
+                            loc.recipeStepOf(_cookingStep + 1, r.steps.length),
                             style: const TextStyle(
                               color: RecipeDesign.green,
                               fontWeight: FontWeight.w900,
@@ -374,8 +377,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                               onPressed: _advanceCooking,
                               child: Text(
                                 _cookingStep + 1 == r.steps.length
-                                    ? 'Завершить'
-                                    : 'Следующий шаг',
+                                    ? loc.recipeFinish
+                                    : loc.recipeNextStep,
                               ),
                             ),
                           ),
@@ -429,7 +432,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           child: FilledButton.icon(
             onPressed: _addToDiary,
             icon: const Icon(Icons.add),
-            label: const Text('В дневник'),
+            label: Text(loc.scannerToDiary),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               backgroundColor: RecipeDesign.green,

@@ -347,7 +347,7 @@ class _VoiceFoodDialogState extends State<VoiceFoodDialog> {
     if (_analysisResult?.clarificationNeeded?.isNotEmpty == true) {
       showWelmiSnackbar(
         context,
-        'Уточните количество продукта, чтобы получить примерную оценку.',
+        AppLocalizations.of(context)!.voiceFoodClarifyFirst,
         icon: Icons.help_outline_rounded,
       );
       return;

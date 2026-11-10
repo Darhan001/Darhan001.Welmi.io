@@ -75,7 +75,7 @@ class ProfileAvatarPicker extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              'BMR $bmr ккал · TDEE $tdee ккал',
+              AppLocalizations.of(context)!.profileBmrTdee(bmr, tdee),
               style: GoogleFonts.inter(
                 color: tc.greenDark,
                 fontWeight: FontWeight.w700,

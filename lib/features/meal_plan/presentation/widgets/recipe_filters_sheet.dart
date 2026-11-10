@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/meal_plan/domain/recipe_filters.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Показывает шторку фильтров.
 ///
@@ -12,6 +13,7 @@ Future<RecipeFilters?> showRecipeFiltersSheet(
   required RecipeFilters current,
 }) {
   final tc = ThemeColors.of(context);
+  final loc = AppLocalizations.of(context)!;
 
   return showModalBottomSheet<RecipeFilters>(
     context: context,
@@ -46,7 +48,7 @@ Future<RecipeFilters?> showRecipeFiltersSheet(
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Фильтры',
+                  loc.filtersTitle,
                   style: GoogleFonts.notoSerif(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -55,28 +57,34 @@ Future<RecipeFilters?> showRecipeFiltersSheet(
                 ),
                 const SizedBox(height: 12),
                 _FilterChoice<int>(
-                  title: 'Калории',
+                  title: loc.nutrientCalories,
+                  formatValue: loc.filterUpToKcal,
                   selected: calories,
                   values: const [300, 500, 700],
                   onSelect: (v) => setSheet(() => calories = v),
                 ),
                 _FilterChoice<int>(
-                  title: 'Белок от',
+                  title: loc.recipeFilterProteinFrom,
+                  formatValue: loc.filterFromGrams,
                   selected: protein,
                   values: const [20, 30, 40],
                   onSelect: (v) => setSheet(() => protein = v),
                 ),
                 _FilterChoice<int>(
-                  title: 'Время до',
+                  title: loc.recipeFilterTimeUpTo,
+                  formatValue: loc.filterUpToMinutes,
                   selected: minutes,
                   values: const [20, 30, 45],
                   onSelect: (v) => setSheet(() => minutes = v),
                 ),
-                _FilterChoice<String>(
-                  title: 'Питание',
+                _FilterChoice<RecipeDiet>(
+                  title: loc.recipeFilterDiet,
                   selected: diet,
-                  values: const ['Вегетарианские', 'Без сахара'],
-                  formatValue: (value) => value,
+                  values: RecipeDiet.values,
+                  formatValue: (value) => switch (value) {
+                    RecipeDiet.vegetarian => loc.recipeDietVegetarian,
+                    RecipeDiet.sugarFree => loc.recipeDietSugarFree,
+                  },
                   onSelect: (v) => setSheet(() => diet = v),
                 ),
                 const SizedBox(height: 12),
@@ -85,7 +93,7 @@ Future<RecipeFilters?> showRecipeFiltersSheet(
                     TextButton(
                       onPressed: () =>
                           Navigator.pop(sheetContext, const RecipeFilters()),
-                      child: const Text('Сбросить'),
+                      child: Text(loc.resetAction),
                     ),
                     const Spacer(),
                     FilledButton(
@@ -98,7 +106,7 @@ Future<RecipeFilters?> showRecipeFiltersSheet(
                           diet: diet,
                         ),
                       ),
-                      child: const Text('Показать'),
+                      child: Text(loc.showAction),
                     ),
                   ],
                 ),
@@ -118,27 +126,14 @@ class _FilterChoice<T> extends StatelessWidget {
     required this.selected,
     required this.values,
     required this.onSelect,
-    this.formatValue,
+    required this.formatValue,
   });
 
   final String title;
   final T? selected;
   final List<T> values;
   final ValueChanged<T?> onSelect;
-  final String Function(T value)? formatValue;
-
-  String _label(T value) {
-    final format = formatValue;
-    if (format != null) return format(value);
-    if (value is int) {
-      return switch (title) {
-        'Калории' => 'До $value ккал',
-        'Белок от' => 'От $value г',
-        _ => 'До $value мин',
-      };
-    }
-    return value.toString();
-  }
+  final String Function(T value) formatValue;
 
   @override
   Widget build(BuildContext context) {
@@ -153,13 +148,13 @@ class _FilterChoice<T> extends StatelessWidget {
             spacing: 8,
             children: [
               ChoiceChip(
-                label: const Text('Любое'),
+                label: Text(AppLocalizations.of(context)!.anyOption),
                 selected: selected == null,
                 onSelected: (_) => onSelect(null),
               ),
               ...values.map(
                 (value) => ChoiceChip(
-                  label: Text(_label(value)),
+                  label: Text(formatValue(value)),
                   selected: selected == value,
                   onSelected: (_) => onSelect(selected == value ? null : value),
                 ),

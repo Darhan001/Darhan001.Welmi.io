@@ -88,3 +88,25 @@ class DailySnapshot {
   }
   return (streak: stored, reset: false);
 }
+
+/// Объём воды за [day] в очереди неотправленных операций.
+///
+/// Операция — `{'type': 'water', 'data': {'amount_ml': …, 'date': ISO}}`.
+/// Повреждённые записи пропускаются.
+int pendingWaterMl(List<Map<String, dynamic>> ops, DateTime day) {
+  var total = 0;
+  for (final op in ops) {
+    if (op['type'] != 'water') continue;
+    final data = op['data'];
+    if (data is! Map) continue;
+    final date = DateTime.tryParse('${data['date']}');
+    final amount = data['amount_ml'];
+    if (date == null || amount is! num) continue;
+    if (date.year == day.year &&
+        date.month == day.month &&
+        date.day == day.day) {
+      total += amount.toInt();
+    }
+  }
+  return total;
+}

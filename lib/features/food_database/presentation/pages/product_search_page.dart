@@ -6,10 +6,12 @@ import 'package:lumina/core/widgets/app_app_bar.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/food_database/data/open_food_facts_service.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
+import 'package:lumina/features/food_database/presentation/open_food_facts_messages.dart';
 import 'package:lumina/features/food_database/presentation/pages/barcode_scanner_page.dart';
 import 'package:lumina/features/food_database/presentation/widgets/food_portion_sheet.dart';
 import 'package:lumina/features/food_database/presentation/widgets/product_result_card.dart';
 import 'package:lumina/features/food_database/presentation/widgets/product_search_states.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Поиск продукта в открытой базе Open Food Facts.
 ///
@@ -61,6 +63,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     if (query.isEmpty || _isLoading) return;
 
     FocusScope.of(context).unfocus();
+    final loc = AppLocalizations.of(context)!;
     final requestId = ++_requestId;
     final isBarcode = isRetailBarcode(query);
 
@@ -82,10 +85,10 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         products = await _service.search(query);
       }
     } on OpenFoodFactsException catch (e) {
-      error = e.message;
+      error = openFoodFactsMessage(loc, e);
     } catch (e) {
       debugPrint('Product search failed: $e');
-      error = 'Не удалось выполнить поиск. Проверь интернет и повтори.';
+      error = loc.foodDbSearchFailed;
     }
 
     if (!mounted || requestId != _requestId) return;
@@ -133,18 +136,19 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: tc.background,
       body: SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(12, 6, 12, 0),
-              child: AppAppBar(title: 'База продуктов'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+              child: AppAppBar(title: loc.foodDbTitle),
             ),
             Text(
-              'Open Food Facts · значения на 100 г',
+              loc.foodDbSubtitle,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -163,6 +167,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   }
 
   Widget _buildSearchField(ThemeColors tc) {
+    final loc = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -191,7 +196,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                 color: tc.text,
               ),
               decoration: InputDecoration(
-                hintText: 'Название или штрихкод',
+                hintText: loc.foodDbSearchHint,
                 hintStyle: TextStyle(
                   color: tc.textHint,
                   fontWeight: FontWeight.w600,
@@ -202,12 +207,12 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           ),
           if (_showClear)
             IconButton(
-              tooltip: 'Очистить',
+              tooltip: loc.clearAction,
               onPressed: _clear,
               icon: Icon(Icons.close_rounded, size: 18, color: tc.inactive),
             ),
           IconButton(
-            tooltip: 'Сканировать штрихкод',
+            tooltip: loc.foodDbScanBarcode,
             onPressed: _isLoading ? null : _scanBarcode,
             icon: Icon(Icons.qr_code_scanner_rounded, color: tc.green),
           ),
@@ -232,7 +237,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
           child: Text(
-            'Найдено: ${_results.length}',
+            AppLocalizations.of(context)!.foodDbFound(_results.length),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Отправляет обратную связь через Supabase Edge Function.
@@ -47,7 +44,6 @@ class FeedbackService {
         );
       }
 
-      await _saveLocally(trimmedMessage, category);
       return const FeedbackResult(success: true);
     } on FunctionException catch (error) {
       debugPrint('Feedback Edge Function returned HTTP ${error.status}.');
@@ -81,39 +77,6 @@ class FeedbackService {
     if (status == 503) return 'secrets';
     if (status >= 500) return 'function';
     return 'send';
-  }
-
-  Future<void> _saveLocally(String message, String category) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final history = prefs.getStringList('feedback_history') ?? [];
-      history.add(
-        jsonEncode({
-          'message': message,
-          'category': category,
-          'timestamp': DateTime.now().toIso8601String(),
-          'sent': true,
-        }),
-      );
-      if (history.length > 50) {
-        history.removeRange(0, history.length - 50);
-      }
-      await prefs.setStringList('feedback_history', history);
-    } catch (_) {
-      // История необязательна; успешную доставку не считаем неуспешной.
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getHistory() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final history = prefs.getStringList('feedback_history') ?? [];
-      return history
-          .map((entry) => jsonDecode(entry) as Map<String, dynamic>)
-          .toList();
-    } catch (_) {
-      return [];
-    }
   }
 }
 

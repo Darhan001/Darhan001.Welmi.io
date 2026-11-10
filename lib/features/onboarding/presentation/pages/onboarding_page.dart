@@ -126,6 +126,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         GoalSpeedStep(
           goalSpeed: _data.goalSpeed,
+          isGain: _data.goal == GoalType.gainWeight,
           onSpeedChanged: (s) => setState(() => _data.goalSpeed = s),
         ),
         GoogleAuthStep(onSuccess: _nextPage, onSkip: _nextPage),
@@ -156,7 +157,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 GestureDetector(
                   onTap: _nextPage,
                   child: Text(
-                    'Пропустить',
+                    AppLocalizations.of(context)!.onboardingSkip,
                     style: GoogleFonts.inter(
                       color: tc.textSecondary,
                       fontSize: 13,
@@ -168,7 +169,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 const SizedBox(),
 
               Text(
-                '${_currentPage + 1} из $_totalSteps',
+                '${_currentPage + 1} ${AppLocalizations.of(context)!.stepOutOf(_totalSteps)}',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: tc.textSecondary,

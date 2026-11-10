@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
 import 'package:lumina/features/food_database/presentation/widgets/food_portion_sheet.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 Future<void> _openSheet(
   WidgetTester tester,
@@ -10,6 +11,9 @@ Future<void> _openSheet(
 ) async {
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('ru'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: Builder(
         builder: (context) => Scaffold(
           body: Center(

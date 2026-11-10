@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
+import 'package:lumina/features/food_database/presentation/open_food_facts_messages.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Карточка продукта в результатах поиска: название, бренд, БЖУ и ккал/100 г.
 class ProductResultCard extends StatelessWidget {
@@ -15,21 +17,23 @@ class ProductResultCard extends StatelessWidget {
     required this.onTap,
   });
 
-  String get _macrosLine {
-    if (!product.hasNutrition) return 'Нет данных о пищевой ценности';
+  String _macrosLine(AppLocalizations loc) {
+    if (!product.hasNutrition) return loc.foodNoNutritionData;
     final macros = <String>[
       if (product.proteinPer100g != null)
-        'Б ${formatNutrient(product.proteinPer100g)}',
-      if (product.fatPer100g != null) 'Ж ${formatNutrient(product.fatPer100g)}',
+        '${loc.macroProteinShort} ${formatNutrient(product.proteinPer100g)}',
+      if (product.fatPer100g != null) '${loc.macroFatShort} ${formatNutrient(product.fatPer100g)}',
       if (product.carbsPer100g != null)
-        'У ${formatNutrient(product.carbsPer100g)}',
+        '${loc.macroCarbsShort} ${formatNutrient(product.carbsPer100g)}',
     ];
-    return macros.isEmpty ? 'Калорийность без БЖУ' : macros.join(' · ');
+    return macros.isEmpty ? loc.foodCaloriesOnly : macros.join(' · ');
   }
 
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
+    final subtitle = productSubtitle(loc, product);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -66,10 +70,10 @@ class ProductResultCard extends StatelessWidget {
                           color: tc.text,
                         ),
                       ),
-                      if (product.subtitle.isNotEmpty) ...[
+                      if (subtitle.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          product.subtitle,
+                          subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -81,7 +85,7 @@ class ProductResultCard extends StatelessWidget {
                       ],
                       const SizedBox(height: 8),
                       Text(
-                        _macrosLine,
+                        _macrosLine(loc),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -104,7 +108,7 @@ class ProductResultCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'ккал / 100 г',
+                      loc.foodKcalPer100,
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,

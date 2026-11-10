@@ -85,7 +85,7 @@ class _AddFoodSheetState extends State<AddFoodSheet> {
       handleGap: 24,
       children: [
         Text(
-          'Добавить в $mealLabel',
+          loc.addFoodTo(mealLabel),
           style: GoogleFonts.notoSerif(
             fontSize: 20,
             fontWeight: FontWeight.w900,

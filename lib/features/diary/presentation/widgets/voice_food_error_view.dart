@@ -32,7 +32,7 @@ class VoiceFoodErrorView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          message ?? 'Произошла ошибка при распознавании',
+          message ?? AppLocalizations.of(context)!.voiceFoodGenericError,
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,

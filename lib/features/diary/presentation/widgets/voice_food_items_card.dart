@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/services/ai/ai_food_models.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Список продуктов, которые AI распознал в голосовом сообщении.
 class VoiceFoodItemsCard extends StatelessWidget {
@@ -46,7 +47,7 @@ class VoiceFoodItemsCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '~${item.calories} ккал',
+                  AppLocalizations.of(context)!.kcalApprox(item.calories),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -114,7 +115,7 @@ class VoiceFoodClarifyCard extends StatelessWidget {
                   controller: controller,
                   style: GoogleFonts.inter(fontSize: 13, color: tc.text),
                   decoration: InputDecoration(
-                    hintText: 'Например: 150 грамм',
+                    hintText: AppLocalizations.of(context)!.voiceFoodClarifyHint,
                     hintStyle: TextStyle(color: tc.textHint, fontSize: 13),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
@@ -132,7 +133,7 @@ class VoiceFoodClarifyCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                tooltip: 'Уточнить',
+                tooltip: AppLocalizations.of(context)!.voiceFoodClarify,
                 onPressed: onSubmit,
                 icon: Icon(
                   Icons.check_circle_rounded,

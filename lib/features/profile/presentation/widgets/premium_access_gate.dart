@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/features/profile/presentation/pages/subscription_page.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Keeps premium-only surfaces locked unless Supabase confirms an active
 /// store-verified entitlement. No local preference can unlock this widget.
@@ -32,7 +33,7 @@ class PremiumAccessGate extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Эта функция доступна в Welmi Premium',
+                    AppLocalizations.of(context)!.premiumGateTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: tc.text,
@@ -42,7 +43,7 @@ class PremiumAccessGate extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Статус проверяется по подтверждённой подписке магазина.',
+                    AppLocalizations.of(context)!.premiumGateSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: tc.textSecondary, height: 1.4),
                   ),
@@ -54,7 +55,7 @@ class PremiumAccessGate extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.auto_awesome_rounded),
-                    label: const Text('Посмотреть Premium'),
+                    label: Text(AppLocalizations.of(context)!.premiumGateButton),
                   ),
                 ],
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/app_button.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Пустые состояния и ошибки экрана поиска продуктов.
 ///
@@ -77,6 +78,7 @@ class ProductSearchStart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     return _SearchMessage(
       icon: Container(
         width: 96,
@@ -84,13 +86,9 @@ class ProductSearchStart extends StatelessWidget {
         decoration: BoxDecoration(color: tc.successBg, shape: BoxShape.circle),
         child: Icon(Icons.travel_explore_rounded, size: 42, color: tc.green),
       ),
-      title: 'Найди продукт по названию',
-      body:
-          'Или отсканируй штрихкод упаковки. '
-          'Пищевая ценность пересчитается на твою порцию.',
-      footnote:
-          'Данные добровольные и могут быть неполными — '
-          'мы показываем «—», если значения нет в базе.',
+      title: loc.foodDbStartTitle,
+      body: loc.foodDbStartBody,
+      footnote: loc.foodDbStartFootnote,
     );
   }
 }
@@ -105,6 +103,7 @@ class ProductSearchEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     return _SearchMessage(
       icon: Container(
         width: 84,
@@ -112,12 +111,12 @@ class ProductSearchEmpty extends StatelessWidget {
         decoration: BoxDecoration(color: tc.card, shape: BoxShape.circle),
         child: Icon(Icons.search_off_rounded, size: 36, color: tc.inactive),
       ),
-      title: byBarcode ? 'Продукт не найден' : 'Ничего не найдено',
+      title: byBarcode
+          ? loc.foodDbNotFoundTitle
+          : loc.foodDbNothingFoundTitle,
       body: byBarcode
-          ? 'Этого штрихкода нет в Open Food Facts. '
-                'Проверь цифры или добавь продукт вручную.'
-          : 'Проверь название или отсканируй штрихкод. '
-                'Продукт можно добавить вручную в дневнике.',
+          ? loc.foodDbNotFoundBarcodeBody
+          : loc.foodDbNothingFoundBody,
     );
   }
 }
@@ -136,7 +135,7 @@ class ProductSearchLoading extends StatelessWidget {
           CircularProgressIndicator(color: tc.green),
           const SizedBox(height: 16),
           Text(
-            'Ищем в Open Food Facts...',
+            AppLocalizations.of(context)!.foodDbSearching,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -183,7 +182,7 @@ class ProductSearchError extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             AppButton(
-              text: 'Повторить',
+              text: AppLocalizations.of(context)!.retry,
               icon: Icons.refresh_rounded,
               variant: AppButtonVariant.outline,
               fullWidth: false,

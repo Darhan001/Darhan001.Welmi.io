@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class GoalSpeedStep extends StatefulWidget {
   final double goalSpeed;
   final ValueChanged<double> onSpeedChanged;
 
+  /// Цель — набор веса: темп показывается со знаком «+».
+  final bool isGain;
+
   const GoalSpeedStep({
     super.key,
     required this.goalSpeed,
     required this.onSpeedChanged,
+    this.isGain = false,
   });
 
   @override
@@ -33,6 +38,14 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
     }
   }
 
+  /// Оценка выбранного темпа: раньше подпись всегда была «Оптимально»,
+  /// даже на максимальном 1 кг в неделю.
+  String _paceLabel(AppLocalizations loc) {
+    if (_currentValue < 0.4) return loc.slow;
+    if (_currentValue <= 0.7) return loc.optimal;
+    return loc.fast;
+  }
+
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
@@ -42,13 +55,13 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
         children: [
           const SizedBox(height: 40),
           Text(
-            'Как быстро хочешь достичь\nцели?',
+            AppLocalizations.of(context)!.onboardingSpeedTitle,
             style: Theme.of(context).textTheme.displayMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Выбери комфортный для себя темп',
+            AppLocalizations.of(context)!.onboardingSpeedSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(color: tc.textSecondary, fontSize: 14),
           ),
@@ -63,7 +76,7 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
             child: Column(
               children: [
                 Text(
-                  '-${_currentValue.toStringAsFixed(1)} кг/нед',
+                  '${widget.isGain ? '+' : '−'}${_currentValue.toStringAsFixed(1)} ${AppLocalizations.of(context)!.kgPerWeek}',
                   style: GoogleFonts.inter(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -72,7 +85,7 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Оптимально',
+                  _paceLabel(AppLocalizations.of(context)!),
                   style: TextStyle(color: tc.text, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 40),
@@ -106,11 +119,11 @@ class _GoalSpeedStepState extends State<GoalSpeedStep> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Медленно',
+                        AppLocalizations.of(context)!.slow,
                         style: TextStyle(color: tc.textSecondary, fontSize: 12),
                       ),
                       Text(
-                        'Быстро',
+                        AppLocalizations.of(context)!.fast,
                         style: TextStyle(color: tc.textSecondary, fontSize: 12),
                       ),
                     ],

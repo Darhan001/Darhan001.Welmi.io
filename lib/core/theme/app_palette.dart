@@ -68,7 +68,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     card: AppColors.card,
     surface: AppColors.surface,
     text: AppColors.textPrimary,
-    textSecondary: Colors.black38,
+    textSecondary: AppColors.textSecondary,
     textHint: AppColors.textHint,
     textOnPrimary: Colors.white,
     primary: AppColors.primary,

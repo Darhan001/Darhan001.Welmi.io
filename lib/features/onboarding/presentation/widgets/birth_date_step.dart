@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class BirthDateStep extends StatelessWidget {
   final DateTime birthDate;
@@ -21,12 +22,12 @@ class BirthDateStep extends StatelessWidget {
         children: [
           const SizedBox(height: 40),
           Text(
-            'Когда ты родился?',
+            AppLocalizations.of(context)!.onboardingBirthTitle,
             style: Theme.of(context).textTheme.displayMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Эта информация поможет нам точнее\nрассчитать твою норму калорий',
+            AppLocalizations.of(context)!.onboardingBirthSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: tc.textSecondary,

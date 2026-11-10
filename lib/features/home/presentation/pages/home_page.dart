@@ -52,7 +52,10 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _clock = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted && _tracker.lastUpdated != null) setState(() {});
+      if (!mounted) return;
+      // Экран открыт в полночь: счётчики дня обнуляются без перезапуска.
+      unawaited(_tracker.refreshIfDayChanged());
+      if (_tracker.lastUpdated != null) setState(() {});
     });
     _loadData();
   }
@@ -290,7 +293,10 @@ class _HomePageState extends State<HomePage> {
 
   String _formatWater(int ml) {
     if (ml <= 0) return '—';
-    return ml >= 1000 ? '${(ml / 1000).toStringAsFixed(1)}л' : '$mlмл';
+    final loc = AppLocalizations.of(context)!;
+    return ml >= 1000
+        ? loc.litersValue((ml / 1000).toStringAsFixed(1))
+        : loc.mlValue(ml);
   }
 
   // ─────────────────────────────────────────────

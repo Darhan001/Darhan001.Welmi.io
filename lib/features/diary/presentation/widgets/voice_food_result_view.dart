@@ -53,7 +53,7 @@ class VoiceFoodResultView extends StatelessWidget {
         _RecognizedQuote(text: recognizedText),
         const SizedBox(height: 14),
         Text(
-          'Распознано:',
+          AppLocalizations.of(context)!.voiceFoodRecognized,
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -75,7 +75,7 @@ class VoiceFoodResultView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Примерная оценка:',
+              AppLocalizations.of(context)!.voiceFoodEstimate,
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -85,7 +85,9 @@ class VoiceFoodResultView extends StatelessWidget {
             GestureDetector(
               onTap: onToggleEditing,
               child: Text(
-                isEditing ? 'Скрыть правку' : 'Изменить данные',
+                isEditing
+                    ? AppLocalizations.of(context)!.voiceFoodHideEdit
+                    : AppLocalizations.of(context)!.voiceFoodEditData,
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -193,6 +195,7 @@ class _MacroSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -204,20 +207,24 @@ class _MacroSummary extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _MacroColumn(label: 'Калории', value: '$kcal ккал', color: tc.text),
           _MacroColumn(
-            label: 'Белки',
-            value: '$protein г',
+            label: loc.nutrientCalories,
+            value: loc.kcalValue(kcal),
+            color: tc.text,
+          ),
+          _MacroColumn(
+            label: loc.nutrientProtein,
+            value: loc.gramsValue(protein),
             color: const Color(0xFF75A47F),
           ),
           _MacroColumn(
-            label: 'Жиры',
-            value: '$fat г',
+            label: loc.nutrientFat,
+            value: loc.gramsValue(fat),
             color: const Color(0xFFFFB347),
           ),
           _MacroColumn(
-            label: 'Углеводы',
-            value: '$carbs г',
+            label: loc.nutrientCarbs,
+            value: loc.gramsValue(carbs),
             color: const Color(0xFF4A90E2),
           ),
         ],
@@ -244,15 +251,16 @@ class _EditFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Column(
       children: [
-        _EditField(label: 'Название', controller: nameController),
+        _EditField(label: loc.foodName, controller: nameController),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: _EditField(
-                label: 'Калории',
+                label: loc.nutrientCalories,
                 controller: kcalController,
                 keyboardType: TextInputType.number,
               ),
@@ -260,7 +268,7 @@ class _EditFields extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: _EditField(
-                label: 'Белки (г)',
+                label: loc.proteinGrams,
                 controller: proteinController,
                 keyboardType: TextInputType.number,
               ),
@@ -272,7 +280,7 @@ class _EditFields extends StatelessWidget {
           children: [
             Expanded(
               child: _EditField(
-                label: 'Жиры (г)',
+                label: loc.fatGrams,
                 controller: fatController,
                 keyboardType: TextInputType.number,
               ),
@@ -280,7 +288,7 @@ class _EditFields extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: _EditField(
-                label: 'Углеводы (г)',
+                label: loc.carbsGrams,
                 controller: carbsController,
                 keyboardType: TextInputType.number,
               ),

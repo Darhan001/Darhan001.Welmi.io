@@ -29,22 +29,22 @@ Future<bool> confirmDiscardProfileChanges(BuildContext context) async {
         ],
       ),
       content: Text(
-        'У вас есть несохранённые изменения. Они будут потеряны.',
+        AppLocalizations.of(context)!.unsavedChangesBody,
         style: TextStyle(color: tc.textSecondary),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
           child: Text(
-            'Остаться',
+            AppLocalizations.of(context)!.stayAction,
             style: TextStyle(fontWeight: FontWeight.w700, color: tc.textHint),
           ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text(
-            'Выйти',
-            style: TextStyle(
+          child: Text(
+            AppLocalizations.of(context)!.leaveAction,
+            style: const TextStyle(
               fontWeight: FontWeight.w700,
               color: Colors.redAccent,
             ),

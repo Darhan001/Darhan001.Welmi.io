@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/models/onboarding_data.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class GenderStep extends StatelessWidget {
   final Gender? selectedGender;
@@ -22,12 +23,12 @@ class GenderStep extends StatelessWidget {
         children: [
           const SizedBox(height: 40),
           Text(
-            'Укажи свой пол',
+            AppLocalizations.of(context)!.onboardingGenderTitle,
             style: Theme.of(context).textTheme.displayMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Это поможет нам точнее настроить расчеты для твоего метаболизма',
+            AppLocalizations.of(context)!.onboardingGenderSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(color: tc.textSecondary, fontSize: 14),
           ),
@@ -35,12 +36,17 @@ class GenderStep extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildGenderCard('Мужской', Icons.male, Gender.male, tc),
+                child: _buildGenderCard(
+                  AppLocalizations.of(context)!.male,
+                  Icons.male,
+                  Gender.male,
+                  tc,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildGenderCard(
-                  'Женский',
+                  AppLocalizations.of(context)!.female,
                   Icons.female,
                   Gender.female,
                   tc,

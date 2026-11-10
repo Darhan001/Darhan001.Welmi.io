@@ -3843,6 +3843,1530 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 serving · Welmi recipe'**
   String get recipeServingInfo;
+
+  /// No description provided for @offErrRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts is limiting requests. Wait a minute and try again.'**
+  String get offErrRateLimited;
+
+  /// No description provided for @offErrTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts did not respond in time. Check your connection and try again.'**
+  String get offErrTimeout;
+
+  /// No description provided for @offErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach Open Food Facts. Check your connection and try again.'**
+  String get offErrNetwork;
+
+  /// No description provided for @offErrRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load data from Open Food Facts. Please try again.'**
+  String get offErrRequest;
+
+  /// No description provided for @offErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts is temporarily unavailable (code {code}).'**
+  String offErrUnavailable(Object code);
+
+  /// No description provided for @offErrBadResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts returned an invalid response. Try again later.'**
+  String get offErrBadResponse;
+
+  /// No description provided for @offErrTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again in {seconds} s.'**
+  String offErrTooMany(Object seconds);
+
+  /// No description provided for @foodDbSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed. Check your connection and try again.'**
+  String get foodDbSearchFailed;
+
+  /// No description provided for @foodDbTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Food database'**
+  String get foodDbTitle;
+
+  /// No description provided for @foodDbSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts · values per 100 g'**
+  String get foodDbSubtitle;
+
+  /// No description provided for @foodDbSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name or barcode'**
+  String get foodDbSearchHint;
+
+  /// No description provided for @clearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearAction;
+
+  /// No description provided for @foodDbScanBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode'**
+  String get foodDbScanBarcode;
+
+  /// No description provided for @foodDbFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found: {count}'**
+  String foodDbFound(Object count);
+
+  /// No description provided for @foodDbStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a product by name'**
+  String get foodDbStartTitle;
+
+  /// No description provided for @foodDbStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Or scan the barcode on the package. Nutrition is recalculated for your portion.'**
+  String get foodDbStartBody;
+
+  /// No description provided for @foodDbStartFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'The data is community-contributed and may be incomplete — we show “—” when a value is missing.'**
+  String get foodDbStartFootnote;
+
+  /// No description provided for @foodDbNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product not found'**
+  String get foodDbNotFoundTitle;
+
+  /// No description provided for @foodDbNothingFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found'**
+  String get foodDbNothingFoundTitle;
+
+  /// No description provided for @foodDbNotFoundBarcodeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This barcode isn\'t in Open Food Facts. Check the digits or add the product manually.'**
+  String get foodDbNotFoundBarcodeBody;
+
+  /// No description provided for @foodDbNothingFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the name or scan the barcode. You can also add the product manually in the diary.'**
+  String get foodDbNothingFoundBody;
+
+  /// No description provided for @foodDbSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching Open Food Facts...'**
+  String get foodDbSearching;
+
+  /// No description provided for @foodNoNutritionData.
+  ///
+  /// In en, this message translates to:
+  /// **'No nutrition data'**
+  String get foodNoNutritionData;
+
+  /// No description provided for @foodCaloriesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories only, no macros'**
+  String get foodCaloriesOnly;
+
+  /// No description provided for @foodKcalPer100.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal / 100 g'**
+  String get foodKcalPer100;
+
+  /// No description provided for @macroProteinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'P'**
+  String get macroProteinShort;
+
+  /// No description provided for @macroFatShort.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get macroFatShort;
+
+  /// No description provided for @macroCarbsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'C'**
+  String get macroCarbsShort;
+
+  /// No description provided for @foodPer100NoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition: no data'**
+  String get foodPer100NoData;
+
+  /// No description provided for @foodPer100.
+  ///
+  /// In en, this message translates to:
+  /// **'Per 100 g: {values}'**
+  String foodPer100(Object values);
+
+  /// No description provided for @foodKcalEstimatedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories are estimated from macros: the database has no value.'**
+  String get foodKcalEstimatedNote;
+
+  /// No description provided for @foodMacrosIncompleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Not all nutrients are filled in — “—” means no data.'**
+  String get foodMacrosIncompleteNote;
+
+  /// No description provided for @nutrientProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get nutrientProtein;
+
+  /// No description provided for @nutrientFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get nutrientFat;
+
+  /// No description provided for @nutrientCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get nutrientCarbs;
+
+  /// No description provided for @nutrientCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get nutrientCalories;
+
+  /// No description provided for @foodNoNutritionCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Food Facts has no nutrition data for this product. Add the entry manually from the diary.'**
+  String get foodNoNutritionCard;
+
+  /// No description provided for @foodServingPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'serving {size}'**
+  String foodServingPrefix(Object size);
+
+  /// No description provided for @torchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn on the flashlight'**
+  String get torchFailed;
+
+  /// No description provided for @barcodeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No product with barcode {barcode} was found in Open Food Facts. Check the package or add the entry manually.'**
+  String barcodeNotFound(Object barcode);
+
+  /// No description provided for @barcodeLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the product. Check your connection and try again.'**
+  String get barcodeLoadFailed;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @barcodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get barcodeTitle;
+
+  /// No description provided for @barcodeAimHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the package'**
+  String get barcodeAimHint;
+
+  /// No description provided for @torch.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight'**
+  String get torch;
+
+  /// No description provided for @barcodeScanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan again'**
+  String get barcodeScanAgain;
+
+  /// No description provided for @barcodeFormatsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports EAN-8, EAN-13, UPC-A, UPC-E and Code 128.\nData: Open Food Facts.'**
+  String get barcodeFormatsNote;
+
+  /// No description provided for @barcodeLookingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking up the product...'**
+  String get barcodeLookingUp;
+
+  /// No description provided for @cameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable'**
+  String get cameraUnavailable;
+
+  /// No description provided for @cameraUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access in your phone settings or type the barcode into the search field.'**
+  String get cameraUnavailableHint;
+
+  /// No description provided for @foodNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The name can\'t be empty.'**
+  String get foodNameEmpty;
+
+  /// No description provided for @foodKcalInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter calories as a whole number.'**
+  String get foodKcalInvalid;
+
+  /// No description provided for @foodGramsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Portion weight must be between 1 and 5000 g.'**
+  String get foodGramsRange;
+
+  /// No description provided for @foodEditEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get foodEditEntry;
+
+  /// No description provided for @foodPortionWeightG.
+  ///
+  /// In en, this message translates to:
+  /// **'Portion weight, g'**
+  String get foodPortionWeightG;
+
+  /// No description provided for @foodRecalcNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories and macros are recalculated automatically when the weight changes.'**
+  String get foodRecalcNote;
+
+  /// No description provided for @nutrientProteinG.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein, g'**
+  String get nutrientProteinG;
+
+  /// No description provided for @nutrientFatG.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat, g'**
+  String get nutrientFatG;
+
+  /// No description provided for @nutrientCarbsG.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs, g'**
+  String get nutrientCarbsG;
+
+  /// No description provided for @foodPortionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Portion'**
+  String get foodPortionTitle;
+
+  /// No description provided for @foodPortionWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Portion weight'**
+  String get foodPortionWeight;
+
+  /// No description provided for @foodEnterGramsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a portion weight between 1 and 5000 g.'**
+  String get foodEnterGramsRange;
+
+  /// No description provided for @foodNoCaloriesCantSave.
+  ///
+  /// In en, this message translates to:
+  /// **'The database has no calories for this product, so the entry can\'t be saved.'**
+  String get foodNoCaloriesCantSave;
+
+  /// No description provided for @gramsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} g'**
+  String gramsValue(Object value);
+
+  /// No description provided for @foodEnterGramsToSee.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the weight to see the calculation.'**
+  String get foodEnterGramsToSee;
+
+  /// No description provided for @foodDataSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Data: Open Food Facts (open database)'**
+  String get foodDataSource;
+
+  /// No description provided for @diaryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load data'**
+  String get diaryLoadError;
+
+  /// No description provided for @diaryEntryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry updated'**
+  String get diaryEntryUpdated;
+
+  /// No description provided for @diaryEntryUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the entry'**
+  String get diaryEntryUpdateFailed;
+
+  /// No description provided for @diaryDeleteEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry?'**
+  String get diaryDeleteEntryTitle;
+
+  /// No description provided for @diaryDeleteEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The entry will be removed from the diary.'**
+  String get diaryDeleteEntryBody;
+
+  /// No description provided for @diaryDeleteNamedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” will be removed from the diary.'**
+  String diaryDeleteNamedBody(Object name);
+
+  /// No description provided for @diaryEntryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry deleted'**
+  String get diaryEntryDeleted;
+
+  /// No description provided for @diaryEntryDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the entry'**
+  String get diaryEntryDeleteFailed;
+
+  /// No description provided for @diaryAddByVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add by voice'**
+  String get diaryAddByVoice;
+
+  /// No description provided for @diaryVoiceShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get diaryVoiceShort;
+
+  /// No description provided for @diaryFindInDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a product in Open Food Facts'**
+  String get diaryFindInDatabase;
+
+  /// No description provided for @diaryDatabaseShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Database'**
+  String get diaryDatabaseShort;
+
+  /// No description provided for @deleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteAction;
+
+  /// No description provided for @editAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editAction;
+
+  /// No description provided for @voiceFoodClarifyFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Specify the amount to get an approximate estimate.'**
+  String get voiceFoodClarifyFirst;
+
+  /// No description provided for @voiceFoodGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong during recognition'**
+  String get voiceFoodGenericError;
+
+  /// No description provided for @kcalApprox.
+  ///
+  /// In en, this message translates to:
+  /// **'~{kcal} kcal'**
+  String kcalApprox(Object kcal);
+
+  /// No description provided for @kcalValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{kcal} kcal'**
+  String kcalValue(Object kcal);
+
+  /// No description provided for @voiceFoodClarifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: 150 grams'**
+  String get voiceFoodClarifyHint;
+
+  /// No description provided for @voiceFoodClarify.
+  ///
+  /// In en, this message translates to:
+  /// **'Clarify'**
+  String get voiceFoodClarify;
+
+  /// No description provided for @voiceFoodListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening... ({time})'**
+  String voiceFoodListening(Object time);
+
+  /// No description provided for @voiceFoodExample.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: “Two eggs, two slices of bread and a banana”'**
+  String get voiceFoodExample;
+
+  /// No description provided for @voiceFoodAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is analyzing the food...'**
+  String get voiceFoodAnalyzing;
+
+  /// No description provided for @voiceFoodRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognized:'**
+  String get voiceFoodRecognized;
+
+  /// No description provided for @voiceFoodEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate estimate:'**
+  String get voiceFoodEstimate;
+
+  /// No description provided for @voiceFoodHideEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide editing'**
+  String get voiceFoodHideEdit;
+
+  /// No description provided for @voiceFoodEditData.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit values'**
+  String get voiceFoodEditData;
+
+  /// No description provided for @voiceFoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input: {meal}'**
+  String voiceFoodTitle(Object meal);
+
+  /// No description provided for @voiceFoodSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Say the dish and the amount'**
+  String get voiceFoodSubtitle;
+
+  /// No description provided for @homeDiarySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{consumed} of {goal} kcal · {protein} g protein'**
+  String homeDiarySummary(Object consumed, Object goal, Object protein);
+
+  /// No description provided for @bfEstimateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat estimate'**
+  String get bfEstimateTitle;
+
+  /// No description provided for @bfEstimateNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data for the calculation.\n\nRequired: height and sex in your profile, plus waist and neck measurements (and hips for women). Add measurements and try again.'**
+  String get bfEstimateNoData;
+
+  /// No description provided for @bfEstimateMethodMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated with the U.S. Navy method from waist and neck circumference and height.\n\nThis is an approximate estimate, not a measurement. The method\'s error is several percentage points.'**
+  String get bfEstimateMethodMale;
+
+  /// No description provided for @bfEstimateMethodFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated with the U.S. Navy method from waist, neck and hip circumference and height.\n\nThis is an approximate estimate, not a measurement. The method\'s error is several percentage points.'**
+  String get bfEstimateMethodFemale;
+
+  /// No description provided for @bfCatExtremelyLow.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ Extremely low'**
+  String get bfCatExtremelyLow;
+
+  /// No description provided for @bfCatAthletic.
+  ///
+  /// In en, this message translates to:
+  /// **'💪 Athletic'**
+  String get bfCatAthletic;
+
+  /// No description provided for @bfCatNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Normal'**
+  String get bfCatNormal;
+
+  /// No description provided for @bfCatAboveNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'📈 Above normal'**
+  String get bfCatAboveNormal;
+
+  /// No description provided for @bfCatHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ High'**
+  String get bfCatHigh;
+
+  /// No description provided for @bfHeaderCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'BODY FAT %'**
+  String get bfHeaderCaps;
+
+  /// No description provided for @progressLast28Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 28 days'**
+  String get progressLast28Days;
+
+  /// No description provided for @legendHasEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'has entry'**
+  String get legendHasEntry;
+
+  /// No description provided for @legendToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get legendToday;
+
+  /// No description provided for @legendTapDay.
+  ///
+  /// In en, this message translates to:
+  /// **'tap a day'**
+  String get legendTapDay;
+
+  /// No description provided for @bfMethodCaliper.
+  ///
+  /// In en, this message translates to:
+  /// **'caliper'**
+  String get bfMethodCaliper;
+
+  /// No description provided for @bfMethodScale.
+  ///
+  /// In en, this message translates to:
+  /// **'scale'**
+  String get bfMethodScale;
+
+  /// No description provided for @bfMethodEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimate'**
+  String get bfMethodEstimated;
+
+  /// No description provided for @bfMethodManual.
+  ///
+  /// In en, this message translates to:
+  /// **'manual'**
+  String get bfMethodManual;
+
+  /// No description provided for @bfEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No body fat data yet'**
+  String get bfEmptyTitle;
+
+  /// No description provided for @bfEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your body fat percentage to track changes'**
+  String get bfEmptySubtitle;
+
+  /// No description provided for @bfDynamics.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat trend'**
+  String get bfDynamics;
+
+  /// No description provided for @bfNoEntriesInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No body fat entries in the selected period'**
+  String get bfNoEntriesInPeriod;
+
+  /// No description provided for @bfEstimateDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'An estimate from measurements — not a medical measurement.'**
+  String get bfEstimateDisclaimer;
+
+  /// No description provided for @bfEstimateFromMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate from measurements'**
+  String get bfEstimateFromMeasurements;
+
+  /// No description provided for @historyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyLabel;
+
+  /// No description provided for @progressNoEntriesDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries for this day.'**
+  String get progressNoEntriesDay;
+
+  /// No description provided for @bfEstimatedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (estimate)'**
+  String bfEstimatedSuffix(Object label);
+
+  /// No description provided for @chartNeedTwoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 2 entries are needed in the selected period\n({count} of 2)'**
+  String chartNeedTwoEntries(Object count);
+
+  /// No description provided for @measEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No measurements yet'**
+  String get measEmptyTitle;
+
+  /// No description provided for @measEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your chest, waist, hips and arm measurements'**
+  String get measEmptySubtitle;
+
+  /// No description provided for @measLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest measurements'**
+  String get measLatest;
+
+  /// No description provided for @measDynamics.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements trend'**
+  String get measDynamics;
+
+  /// No description provided for @measNoEntriesInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No “{metric}” measurements in the selected period'**
+  String measNoEntriesInPeriod(Object metric);
+
+  /// No description provided for @currentWeightCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT WEIGHT'**
+  String get currentWeightCaps;
+
+  /// No description provided for @bfChipCaliper.
+  ///
+  /// In en, this message translates to:
+  /// **'Caliper'**
+  String get bfChipCaliper;
+
+  /// No description provided for @bfChipScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get bfChipScale;
+
+  /// No description provided for @bfChipManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get bfChipManual;
+
+  /// No description provided for @bfRangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a body fat value between 2 and 70%'**
+  String get bfRangeError;
+
+  /// No description provided for @bfEstimateSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as an estimated value'**
+  String get bfEstimateSaved;
+
+  /// No description provided for @progressEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show yet'**
+  String get progressEmptyTitle;
+
+  /// No description provided for @progressEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start logging weight, measurements and body fat\nto see your progress'**
+  String get progressEmptySubtitle;
+
+  /// No description provided for @progressRecordFirstWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your first weight'**
+  String get progressRecordFirstWeight;
+
+  /// No description provided for @daysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String daysCount(Object days);
+
+  /// No description provided for @progressActivityOfEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging activity'**
+  String get progressActivityOfEntries;
+
+  /// No description provided for @workoutGeneralFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get workoutGeneralFocus;
+
+  /// No description provided for @premiumGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is available in Welmi Premium'**
+  String get premiumGateTitle;
+
+  /// No description provided for @premiumGateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Access is checked against a verified store subscription.'**
+  String get premiumGateSubtitle;
+
+  /// No description provided for @premiumGateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View Premium'**
+  String get premiumGateButton;
+
+  /// No description provided for @profileBmrTdee.
+  ///
+  /// In en, this message translates to:
+  /// **'BMR {bmr} kcal · TDEE {tdee} kcal'**
+  String profileBmrTdee(Object bmr, Object tdee);
+
+  /// No description provided for @unsavedChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. They will be lost.'**
+  String get unsavedChangesBody;
+
+  /// No description provided for @stayAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get stayAction;
+
+  /// No description provided for @leaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leaveAction;
+
+  /// No description provided for @profileUserUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t identify the user'**
+  String get profileUserUnknown;
+
+  /// No description provided for @profilePhotoNotUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo didn\'t upload'**
+  String get profilePhotoNotUploaded;
+
+  /// No description provided for @profileSavedWithWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved. {warning}'**
+  String profileSavedWithWarning(Object warning);
+
+  /// No description provided for @profileLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading profile...'**
+  String get profileLoading;
+
+  /// No description provided for @profileMyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get profileMyProfile;
+
+  /// No description provided for @profileWeightGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight goal'**
+  String get profileWeightGoal;
+
+  /// No description provided for @profileCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get profileCurrent;
+
+  /// No description provided for @profileLeftToLose.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to lose'**
+  String get profileLeftToLose;
+
+  /// No description provided for @profileLeftToGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to gain'**
+  String get profileLeftToGain;
+
+  /// No description provided for @profileTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get profileTarget;
+
+  /// No description provided for @subscriptionActiveShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get subscriptionActiveShort;
+
+  /// No description provided for @subscriptionChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get subscriptionChoose;
+
+  /// No description provided for @subManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get subManage;
+
+  /// No description provided for @subActiveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription is active.'**
+  String get subActiveMessage;
+
+  /// No description provided for @subOfferUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer unavailable'**
+  String get subOfferUnavailable;
+
+  /// No description provided for @subContinuePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue · {price}'**
+  String subContinuePrice(Object price);
+
+  /// No description provided for @subRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get subRestore;
+
+  /// No description provided for @subRefreshOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh offers'**
+  String get subRefreshOffers;
+
+  /// No description provided for @subTermsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment and subscription terms are shown by the store before you confirm the purchase. You can manage auto-renewal in the store settings.'**
+  String get subTermsNote;
+
+  /// No description provided for @subHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More ways to take care of yourself'**
+  String get subHeroSubtitle;
+
+  /// No description provided for @subInPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'In Premium'**
+  String get subInPremium;
+
+  /// No description provided for @subFeatureScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart food scanner'**
+  String get subFeatureScanner;
+
+  /// No description provided for @subFeatureWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'AI workout plans'**
+  String get subFeatureWorkouts;
+
+  /// No description provided for @subFeatureAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed analytics and measurements'**
+  String get subFeatureAnalytics;
+
+  /// No description provided for @subFeatureHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect sync'**
+  String get subFeatureHealth;
+
+  /// No description provided for @subFeatureNoAds.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads'**
+  String get subFeatureNoAds;
+
+  /// No description provided for @subPlanMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get subPlanMonth;
+
+  /// No description provided for @subPlanYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get subPlanYear;
+
+  /// No description provided for @subPremiumActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium is active'**
+  String get subPremiumActive;
+
+  /// No description provided for @subValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String subValidUntil(Object date);
+
+  /// No description provided for @subErrStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Store error. Please try again.'**
+  String get subErrStore;
+
+  /// No description provided for @subErrStoreUnavailableDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The store is not available on this device.'**
+  String get subErrStoreUnavailableDevice;
+
+  /// No description provided for @subErrStoreUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The store is currently unavailable.'**
+  String get subErrStoreUnavailable;
+
+  /// No description provided for @subErrProductsMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans are not available in the store yet. Try again later.'**
+  String get subErrProductsMissing;
+
+  /// No description provided for @subErrProductsLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load store offers.'**
+  String get subErrProductsLoad;
+
+  /// No description provided for @subErrEntitlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check Premium status.'**
+  String get subErrEntitlement;
+
+  /// No description provided for @subErrPlanNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan was not found in the store.'**
+  String get subErrPlanNotFound;
+
+  /// No description provided for @subErrSignInToSubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your Welmi account to subscribe.'**
+  String get subErrSignInToSubscribe;
+
+  /// No description provided for @subErrPurchaseNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The store didn\'t start the purchase. Please try again.'**
+  String get subErrPurchaseNotStarted;
+
+  /// No description provided for @subErrPurchaseStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the purchase.'**
+  String get subErrPurchaseStart;
+
+  /// No description provided for @subErrSignInToRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Welmi to restore your subscription.'**
+  String get subErrSignInToRestore;
+
+  /// No description provided for @subErrRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore purchases.'**
+  String get subErrRestore;
+
+  /// No description provided for @subErrManageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'You can manage the subscription on a device with the App Store or Google Play.'**
+  String get subErrManageUnsupported;
+
+  /// No description provided for @subErrManageOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open subscription management.'**
+  String get subErrManageOpen;
+
+  /// No description provided for @subErrPurchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The store didn\'t complete the purchase.'**
+  String get subErrPurchaseFailed;
+
+  /// No description provided for @subErrVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'The purchase was received, but server verification didn\'t finish. Tap “Restore purchases” a bit later.'**
+  String get subErrVerification;
+
+  /// No description provided for @subNoticeNoActive.
+  ///
+  /// In en, this message translates to:
+  /// **'No active subscription found.'**
+  String get subNoticeNoActive;
+
+  /// No description provided for @subNoticeCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase cancelled.'**
+  String get subNoticeCancelled;
+
+  /// No description provided for @subNoticeActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi Premium is activated.'**
+  String get subNoticeActivated;
+
+  /// No description provided for @calcStatusAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your data...'**
+  String get calcStatusAnalyzing;
+
+  /// No description provided for @calcStatusMetabolism.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating metabolism...'**
+  String get calcStatusMetabolism;
+
+  /// No description provided for @calcStatusMacros.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating calories and macros...'**
+  String get calcStatusMacros;
+
+  /// No description provided for @calcStatusPersonalReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal plan is ready! ✅'**
+  String get calcStatusPersonalReady;
+
+  /// No description provided for @calcStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan is ready! ✅'**
+  String get calcStatusReady;
+
+  /// No description provided for @calcProteinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'protein'**
+  String get calcProteinShort;
+
+  /// No description provided for @calcFatShort.
+  ///
+  /// In en, this message translates to:
+  /// **'fat'**
+  String get calcFatShort;
+
+  /// No description provided for @calcCarbsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'carbs'**
+  String get calcCarbsShort;
+
+  /// No description provided for @chooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose language'**
+  String get chooseLanguage;
+
+  /// No description provided for @languageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Language / Тил'**
+  String get languageLabel;
+
+  /// No description provided for @perDaySuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'/day'**
+  String get perDaySuffix;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your path to health'**
+  String get splashTagline;
+
+  /// No description provided for @model3dTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The model took too long to load'**
+  String get model3dTimeout;
+
+  /// No description provided for @model3dRotateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to rotate the model'**
+  String get model3dRotateHint;
+
+  /// No description provided for @model3dFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The 3D model didn\'t load'**
+  String get model3dFailed;
+
+  /// No description provided for @model3dFailedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'3D model: {reason}'**
+  String model3dFailedReason(Object reason);
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @rangeLastDaysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'last {days} d'**
+  String rangeLastDaysShort(Object days);
+
+  /// No description provided for @filtersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersTitle;
+
+  /// No description provided for @recipeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a dish or ingredient'**
+  String get recipeSearchHint;
+
+  /// No description provided for @recipePopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get recipePopular;
+
+  /// No description provided for @recipeResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Results · {count}'**
+  String recipeResults(Object count);
+
+  /// No description provided for @resetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetAction;
+
+  /// No description provided for @recipeFilterProteinFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein from'**
+  String get recipeFilterProteinFrom;
+
+  /// No description provided for @recipeFilterTimeUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Time up to'**
+  String get recipeFilterTimeUpTo;
+
+  /// No description provided for @recipeFilterDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Diet'**
+  String get recipeFilterDiet;
+
+  /// No description provided for @recipeDietVegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get recipeDietVegetarian;
+
+  /// No description provided for @recipeDietSugarFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar-free'**
+  String get recipeDietSugarFree;
+
+  /// No description provided for @showAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get showAction;
+
+  /// No description provided for @anyOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get anyOption;
+
+  /// No description provided for @filterUpToKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {value} kcal'**
+  String filterUpToKcal(Object value);
+
+  /// No description provided for @filterFromGrams.
+  ///
+  /// In en, this message translates to:
+  /// **'From {value} g'**
+  String filterFromGrams(Object value);
+
+  /// No description provided for @filterUpToMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {value} min'**
+  String filterUpToMinutes(Object value);
+
+  /// No description provided for @recipeMetaWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min · {grams} g'**
+  String recipeMetaWeight(Object grams, Object minutes);
+
+  /// No description provided for @recipeMetaProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min · P {protein} g'**
+  String recipeMetaProtein(Object minutes, Object protein);
+
+  /// No description provided for @favoriteRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get favoriteRemove;
+
+  /// No description provided for @favoriteAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get favoriteAdd;
+
+  /// No description provided for @recipeNothingFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found.\nTry changing the search or filters.'**
+  String get recipeNothingFound;
+
+  /// No description provided for @recipesComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes are coming soon.'**
+  String get recipesComingSoon;
+
+  /// No description provided for @recipeNoPhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo: {label}'**
+  String recipeNoPhotoLabel(Object label);
+
+  /// No description provided for @recipePhotoSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo coming soon'**
+  String get recipePhotoSoon;
+
+  /// No description provided for @recipeAddToMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to a meal'**
+  String get recipeAddToMeal;
+
+  /// No description provided for @recipeBonAppetit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy your meal!'**
+  String get recipeBonAppetit;
+
+  /// No description provided for @recipePhotoCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo: {credit}'**
+  String recipePhotoCredit(Object credit);
+
+  /// No description provided for @recipeStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step}'**
+  String recipeStep(Object step);
+
+  /// No description provided for @recipeCook.
+  ///
+  /// In en, this message translates to:
+  /// **'Cook'**
+  String get recipeCook;
+
+  /// No description provided for @recipeAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get recipeAsk;
+
+  /// No description provided for @recipeAskPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m cooking “{title}” ({kcal} kcal, P {protein} g, F {fat} g, C {carbs} g). Tell me:'**
+  String recipeAskPrompt(
+    Object carbs,
+    Object fat,
+    Object kcal,
+    Object protein,
+    Object title,
+  );
+
+  /// No description provided for @recipeNutritionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories and nutrients'**
+  String get recipeNutritionTitle;
+
+  /// No description provided for @recipeMicros.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiber {fiber} g · Sugar {sugar} g · Sodium {sodium} mg'**
+  String recipeMicros(Object fiber, Object sodium, Object sugar);
+
+  /// No description provided for @recipeNutritionDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories and macros are estimates per serving based on the ingredients. TheMealDB does not publish nutrition data.'**
+  String get recipeNutritionDisclaimer;
+
+  /// No description provided for @recipeIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients · servings: {servings}'**
+  String recipeIngredients(Object servings);
+
+  /// No description provided for @recipeCooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparation'**
+  String get recipeCooking;
+
+  /// No description provided for @recipeStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String recipeStepOf(Object step, Object total);
+
+  /// No description provided for @recipeFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get recipeFinish;
+
+  /// No description provided for @recipeNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Next step'**
+  String get recipeNextStep;
 }
 
 class _AppLocalizationsDelegate

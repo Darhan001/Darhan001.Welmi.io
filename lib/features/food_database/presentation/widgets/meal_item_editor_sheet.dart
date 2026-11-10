@@ -9,6 +9,7 @@ import 'package:lumina/core/widgets/app_button.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
 import 'package:lumina/features/food_database/presentation/widgets/food_sheet_frame.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Редактирование записи дневника.
 ///
@@ -135,15 +136,16 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
   }
 
   void _save() {
+    final loc = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Название не может быть пустым.');
+      setState(() => _error = loc.foodNameEmpty);
       return;
     }
 
     final kcal = int.tryParse(_kcalController.text.trim());
     if (kcal == null || kcal < 0) {
-      setState(() => _error = 'Укажи калорийность целым числом.');
+      setState(() => _error = loc.foodKcalInvalid);
       return;
     }
 
@@ -151,7 +153,7 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
     if (_hasPortion) {
       grams = parseDecimalInput(_gramsController.text);
       if (grams == null || grams <= 0 || grams > 5000) {
-        setState(() => _error = 'Масса порции должна быть от 1 до 5000 г.');
+        setState(() => _error = loc.foodGramsRange);
         return;
       }
     }
@@ -177,11 +179,12 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
 
     return FoodSheetFrame(
       children: [
         Text(
-          'Изменить запись',
+          loc.foodEditEntry,
           style: GoogleFonts.notoSerif(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -189,19 +192,18 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
           ),
         ),
         const SizedBox(height: 20),
-        NutritionTextField(label: 'Название', controller: _nameController),
+        NutritionTextField(label: loc.foodName, controller: _nameController),
         if (_hasPortion) ...[
           const SizedBox(height: 10),
           NutritionTextField(
-            label: 'Масса порции, г',
+            label: loc.foodPortionWeightG,
             controller: _gramsController,
             keyboardType: NutritionTextField.decimalKeyboard,
             inputFormatters: NutritionTextField.decimalFormatters,
           ),
           const SizedBox(height: 6),
           Text(
-            'При изменении массы калории и БЖУ пересчитываются '
-            'автоматически.',
+            loc.foodRecalcNote,
             style: TextStyle(
               fontSize: 10,
               height: 1.35,
@@ -212,7 +214,7 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
         ],
         const SizedBox(height: 10),
         NutritionTextField(
-          label: 'Калории',
+          label: loc.nutrientCalories,
           controller: _kcalController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -220,12 +222,12 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
         const SizedBox(height: 10),
         Row(
           children: [
-            for (final (label, controller) in [
-              ('Белки, г', _proteinController),
-              ('Жиры, г', _fatController),
-              ('Углеводы, г', _carbsController),
-            ]) ...[
-              if (label != 'Белки, г') const SizedBox(width: 10),
+            for (final (index, (label, controller)) in [
+              (loc.nutrientProteinG, _proteinController),
+              (loc.nutrientFatG, _fatController),
+              (loc.nutrientCarbsG, _carbsController),
+            ].indexed) ...[
+              if (index > 0) const SizedBox(width: 10),
               Expanded(
                 child: NutritionTextField(
                   label: label,
@@ -249,7 +251,7 @@ class _MealItemEditorSheetState extends State<MealItemEditorSheet> {
           ),
         ],
         const SizedBox(height: 22),
-        AppButton(text: 'Сохранить', size: AppButtonSize.lg, onPressed: _save),
+        AppButton(text: loc.save, size: AppButtonSize.lg, onPressed: _save),
       ],
     );
   }

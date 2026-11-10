@@ -64,7 +64,7 @@ class HomeDiaryCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$consumed из $goal ккал · $proteinг белка',
+                    loc.homeDiarySummary(consumed, goal, protein),
                     style: TextStyle(
                       fontSize: 12,
                       color: tc.textSecondary,

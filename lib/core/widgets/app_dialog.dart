@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Единые диалоги подтверждения и нижние листы.
 class AppDialog {
@@ -11,12 +12,13 @@ class AppDialog {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmLabel = 'Удалить',
-    String cancelLabel = 'Отмена',
+    String? confirmLabel,
+    String? cancelLabel,
     bool destructive = true,
     IconData? icon,
   }) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final confirmColor = destructive ? tc.error : tc.success;
 
     return showDialog<bool>(
@@ -46,7 +48,7 @@ class AppDialog {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              cancelLabel,
+              cancelLabel ?? loc.cancel,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -57,7 +59,7 @@ class AppDialog {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              confirmLabel,
+              confirmLabel ?? loc.deleteAction,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,

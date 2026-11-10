@@ -17,10 +17,9 @@ class GoalDailyStats extends StatelessWidget {
     final tc = ThemeColors.of(context);
     final loc = AppLocalizations.of(context)!;
     final pace = progress.averagePace;
-    // TODO(l10n): суффикс «/день» — нужен ключ локализации (см. отчёт).
     final paceText = pace == null
         ? '—'
-        : '${pace.isPlanned ? '≈' : ''}${loc.formatWeight(pace.kgPerDay, decimals: 2)}/день';
+        : '${pace.isPlanned ? '≈' : ''}${loc.formatWeight(pace.kgPerDay, decimals: 2)}${loc.perDaySuffix}';
     final days = progress.estimatedDaysToGoal;
     return Row(
       children: [

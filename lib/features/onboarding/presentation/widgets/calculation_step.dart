@@ -5,6 +5,7 @@ import 'package:lumina/core/models/onboarding_data.dart'
 import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Глобально сохраняем последний результат AI для использования на главной
 AiNutritionPlan? lastAiPlan;
@@ -23,11 +24,14 @@ class CalculationStep extends StatefulWidget {
   State<CalculationStep> createState() => _CalculationStepState();
 }
 
+/// Этап расчёта плана — подпись под логотипом.
+enum _CalcStage { analyzing, metabolism, macros, personalReady, ready }
+
 class _CalculationStepState extends State<CalculationStep>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulseAnimation;
-  String _statusText = 'Анализируем твои данные...';
+  _CalcStage _stage = _CalcStage.analyzing;
 
   @override
   void initState() {
@@ -52,18 +56,18 @@ class _CalculationStepState extends State<CalculationStep>
     // Анимированные статусы
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
-    setState(() => _statusText = 'Рассчитываем метаболизм...');
+    setState(() => _stage = _CalcStage.metabolism);
 
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
-    setState(() => _statusText = 'Считаем калории и БЖУ...');
+    setState(() => _stage = _CalcStage.macros);
 
     // Сначала сохраняем профиль в Supabase (даже если AI упадёт)
     try {
       await UserDataService().saveOnboardingProfile(data);
-      debugPrint('✅ Профиль сохранён в Supabase');
+      debugPrint('✅ Onboarding profile saved');
     } catch (e) {
-      debugPrint('❌ Ошибка сохранения профиля: $e');
+      debugPrint('❌ Onboarding profile save failed: $e');
     }
 
     // Запускаем AI расчёт
@@ -83,18 +87,26 @@ class _CalculationStepState extends State<CalculationStep>
 
       // Сохраняем результат глобально
       lastAiPlan = plan;
-      setState(() => _statusText = 'Персональный план готов! ✅');
+      setState(() => _stage = _CalcStage.personalReady);
 
       await Future.delayed(const Duration(milliseconds: 1200));
       if (mounted) widget.onComplete();
     } catch (e) {
       if (!mounted) return;
       // Даже если AI упал — переходим дальше
-      setState(() => _statusText = 'План готов! ✅');
+      setState(() => _stage = _CalcStage.ready);
       await Future.delayed(const Duration(milliseconds: 1200));
       if (mounted) widget.onComplete();
     }
   }
+
+  String _statusText(AppLocalizations loc) => switch (_stage) {
+    _CalcStage.analyzing => loc.calcStatusAnalyzing,
+    _CalcStage.metabolism => loc.calcStatusMetabolism,
+    _CalcStage.macros => loc.calcStatusMacros,
+    _CalcStage.personalReady => loc.calcStatusPersonalReady,
+    _CalcStage.ready => loc.calcStatusReady,
+  };
 
   @override
   void dispose() {
@@ -166,8 +178,8 @@ class _CalculationStepState extends State<CalculationStep>
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),
             child: Text(
-              _statusText,
-              key: ValueKey(_statusText),
+              _statusText(AppLocalizations.of(context)!),
+              key: ValueKey(_stage),
               style: GoogleFonts.notoSerif(
                 fontSize: 14,
                 color: tc.textSecondary,
@@ -195,10 +207,10 @@ class _CalculationStepState extends State<CalculationStep>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildResultStat('${lastAiPlan!.dailyCalories}', 'ккал', tc),
-                  _buildResultStat('${lastAiPlan!.proteinGrams}', 'белки', tc),
-                  _buildResultStat('${lastAiPlan!.fatGrams}', 'жиры', tc),
-                  _buildResultStat('${lastAiPlan!.carbGrams}', 'углев.', tc),
+                  _buildResultStat('${lastAiPlan!.dailyCalories}', AppLocalizations.of(context)!.kcal, tc),
+                  _buildResultStat('${lastAiPlan!.proteinGrams}', AppLocalizations.of(context)!.calcProteinShort, tc),
+                  _buildResultStat('${lastAiPlan!.fatGrams}', AppLocalizations.of(context)!.calcFatShort, tc),
+                  _buildResultStat('${lastAiPlan!.carbGrams}', AppLocalizations.of(context)!.calcCarbsShort, tc),
                 ],
               ),
             ),

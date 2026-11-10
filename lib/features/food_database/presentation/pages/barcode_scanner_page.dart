@@ -5,6 +5,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/food_database/data/open_food_facts_service.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
+import 'package:lumina/l10n/app_localizations.dart';
+import 'package:lumina/features/food_database/presentation/open_food_facts_messages.dart';
 
 /// Сканирование штрихкода упаковки и загрузка продукта из Open Food Facts.
 ///
@@ -80,7 +82,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
       if (mounted) {
         showWelmiSnackbar(
           context,
-          'Не удалось включить фонарик',
+          AppLocalizations.of(context)!.torchFailed,
           icon: Icons.flash_off_rounded,
         );
       }
@@ -112,6 +114,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
   }
 
   Future<void> _lookup(String barcode) async {
+    final loc = AppLocalizations.of(context)!;
     setState(() {
       _isLookingUp = true;
       _error = null;
@@ -126,9 +129,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
       if (product == null) {
         setState(() {
           _isLookingUp = false;
-          _error =
-              'Продукт со штрихкодом $barcode не найден в Open Food Facts. '
-              'Проверь упаковку или добавь запись вручную.';
+          _error = loc.barcodeNotFound(barcode);
         });
         return;
       }
@@ -139,13 +140,13 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
       if (!mounted) return;
       setState(() {
         _isLookingUp = false;
-        _error = e.message;
+        _error = openFoodFactsMessage(loc, e);
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isLookingUp = false;
-        _error = 'Не удалось загрузить продукт. Проверь интернет и повтори.';
+        _error = loc.barcodeLoadFailed;
       });
     }
   }
@@ -210,6 +211,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
   }
 
   Widget _buildHeader() {
+    final loc = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
@@ -217,7 +219,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
           _circleButton(
             icon: Icons.arrow_back_rounded,
             onTap: () => Navigator.pop(context),
-            tooltip: 'Назад',
+            tooltip: loc.back,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -225,7 +227,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Штрихкод',
+                  loc.barcodeTitle,
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 18,
@@ -233,7 +235,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                   ),
                 ),
                 Text(
-                  'Наведи камеру на упаковку',
+                  loc.barcodeAimHint,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 11,
@@ -246,7 +248,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
           _circleButton(
             icon: _torchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
             onTap: _toggleTorch,
-            tooltip: 'Фонарик',
+            tooltip: loc.torch,
           ),
         ],
       ),
@@ -330,7 +332,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                     OutlinedButton.icon(
                       onPressed: _retry,
                       icon: const Icon(Icons.qr_code_scanner, size: 18),
-                      label: const Text('Сканировать снова'),
+                      label: Text(AppLocalizations.of(context)!.barcodeScanAgain),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(
@@ -348,8 +350,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
             const SizedBox(height: 14),
           ],
           Text(
-            'Поддерживаются EAN-8, EAN-13, UPC-A, UPC-E и Code 128.\n'
-            'Данные: Open Food Facts.',
+            AppLocalizations.of(context)!.barcodeFormatsNote,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),
@@ -373,7 +374,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
             const CircularProgressIndicator(color: Color(0xFF8BC98E)),
             const SizedBox(height: 16),
             Text(
-              'Ищем продукт...',
+              AppLocalizations.of(context)!.barcodeLookingUp,
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 14,
@@ -401,9 +402,9 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                 size: 44,
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Камера недоступна',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.cameraUnavailable,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -411,8 +412,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
               ),
               const SizedBox(height: 8),
               Text(
-                'Разреши доступ к камере в настройках телефона '
-                'или введи штрихкод в строке поиска.',
+                AppLocalizations.of(context)!.cameraUnavailableHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.6),

@@ -53,7 +53,7 @@ class ProgressWeightCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ТЕКУЩИЙ ВЕС',
+                    AppLocalizations.of(context)!.currentWeightCaps,
                     style: TextStyle(
                       fontSize: 10,
                       color: tc.textHint,
@@ -94,7 +94,7 @@ class ProgressWeightCard extends StatelessWidget {
             title: loc.weightDynamics,
             fontSize: 13,
             trailing: Text(
-              'за $rangeDays дн.',
+              AppLocalizations.of(context)!.rangeLastDaysShort(rangeDays),
               style: TextStyle(fontSize: 11, color: tc.textHint),
             ),
           ),

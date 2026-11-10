@@ -80,11 +80,11 @@ class FoodItemActionsSheet extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              _MacroLabel(label: 'Б', value: item.proteinGrams),
+              _MacroLabel(label: AppLocalizations.of(context)!.macroProteinShort, value: item.proteinGrams),
               const SizedBox(width: 10),
-              _MacroLabel(label: 'Ж', value: item.fatGrams),
+              _MacroLabel(label: AppLocalizations.of(context)!.macroFatShort, value: item.fatGrams),
               const SizedBox(width: 10),
-              _MacroLabel(label: 'У', value: item.carbsGrams),
+              _MacroLabel(label: AppLocalizations.of(context)!.macroCarbsShort, value: item.carbsGrams),
             ],
           ),
         ),
@@ -97,9 +97,9 @@ class FoodItemActionsSheet extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.pop(context, FoodItemAction.delete),
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: const Text(
-                  'Удалить',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                label: Text(
+                  AppLocalizations.of(context)!.deleteAction,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: tc.error,
@@ -114,7 +114,7 @@ class FoodItemActionsSheet extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: AppButton(
-                text: 'Изменить',
+                text: AppLocalizations.of(context)!.editAction,
                 icon: Icons.edit_rounded,
                 onPressed: () => Navigator.pop(context, FoodItemAction.edit),
               ),

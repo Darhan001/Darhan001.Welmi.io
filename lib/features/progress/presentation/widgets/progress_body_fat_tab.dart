@@ -10,12 +10,13 @@ import 'package:lumina/features/progress/presentation/widgets/progress_common.da
 import 'package:lumina/features/progress/presentation/widgets/progress_line_chart.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
-String bodyFatMethodLabel(String method) => switch (method) {
-  'caliper' => 'калипер',
-  'scale' => 'весы',
-  'estimated' => 'оценка',
-  _ => 'вручную',
-};
+String bodyFatMethodLabel(AppLocalizations loc, String method) =>
+    switch (method) {
+      'caliper' => loc.bfMethodCaliper,
+      'scale' => loc.bfMethodScale,
+      'estimated' => loc.bfMethodEstimated,
+      _ => loc.bfMethodManual,
+    };
 
 /// Вкладка «% жира»: текущее значение, график, история и кнопки записи.
 class ProgressBodyFatTab extends StatelessWidget {
@@ -58,11 +59,10 @@ class ProgressBodyFatTab extends StatelessWidget {
             _BodyFatHistoryCard(entries: entries.take(5).toList()),
           ],
         ] else
-          const ProgressEmptyCard(
+          ProgressEmptyCard(
             icon: Icons.monitor_heart_outlined,
-            title: 'Пока нет данных о % жира',
-            subtitle:
-                'Запишите процент жира в теле, чтобы отслеживать изменения',
+            title: loc.bfEmptyTitle,
+            subtitle: loc.bfEmptySubtitle,
           ),
         const SizedBox(height: 24),
         AppButton(
@@ -96,16 +96,16 @@ class _BodyFatChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProgressCardHeader(
-            title: 'Динамика % жира',
+            title: AppLocalizations.of(context)!.bfDynamics,
             trailing: Text(
-              'за $rangeDays дн.',
+              AppLocalizations.of(context)!.rangeLastDaysShort(rangeDays),
               style: TextStyle(fontSize: 11, color: tc.textHint),
             ),
           ),
           const SizedBox(height: 14),
           if (points.isEmpty)
-            const ProgressChartPlaceholder(
-              text: 'За выбранный период нет записей % жира',
+            ProgressChartPlaceholder(
+              text: AppLocalizations.of(context)!.bfNoEntriesInPeriod,
             )
           else
             ProgressLineChart(
@@ -124,7 +124,7 @@ class _BodyFatChartCard extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Оценочный расчёт по замерам — не медицинское измерение.',
+                  AppLocalizations.of(context)!.bfEstimateDisclaimer,
                   style: TextStyle(
                     fontSize: 10,
                     color: tc.textHint,
@@ -145,9 +145,9 @@ class _BodyFatChartCard extends StatelessWidget {
                 width: double.infinity,
                 constraints: const BoxConstraints(minHeight: 44),
                 alignment: Alignment.center,
-                child: const Text(
-                  'Оценить по замерам',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context)!.bfEstimateFromMeasurements,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: ProgressColors.bodyFat,
@@ -176,7 +176,9 @@ class _BodyFatHistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ProgressCardHeader(title: 'История'),
+          ProgressCardHeader(
+            title: AppLocalizations.of(context)!.historyLabel,
+          ),
           const SizedBox(height: 16),
           for (final e in entries)
             Padding(
@@ -199,7 +201,7 @@ class _BodyFatHistoryCard extends StatelessWidget {
                   if (e.method != null) ...[
                     const SizedBox(width: 8),
                     Text(
-                      '(${bodyFatMethodLabel(e.method!)})',
+                      '(${bodyFatMethodLabel(AppLocalizations.of(context)!, e.method!)})',
                       style: TextStyle(fontSize: 10, color: tc.textHint),
                     ),
                   ],

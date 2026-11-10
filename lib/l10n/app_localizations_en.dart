@@ -2074,4 +2074,882 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeServingInfo => '1 serving · Welmi recipe';
+
+  @override
+  String get offErrRateLimited =>
+      'Open Food Facts is limiting requests. Wait a minute and try again.';
+
+  @override
+  String get offErrTimeout =>
+      'Open Food Facts did not respond in time. Check your connection and try again.';
+
+  @override
+  String get offErrNetwork =>
+      'Can\'t reach Open Food Facts. Check your connection and try again.';
+
+  @override
+  String get offErrRequest =>
+      'Couldn\'t load data from Open Food Facts. Please try again.';
+
+  @override
+  String offErrUnavailable(Object code) {
+    return 'Open Food Facts is temporarily unavailable (code $code).';
+  }
+
+  @override
+  String get offErrBadResponse =>
+      'Open Food Facts returned an invalid response. Try again later.';
+
+  @override
+  String offErrTooMany(Object seconds) {
+    return 'Too many requests. Try again in $seconds s.';
+  }
+
+  @override
+  String get foodDbSearchFailed =>
+      'Search failed. Check your connection and try again.';
+
+  @override
+  String get foodDbTitle => 'Food database';
+
+  @override
+  String get foodDbSubtitle => 'Open Food Facts · values per 100 g';
+
+  @override
+  String get foodDbSearchHint => 'Name or barcode';
+
+  @override
+  String get clearAction => 'Clear';
+
+  @override
+  String get foodDbScanBarcode => 'Scan barcode';
+
+  @override
+  String foodDbFound(Object count) {
+    return 'Found: $count';
+  }
+
+  @override
+  String get foodDbStartTitle => 'Find a product by name';
+
+  @override
+  String get foodDbStartBody =>
+      'Or scan the barcode on the package. Nutrition is recalculated for your portion.';
+
+  @override
+  String get foodDbStartFootnote =>
+      'The data is community-contributed and may be incomplete — we show “—” when a value is missing.';
+
+  @override
+  String get foodDbNotFoundTitle => 'Product not found';
+
+  @override
+  String get foodDbNothingFoundTitle => 'Nothing found';
+
+  @override
+  String get foodDbNotFoundBarcodeBody =>
+      'This barcode isn\'t in Open Food Facts. Check the digits or add the product manually.';
+
+  @override
+  String get foodDbNothingFoundBody =>
+      'Check the name or scan the barcode. You can also add the product manually in the diary.';
+
+  @override
+  String get foodDbSearching => 'Searching Open Food Facts...';
+
+  @override
+  String get foodNoNutritionData => 'No nutrition data';
+
+  @override
+  String get foodCaloriesOnly => 'Calories only, no macros';
+
+  @override
+  String get foodKcalPer100 => 'kcal / 100 g';
+
+  @override
+  String get macroProteinShort => 'P';
+
+  @override
+  String get macroFatShort => 'F';
+
+  @override
+  String get macroCarbsShort => 'C';
+
+  @override
+  String get foodPer100NoData => 'Nutrition: no data';
+
+  @override
+  String foodPer100(Object values) {
+    return 'Per 100 g: $values';
+  }
+
+  @override
+  String get foodKcalEstimatedNote =>
+      'Calories are estimated from macros: the database has no value.';
+
+  @override
+  String get foodMacrosIncompleteNote =>
+      'Not all nutrients are filled in — “—” means no data.';
+
+  @override
+  String get nutrientProtein => 'Protein';
+
+  @override
+  String get nutrientFat => 'Fat';
+
+  @override
+  String get nutrientCarbs => 'Carbs';
+
+  @override
+  String get nutrientCalories => 'Calories';
+
+  @override
+  String get foodNoNutritionCard =>
+      'Open Food Facts has no nutrition data for this product. Add the entry manually from the diary.';
+
+  @override
+  String foodServingPrefix(Object size) {
+    return 'serving $size';
+  }
+
+  @override
+  String get torchFailed => 'Couldn\'t turn on the flashlight';
+
+  @override
+  String barcodeNotFound(Object barcode) {
+    return 'No product with barcode $barcode was found in Open Food Facts. Check the package or add the entry manually.';
+  }
+
+  @override
+  String get barcodeLoadFailed =>
+      'Couldn\'t load the product. Check your connection and try again.';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get barcodeTitle => 'Barcode';
+
+  @override
+  String get barcodeAimHint => 'Point the camera at the package';
+
+  @override
+  String get torch => 'Flashlight';
+
+  @override
+  String get barcodeScanAgain => 'Scan again';
+
+  @override
+  String get barcodeFormatsNote =>
+      'Supports EAN-8, EAN-13, UPC-A, UPC-E and Code 128.\nData: Open Food Facts.';
+
+  @override
+  String get barcodeLookingUp => 'Looking up the product...';
+
+  @override
+  String get cameraUnavailable => 'Camera unavailable';
+
+  @override
+  String get cameraUnavailableHint =>
+      'Allow camera access in your phone settings or type the barcode into the search field.';
+
+  @override
+  String get foodNameEmpty => 'The name can\'t be empty.';
+
+  @override
+  String get foodKcalInvalid => 'Enter calories as a whole number.';
+
+  @override
+  String get foodGramsRange => 'Portion weight must be between 1 and 5000 g.';
+
+  @override
+  String get foodEditEntry => 'Edit entry';
+
+  @override
+  String get foodPortionWeightG => 'Portion weight, g';
+
+  @override
+  String get foodRecalcNote =>
+      'Calories and macros are recalculated automatically when the weight changes.';
+
+  @override
+  String get nutrientProteinG => 'Protein, g';
+
+  @override
+  String get nutrientFatG => 'Fat, g';
+
+  @override
+  String get nutrientCarbsG => 'Carbs, g';
+
+  @override
+  String get foodPortionTitle => 'Portion';
+
+  @override
+  String get foodPortionWeight => 'Portion weight';
+
+  @override
+  String get foodEnterGramsRange =>
+      'Enter a portion weight between 1 and 5000 g.';
+
+  @override
+  String get foodNoCaloriesCantSave =>
+      'The database has no calories for this product, so the entry can\'t be saved.';
+
+  @override
+  String gramsValue(Object value) {
+    return '$value g';
+  }
+
+  @override
+  String get foodEnterGramsToSee => 'Enter the weight to see the calculation.';
+
+  @override
+  String get foodDataSource => 'Data: Open Food Facts (open database)';
+
+  @override
+  String get diaryLoadError => 'Couldn\'t load data';
+
+  @override
+  String get diaryEntryUpdated => 'Entry updated';
+
+  @override
+  String get diaryEntryUpdateFailed => 'Couldn\'t update the entry';
+
+  @override
+  String get diaryDeleteEntryTitle => 'Delete entry?';
+
+  @override
+  String get diaryDeleteEntryBody =>
+      'The entry will be removed from the diary.';
+
+  @override
+  String diaryDeleteNamedBody(Object name) {
+    return '“$name” will be removed from the diary.';
+  }
+
+  @override
+  String get diaryEntryDeleted => 'Entry deleted';
+
+  @override
+  String get diaryEntryDeleteFailed => 'Couldn\'t delete the entry';
+
+  @override
+  String get diaryAddByVoice => 'Add by voice';
+
+  @override
+  String get diaryVoiceShort => 'Voice';
+
+  @override
+  String get diaryFindInDatabase => 'Find a product in Open Food Facts';
+
+  @override
+  String get diaryDatabaseShort => 'Database';
+
+  @override
+  String get deleteAction => 'Delete';
+
+  @override
+  String get editAction => 'Edit';
+
+  @override
+  String get voiceFoodClarifyFirst =>
+      'Specify the amount to get an approximate estimate.';
+
+  @override
+  String get voiceFoodGenericError => 'Something went wrong during recognition';
+
+  @override
+  String kcalApprox(Object kcal) {
+    return '~$kcal kcal';
+  }
+
+  @override
+  String kcalValue(Object kcal) {
+    return '$kcal kcal';
+  }
+
+  @override
+  String get voiceFoodClarifyHint => 'For example: 150 grams';
+
+  @override
+  String get voiceFoodClarify => 'Clarify';
+
+  @override
+  String voiceFoodListening(Object time) {
+    return 'Listening... ($time)';
+  }
+
+  @override
+  String get voiceFoodExample =>
+      'For example: “Two eggs, two slices of bread and a banana”';
+
+  @override
+  String get voiceFoodAnalyzing => 'AI is analyzing the food...';
+
+  @override
+  String get voiceFoodRecognized => 'Recognized:';
+
+  @override
+  String get voiceFoodEstimate => 'Approximate estimate:';
+
+  @override
+  String get voiceFoodHideEdit => 'Hide editing';
+
+  @override
+  String get voiceFoodEditData => 'Edit values';
+
+  @override
+  String voiceFoodTitle(Object meal) {
+    return 'Voice input: $meal';
+  }
+
+  @override
+  String get voiceFoodSubtitle => 'Say the dish and the amount';
+
+  @override
+  String homeDiarySummary(Object consumed, Object goal, Object protein) {
+    return '$consumed of $goal kcal · $protein g protein';
+  }
+
+  @override
+  String get bfEstimateTitle => 'Body fat estimate';
+
+  @override
+  String get bfEstimateNoData =>
+      'Not enough data for the calculation.\n\nRequired: height and sex in your profile, plus waist and neck measurements (and hips for women). Add measurements and try again.';
+
+  @override
+  String get bfEstimateMethodMale =>
+      'Calculated with the U.S. Navy method from waist and neck circumference and height.\n\nThis is an approximate estimate, not a measurement. The method\'s error is several percentage points.';
+
+  @override
+  String get bfEstimateMethodFemale =>
+      'Calculated with the U.S. Navy method from waist, neck and hip circumference and height.\n\nThis is an approximate estimate, not a measurement. The method\'s error is several percentage points.';
+
+  @override
+  String get bfCatExtremelyLow => '⚡ Extremely low';
+
+  @override
+  String get bfCatAthletic => '💪 Athletic';
+
+  @override
+  String get bfCatNormal => '✅ Normal';
+
+  @override
+  String get bfCatAboveNormal => '📈 Above normal';
+
+  @override
+  String get bfCatHigh => '⚠️ High';
+
+  @override
+  String get bfHeaderCaps => 'BODY FAT %';
+
+  @override
+  String get progressLast28Days => 'Last 28 days';
+
+  @override
+  String get legendHasEntry => 'has entry';
+
+  @override
+  String get legendToday => 'today';
+
+  @override
+  String get legendTapDay => 'tap a day';
+
+  @override
+  String get bfMethodCaliper => 'caliper';
+
+  @override
+  String get bfMethodScale => 'scale';
+
+  @override
+  String get bfMethodEstimated => 'estimate';
+
+  @override
+  String get bfMethodManual => 'manual';
+
+  @override
+  String get bfEmptyTitle => 'No body fat data yet';
+
+  @override
+  String get bfEmptySubtitle => 'Log your body fat percentage to track changes';
+
+  @override
+  String get bfDynamics => 'Body fat trend';
+
+  @override
+  String get bfNoEntriesInPeriod =>
+      'No body fat entries in the selected period';
+
+  @override
+  String get bfEstimateDisclaimer =>
+      'An estimate from measurements — not a medical measurement.';
+
+  @override
+  String get bfEstimateFromMeasurements => 'Estimate from measurements';
+
+  @override
+  String get historyLabel => 'History';
+
+  @override
+  String get progressNoEntriesDay => 'No entries for this day.';
+
+  @override
+  String bfEstimatedSuffix(Object label) {
+    return '$label (estimate)';
+  }
+
+  @override
+  String chartNeedTwoEntries(Object count) {
+    return 'At least 2 entries are needed in the selected period\n($count of 2)';
+  }
+
+  @override
+  String get measEmptyTitle => 'No measurements yet';
+
+  @override
+  String get measEmptySubtitle =>
+      'Log your chest, waist, hips and arm measurements';
+
+  @override
+  String get measLatest => 'Latest measurements';
+
+  @override
+  String get measDynamics => 'Measurements trend';
+
+  @override
+  String measNoEntriesInPeriod(Object metric) {
+    return 'No “$metric” measurements in the selected period';
+  }
+
+  @override
+  String get currentWeightCaps => 'CURRENT WEIGHT';
+
+  @override
+  String get bfChipCaliper => 'Caliper';
+
+  @override
+  String get bfChipScale => 'Scale';
+
+  @override
+  String get bfChipManual => 'Manual';
+
+  @override
+  String get bfRangeError => 'Enter a body fat value between 2 and 70%';
+
+  @override
+  String get bfEstimateSaved => 'Saved as an estimated value';
+
+  @override
+  String get progressEmptyTitle => 'Nothing to show yet';
+
+  @override
+  String get progressEmptySubtitle =>
+      'Start logging weight, measurements and body fat\nto see your progress';
+
+  @override
+  String get progressRecordFirstWeight => 'Log your first weight';
+
+  @override
+  String daysCount(Object days) {
+    return '$days days';
+  }
+
+  @override
+  String get progressActivityOfEntries => 'Logging activity';
+
+  @override
+  String get workoutGeneralFocus => 'General';
+
+  @override
+  String get premiumGateTitle => 'This feature is available in Welmi Premium';
+
+  @override
+  String get premiumGateSubtitle =>
+      'Access is checked against a verified store subscription.';
+
+  @override
+  String get premiumGateButton => 'View Premium';
+
+  @override
+  String profileBmrTdee(Object bmr, Object tdee) {
+    return 'BMR $bmr kcal · TDEE $tdee kcal';
+  }
+
+  @override
+  String get unsavedChangesBody =>
+      'You have unsaved changes. They will be lost.';
+
+  @override
+  String get stayAction => 'Stay';
+
+  @override
+  String get leaveAction => 'Leave';
+
+  @override
+  String get profileUserUnknown => 'Couldn\'t identify the user';
+
+  @override
+  String get profilePhotoNotUploaded => 'The photo didn\'t upload';
+
+  @override
+  String profileSavedWithWarning(Object warning) {
+    return 'Profile saved. $warning';
+  }
+
+  @override
+  String get profileLoading => 'Loading profile...';
+
+  @override
+  String get profileMyProfile => 'My profile';
+
+  @override
+  String get profileWeightGoal => 'Weight goal';
+
+  @override
+  String get profileCurrent => 'Current';
+
+  @override
+  String get profileLeftToLose => 'Left to lose';
+
+  @override
+  String get profileLeftToGain => 'Left to gain';
+
+  @override
+  String get profileTarget => 'Target';
+
+  @override
+  String get subscriptionActiveShort => 'Active';
+
+  @override
+  String get subscriptionChoose => 'Choose';
+
+  @override
+  String get subManage => 'Manage subscription';
+
+  @override
+  String get subActiveMessage => 'Subscription is active.';
+
+  @override
+  String get subOfferUnavailable => 'Offer unavailable';
+
+  @override
+  String subContinuePrice(Object price) {
+    return 'Continue · $price';
+  }
+
+  @override
+  String get subRestore => 'Restore purchases';
+
+  @override
+  String get subRefreshOffers => 'Refresh offers';
+
+  @override
+  String get subTermsNote =>
+      'Payment and subscription terms are shown by the store before you confirm the purchase. You can manage auto-renewal in the store settings.';
+
+  @override
+  String get subHeroSubtitle => 'More ways to take care of yourself';
+
+  @override
+  String get subInPremium => 'In Premium';
+
+  @override
+  String get subFeatureScanner => 'Smart food scanner';
+
+  @override
+  String get subFeatureWorkouts => 'AI workout plans';
+
+  @override
+  String get subFeatureAnalytics => 'Detailed analytics and measurements';
+
+  @override
+  String get subFeatureHealth => 'Health Connect sync';
+
+  @override
+  String get subFeatureNoAds => 'No ads';
+
+  @override
+  String get subPlanMonth => 'Monthly';
+
+  @override
+  String get subPlanYear => 'Yearly';
+
+  @override
+  String get subPremiumActive => 'Premium is active';
+
+  @override
+  String subValidUntil(Object date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get subErrStore => 'Store error. Please try again.';
+
+  @override
+  String get subErrStoreUnavailableDevice =>
+      'The store is not available on this device.';
+
+  @override
+  String get subErrStoreUnavailable => 'The store is currently unavailable.';
+
+  @override
+  String get subErrProductsMissing =>
+      'Plans are not available in the store yet. Try again later.';
+
+  @override
+  String get subErrProductsLoad => 'Couldn\'t load store offers.';
+
+  @override
+  String get subErrEntitlement => 'Couldn\'t check Premium status.';
+
+  @override
+  String get subErrPlanNotFound => 'The plan was not found in the store.';
+
+  @override
+  String get subErrSignInToSubscribe =>
+      'Sign in to your Welmi account to subscribe.';
+
+  @override
+  String get subErrPurchaseNotStarted =>
+      'The store didn\'t start the purchase. Please try again.';
+
+  @override
+  String get subErrPurchaseStart => 'Couldn\'t start the purchase.';
+
+  @override
+  String get subErrSignInToRestore =>
+      'Sign in to Welmi to restore your subscription.';
+
+  @override
+  String get subErrRestore => 'Couldn\'t restore purchases.';
+
+  @override
+  String get subErrManageUnsupported =>
+      'You can manage the subscription on a device with the App Store or Google Play.';
+
+  @override
+  String get subErrManageOpen => 'Couldn\'t open subscription management.';
+
+  @override
+  String get subErrPurchaseFailed => 'The store didn\'t complete the purchase.';
+
+  @override
+  String get subErrVerification =>
+      'The purchase was received, but server verification didn\'t finish. Tap “Restore purchases” a bit later.';
+
+  @override
+  String get subNoticeNoActive => 'No active subscription found.';
+
+  @override
+  String get subNoticeCancelled => 'Purchase cancelled.';
+
+  @override
+  String get subNoticeActivated => 'Welmi Premium is activated.';
+
+  @override
+  String get calcStatusAnalyzing => 'Analyzing your data...';
+
+  @override
+  String get calcStatusMetabolism => 'Calculating metabolism...';
+
+  @override
+  String get calcStatusMacros => 'Calculating calories and macros...';
+
+  @override
+  String get calcStatusPersonalReady => 'Your personal plan is ready! ✅';
+
+  @override
+  String get calcStatusReady => 'Your plan is ready! ✅';
+
+  @override
+  String get calcProteinShort => 'protein';
+
+  @override
+  String get calcFatShort => 'fat';
+
+  @override
+  String get calcCarbsShort => 'carbs';
+
+  @override
+  String get chooseLanguage => 'Choose language';
+
+  @override
+  String get languageLabel => 'Language / Тил';
+
+  @override
+  String get perDaySuffix => '/day';
+
+  @override
+  String get splashTagline => 'Your path to health';
+
+  @override
+  String get model3dTimeout => 'The model took too long to load';
+
+  @override
+  String get model3dRotateHint => 'Drag to rotate the model';
+
+  @override
+  String get model3dFailed => 'The 3D model didn\'t load';
+
+  @override
+  String model3dFailedReason(Object reason) {
+    return '3D model: $reason';
+  }
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String rangeLastDaysShort(Object days) {
+    return 'last $days d';
+  }
+
+  @override
+  String get filtersTitle => 'Filters';
+
+  @override
+  String get recipeSearchHint => 'Find a dish or ingredient';
+
+  @override
+  String get recipePopular => 'Popular';
+
+  @override
+  String recipeResults(Object count) {
+    return 'Results · $count';
+  }
+
+  @override
+  String get resetAction => 'Reset';
+
+  @override
+  String get recipeFilterProteinFrom => 'Protein from';
+
+  @override
+  String get recipeFilterTimeUpTo => 'Time up to';
+
+  @override
+  String get recipeFilterDiet => 'Diet';
+
+  @override
+  String get recipeDietVegetarian => 'Vegetarian';
+
+  @override
+  String get recipeDietSugarFree => 'Sugar-free';
+
+  @override
+  String get showAction => 'Show';
+
+  @override
+  String get anyOption => 'Any';
+
+  @override
+  String filterUpToKcal(Object value) {
+    return 'Up to $value kcal';
+  }
+
+  @override
+  String filterFromGrams(Object value) {
+    return 'From $value g';
+  }
+
+  @override
+  String filterUpToMinutes(Object value) {
+    return 'Up to $value min';
+  }
+
+  @override
+  String recipeMetaWeight(Object grams, Object minutes) {
+    return '$minutes min · $grams g';
+  }
+
+  @override
+  String recipeMetaProtein(Object minutes, Object protein) {
+    return '$minutes min · P $protein g';
+  }
+
+  @override
+  String get favoriteRemove => 'Remove from favorites';
+
+  @override
+  String get favoriteAdd => 'Add to favorites';
+
+  @override
+  String get recipeNothingFound =>
+      'Nothing found.\nTry changing the search or filters.';
+
+  @override
+  String get recipesComingSoon => 'Recipes are coming soon.';
+
+  @override
+  String recipeNoPhotoLabel(Object label) {
+    return 'No photo: $label';
+  }
+
+  @override
+  String get recipePhotoSoon => 'Photo coming soon';
+
+  @override
+  String get recipeAddToMeal => 'Add to a meal';
+
+  @override
+  String get recipeBonAppetit => 'Enjoy your meal!';
+
+  @override
+  String recipePhotoCredit(Object credit) {
+    return 'Photo: $credit';
+  }
+
+  @override
+  String recipeStep(Object step) {
+    return 'Step $step';
+  }
+
+  @override
+  String get recipeCook => 'Cook';
+
+  @override
+  String get recipeAsk => 'Ask';
+
+  @override
+  String recipeAskPrompt(
+    Object carbs,
+    Object fat,
+    Object kcal,
+    Object protein,
+    Object title,
+  ) {
+    return 'I\'m cooking “$title” ($kcal kcal, P $protein g, F $fat g, C $carbs g). Tell me:';
+  }
+
+  @override
+  String get recipeNutritionTitle => 'Calories and nutrients';
+
+  @override
+  String recipeMicros(Object fiber, Object sodium, Object sugar) {
+    return 'Fiber $fiber g · Sugar $sugar g · Sodium $sodium mg';
+  }
+
+  @override
+  String get recipeNutritionDisclaimer =>
+      'Calories and macros are estimates per serving based on the ingredients. TheMealDB does not publish nutrition data.';
+
+  @override
+  String recipeIngredients(Object servings) {
+    return 'Ingredients · servings: $servings';
+  }
+
+  @override
+  String get recipeCooking => 'Preparation';
+
+  @override
+  String recipeStepOf(Object step, Object total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get recipeFinish => 'Finish';
+
+  @override
+  String get recipeNextStep => 'Next step';
 }

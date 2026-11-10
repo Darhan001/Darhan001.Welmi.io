@@ -94,6 +94,9 @@ class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed || kIsWeb) return;
     if (!_auth.isSignedIn) return;
     if (_isLocked) return;
+    // Приложение могло пролежать в фоне через полночь — тогда счётчики дня
+    // относятся ко вчера и их нужно загрузить заново.
+    unawaited(DailyTracker().refreshIfDayChanged());
     // На холодном старте инициализация ещё может идти — расписание
     // восстановит сама bootstrap(), повторно инициализировать не нужно.
     if (!NotificationService().isInitialized) return;

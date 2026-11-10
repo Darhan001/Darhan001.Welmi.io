@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class TargetWeightStep extends StatefulWidget {
   final double currentWeight;
@@ -49,21 +50,22 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
     final diff = (widget.currentWeight - widget.targetWeight).round();
-    final diffText = diff > 0
-        ? '-$diff кг от текущего веса'
-        : '+${diff.abs()} кг от текущего веса';
+    final loc = AppLocalizations.of(context)!;
+    final diffText = loc.onboardingTargetFromCurrent(
+      diff > 0 ? '−$diff' : '+${diff.abs()}',
+    );
 
     return Column(
       children: [
         const SizedBox(height: 40),
         Text(
-          'Какой вес хочешь\nдостичь?',
+          loc.onboardingTargetTitle,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium,
         ),
         const SizedBox(height: 8),
         Text(
-          'Установи цель, к которой мы будем стремиться',
+          loc.onboardingTargetSubtitle,
           textAlign: TextAlign.center,
           style: TextStyle(color: tc.textSecondary, fontSize: 14),
         ),
@@ -145,7 +147,7 @@ class _TargetWeightStepState extends State<TargetWeightStep> {
             ),
             if (isSelected)
               TextSpan(
-                text: ' кг',
+                text: ' ${AppLocalizations.of(context)!.kg}',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,

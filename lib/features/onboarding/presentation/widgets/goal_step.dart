@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/models/onboarding_data.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class GoalStep extends StatelessWidget {
   final GoalType? selectedGoal;
@@ -16,18 +17,19 @@ class GoalStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
           const SizedBox(height: 40),
           Text(
-            'Какая у тебя цель?',
+            loc.onboardingGoalTitle,
             style: Theme.of(context).textTheme.displayMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Выбери главное направление, чтобы мы могли\nнастроить план питания.',
+            loc.onboardingGoalSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: tc.textSecondary,
@@ -37,22 +39,22 @@ class GoalStep extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           _buildOptionCard(
-            'Похудеть',
-            'Снижение веса за счет создания\nбезопасного дефицита калорий',
+            loc.onboardingLoseWeight,
+            loc.onboardingLoseWeightDesc,
             Icons.trending_down,
             GoalType.loseWeight,
             tc,
           ),
           _buildOptionCard(
-            'Набрать массу',
-            'Профицит калорий и фокус на\nбазис для роста мышц',
+            loc.onboardingGainWeight,
+            loc.onboardingGainWeightDesc,
             Icons.fitness_center,
             GoalType.gainWeight,
             tc,
           ),
           _buildOptionCard(
-            'Поддерживать вес',
-            'Баланс энергии для сохранения\nтекущей формы и здоровья',
+            loc.onboardingMaintainWeight,
+            loc.onboardingMaintainWeightDesc,
             Icons.balance,
             GoalType.maintainWeight,
             tc,

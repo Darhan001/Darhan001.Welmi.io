@@ -38,10 +38,10 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
     try {
       _purchaseSubscription = InAppPurchase.instance.purchaseStream.listen(
         _onPurchasesUpdated,
-        onError: (Object error) => _setError('Ошибка магазина: $error'),
+        onError: (Object error) => _fail(SubscriptionIssue.store, error),
       );
     } catch (error) {
-      _setError('Магазин покупок недоступен на этом устройстве: $error');
+      _fail(SubscriptionIssue.storeUnavailableOnDevice, error);
     }
 
     try {
@@ -81,7 +81,7 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
           _state.copyWith(
             phase: SubscriptionPhase.error,
             isStoreAvailable: false,
-            errorMessage: 'Магазин покупок сейчас недоступен.',
+            issue: SubscriptionIssue.storeUnavailable,
           ),
         );
         return;
@@ -96,24 +96,21 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
         throw StateError(response.error!.message);
       }
       final missing = premiumProductIds.difference(products.keys.toSet());
+      if (missing.isNotEmpty) {
+        // Подсказка разработчику: идентификаторы товаров в консоли магазина.
+        debugPrint('Subscription products missing: ${missing.join(', ')}');
+      }
       _setState(
         _state.copyWith(
           phase: SubscriptionPhase.ready,
           products: products,
           isStoreAvailable: true,
-          errorMessage: missing.isEmpty
-              ? null
-              : 'Не найдены товары: ${missing.join(', ')}. Проверьте Product ID в магазине.',
+          issue: missing.isEmpty ? null : SubscriptionIssue.productsMissing,
           clearError: missing.isEmpty,
         ),
       );
     } catch (error) {
-      _setState(
-        _state.copyWith(
-          phase: SubscriptionPhase.error,
-          errorMessage: 'Не удалось загрузить предложения магазина: $error',
-        ),
-      );
+      _fail(SubscriptionIssue.productsLoad, error);
     }
   }
 
@@ -145,12 +142,13 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
       _scheduleEntitlementRefresh(entitlement.expiresAt);
     } catch (error) {
       // Fail closed: do not grant Premium from a cached/local value.
+      debugPrint('Subscription entitlement check failed: $error');
       _setState(
         _state.copyWith(
           isPremium: false,
           clearExpiration: true,
           phase: SubscriptionPhase.error,
-          errorMessage: 'Не удалось проверить статус Premium: $error',
+          issue: SubscriptionIssue.entitlement,
         ),
       );
     }
@@ -159,11 +157,11 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> purchase(String productId) async {
     final product = _state.products[productId];
     if (product == null) {
-      _setError('Тариф не найден в магазине.');
+      _fail(SubscriptionIssue.planNotFound);
       return;
     }
     if (AuthService().userId == null) {
-      _setError('Для оформления подписки войдите в аккаунт Welmi.');
+      _fail(SubscriptionIssue.signInToSubscribe);
       return;
     }
     _setState(
@@ -179,21 +177,16 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
         userId: AuthService().userId,
       );
       if (!started) {
-        _setState(
-          _state.copyWith(
-            phase: SubscriptionPhase.error,
-            errorMessage: 'Магазин не запустил покупку. Попробуйте ещё раз.',
-          ),
-        );
+        _fail(SubscriptionIssue.purchaseNotStarted);
       }
     } catch (error) {
-      _setError('Не удалось начать покупку: $error');
+      _fail(SubscriptionIssue.purchaseStart, error);
     }
   }
 
   Future<void> restorePurchases() async {
     if (AuthService().userId == null) {
-      _setError('Войдите в Welmi, чтобы восстановить подписку.');
+      _fail(SubscriptionIssue.signInToRestore);
       return;
     }
     _setState(
@@ -215,12 +208,12 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
         _setState(
           _state.copyWith(
             phase: SubscriptionPhase.ready,
-            notice: 'Активная подписка не найдена.',
+            notice: SubscriptionNotice.noActiveSubscription,
           ),
         );
       }
     } catch (error) {
-      _setError('Не удалось восстановить покупки: $error');
+      _fail(SubscriptionIssue.restore, error);
     } finally {
       _restoreCompleter = null;
     }
@@ -239,13 +232,11 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       uri = Uri.parse('https://apps.apple.com/account/subscriptions');
     } else {
-      _setError(
-        'Управлять подпиской можно на устройстве с App Store или Google Play.',
-      );
+      _fail(SubscriptionIssue.manageUnsupported);
       return;
     }
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      _setError('Не удалось открыть управление подпиской.');
+      _fail(SubscriptionIssue.manageOpen);
     }
   }
 
@@ -259,13 +250,13 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
           _setState(
             _state.copyWith(
               phase: SubscriptionPhase.cancelled,
-              notice: 'Покупка отменена.',
+              notice: SubscriptionNotice.purchaseCancelled,
             ),
           );
           await _completeIfNeeded(purchase);
           break;
         case PurchaseStatus.error:
-          _setError(purchase.error?.message ?? 'Магазин не завершил покупку.');
+          _fail(SubscriptionIssue.purchaseFailed, purchase.error?.message);
           await _completeIfNeeded(purchase);
           break;
         case PurchaseStatus.purchased:
@@ -279,27 +270,25 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _verifyAndRefresh(PurchaseDetails purchase) async {
     try {
       if (!premiumProductIds.contains(purchase.productID)) {
-        throw StateError('Неизвестный Product ID: ${purchase.productID}');
+        throw StateError('Unknown product id: ${purchase.productID}');
       }
       final verified = await _repository.verifyPurchase(purchase);
       if (!verified) {
-        throw StateError('Магазин не подтвердил право на Premium.');
+        throw StateError('Store did not confirm the entitlement');
       }
       await refreshEntitlement();
       if (_state.isPremium) {
         _setState(
           _state.copyWith(
             phase: SubscriptionPhase.success,
-            notice: 'Welmi Premium активирован.',
+            notice: SubscriptionNotice.activated,
           ),
         );
       } else {
-        throw StateError('Сервер ещё не обновил статус подписки.');
+        throw StateError('Entitlement is not active after verification');
       }
     } catch (error) {
-      _setError(
-        'Покупка получена, но серверная проверка не завершилась: $error',
-      );
+      _fail(SubscriptionIssue.verification, error);
     } finally {
       await _completeIfNeeded(purchase);
       if (purchase.status == PurchaseStatus.restored &&
@@ -315,13 +304,19 @@ class SubscriptionService extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _setError(String message) => _setState(
-    _state.copyWith(
-      phase: SubscriptionPhase.error,
-      errorMessage: message,
-      clearNotice: true,
-    ),
-  );
+  /// Переводит экран в состояние ошибки. [detail] (исключение, ответ
+  /// магазина) пишется только в лог: раньше его текст показывался
+  /// пользователю вместе с внутренними подробностями.
+  void _fail(SubscriptionIssue issue, [Object? detail]) {
+    if (detail != null) debugPrint('Subscription ${issue.name}: $detail');
+    _setState(
+      _state.copyWith(
+        phase: SubscriptionPhase.error,
+        issue: issue,
+        clearNotice: true,
+      ),
+    );
+  }
 
   void _setState(SubscriptionState state) {
     _state = state;

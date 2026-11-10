@@ -28,17 +28,41 @@ import 'package:http/http.dart' as http;
 import 'package:lumina/features/food_database/data/open_food_facts_parser.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
 
-/// Ошибка обращения к Open Food Facts с готовым для показа сообщением.
+/// Почему запрос к Open Food Facts не выполнен.
+enum OpenFoodFactsFailure {
+  /// Сервер ответил 429.
+  rateLimited,
+
+  /// Локальный лимит частоты: см. [OpenFoodFactsException.retryAfter].
+  tooManyRequests,
+  timeout,
+  network,
+  request,
+
+  /// HTTP-ошибка: см. [OpenFoodFactsException.statusCode].
+  unavailable,
+  badResponse,
+}
+
+/// Ошибка обращения к Open Food Facts. Текст для пользователя строит UI
+/// из локализации (`openFoodFactsMessage`), а не сервис.
 class OpenFoodFactsException implements Exception {
-  final String message;
+  final OpenFoodFactsFailure failure;
 
   /// Сколько осталось до конца локального ограничения частоты запросов.
   final Duration? retryAfter;
 
-  const OpenFoodFactsException(this.message, {this.retryAfter});
+  /// Код ответа для [OpenFoodFactsFailure.unavailable].
+  final int? statusCode;
+
+  const OpenFoodFactsException(
+    this.failure, {
+    this.retryAfter,
+    this.statusCode,
+  });
 
   @override
-  String toString() => message;
+  String toString() => 'OpenFoodFactsException(${failure.name})';
 }
 
 class OpenFoodFactsService {
@@ -67,9 +91,6 @@ class OpenFoodFactsService {
   static const String _fields =
       'code,product_name,product_name_ru,product_name_en,generic_name,'
       'brands,nutriments,quantity,serving_size,nutriscore_grade';
-
-  static const String _rateLimitedMessage =
-      'Open Food Facts ограничил частоту запросов. Подожди минуту и повтори.';
 
   DateTime? _lastSearchAt;
   DateTime? _lastProductAt;
@@ -178,29 +199,24 @@ class OpenFoodFactsService {
           .get(uri, headers: const {'User-Agent': _userAgent})
           .timeout(_requestTimeout);
     } on TimeoutException {
-      throw const OpenFoodFactsException(
-        'Open Food Facts не ответил вовремя. Проверь интернет и повтори.',
-      );
+      throw const OpenFoodFactsException(OpenFoodFactsFailure.timeout);
     } on http.ClientException catch (e) {
-      debugPrint('Open Food Facts: нет связи: $e');
-      throw const OpenFoodFactsException(
-        'Нет связи с Open Food Facts. Проверь интернет и повтори.',
-      );
+      debugPrint('Open Food Facts: no connection: $e');
+      throw const OpenFoodFactsException(OpenFoodFactsFailure.network);
     } catch (e) {
-      debugPrint('Open Food Facts: ошибка запроса: $e');
-      throw const OpenFoodFactsException(
-        'Не удалось загрузить данные из Open Food Facts. Попробуй ещё раз.',
-      );
+      debugPrint('Open Food Facts: request failed: $e');
+      throw const OpenFoodFactsException(OpenFoodFactsFailure.request);
     }
   }
 
   void _throwOnHttpError(http.Response response) {
     if (response.statusCode == 429) {
-      throw const OpenFoodFactsException(_rateLimitedMessage);
+      throw const OpenFoodFactsException(OpenFoodFactsFailure.rateLimited);
     }
     if (response.statusCode != 200) {
       throw OpenFoodFactsException(
-        'Open Food Facts временно недоступен (код ${response.statusCode}).',
+        OpenFoodFactsFailure.unavailable,
+        statusCode: response.statusCode,
       );
     }
   }
@@ -212,9 +228,7 @@ class OpenFoodFactsService {
     } on FormatException {
       // Ниже вернём понятную ошибку.
     }
-    throw const OpenFoodFactsException(
-      'Open Food Facts вернул некорректный ответ. Попробуй позже.',
-    );
+    throw const OpenFoodFactsException(OpenFoodFactsFailure.badResponse);
   }
 
   void _checkRateLimit(DateTime? lastRequestAt, Duration interval) {
@@ -224,7 +238,7 @@ class OpenFoodFactsService {
 
     final wait = interval - elapsed;
     throw OpenFoodFactsException(
-      'Слишком много запросов. Повтори через ${wait.inSeconds + 1} с.',
+      OpenFoodFactsFailure.tooManyRequests,
       retryAfter: wait,
     );
   }

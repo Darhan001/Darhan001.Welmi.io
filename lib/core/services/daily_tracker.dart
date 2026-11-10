@@ -39,6 +39,22 @@ class DailyTracker extends ChangeNotifier {
   DateTime? _lastUpdated;
   double? _lastWeightForGoals;
 
+  /// День, за который сейчас загружены счётчики.
+  DateTime? _loadedDay;
+
+  /// Идущая загрузка дня: параллельные вызовы ждут её, а не запускают свою.
+  Future<void>? _loadInFlight;
+
+  /// Счётчики относятся к прошедшему дню (приложение пережило полночь).
+  bool get isDayStale => _loadedDay != null && _loadedDay != _today;
+
+  /// Перезагружает день, если наступили новые сутки. Вызывается при
+  /// возврате в приложение: раньше после полуночи экран продолжал
+  /// показывать вчерашние калории и воду, а новая вода прибавлялась к ним.
+  Future<void> refreshIfDayChanged() async {
+    if (isDayStale) await loadToday();
+  }
+
   /// Калории по приёмам пищи
   Map<MealType, int> _mealCalories = {for (final t in MealType.values) t: 0};
 
@@ -169,11 +185,20 @@ class DailyTracker extends ChangeNotifier {
 
   String get _uid => AuthService().userId ?? 'anon';
 
-  Future<void> loadToday() async {
+  /// Загружает данные текущего дня. Экраны вкладок вызывают метод
+  /// одновременно — повторный вызов присоединяется к уже идущей загрузке.
+  Future<void> loadToday() =>
+      _loadInFlight ??= _loadToday().whenComplete(() => _loadInFlight = null);
+
+  Future<void> _loadToday() async {
     final userId = AuthService().userId;
     if (userId == null) return;
 
     _isLoading = true;
+    // Наступил новый день — вчерашние значения не должны остаться на экране,
+    // даже если сеть недоступна и кэша за сегодня ещё нет.
+    if (isDayStale) _resetTotals();
+    _loadedDay = _today;
     loadGoalsFromProfile();
 
     // Сначала пытаемся отправить отложенные операции (если сеть вернулась)
@@ -184,9 +209,11 @@ class DailyTracker extends ChangeNotifier {
     try {
       final today = _today;
       // Независимые запросы — параллельно: раньше шли по очереди, и на
-      // медленной сети открытие дня ждало четыре круга до сервера.
-      final (_, water, logs, foodEntries) = await (
-        _supabase.getOrCreateDailyNutrition(userId, today),
+      // медленной сети открытие дня ждало несколько кругов до сервера.
+      // Строка daily_nutrition здесь больше не создаётся: её никто не
+      // читал, а при одновременной загрузке с двух вкладок второй insert
+      // нарушал UNIQUE(user_id, date), и день ошибочно помечался офлайн.
+      final (water, logs, foodEntries) = await (
         _supabase.getDailyWaterTotal(userId, today),
         _supabase.getActivityLogs(userId, from: today),
         _supabase.getFoodEntries(userId, today),
@@ -195,7 +222,9 @@ class DailyTracker extends ChangeNotifier {
         foodEntries.map((e) => e.id).toList(),
       );
 
-      _totalWaterMl = water;
+      // Вода, которая ещё ждёт отправки, на сервере не учтена — прибавляем,
+      // иначе выпитое офлайн пропадало с экрана до следующей синхронизации.
+      _totalWaterMl = water + pendingWaterMl(_pendingOps, today);
 
       // Шаги из логов активности (логи отсортированы по убыванию)
       final latest = logs.isNotEmpty ? logs.first : null;
@@ -296,6 +325,7 @@ class DailyTracker extends ChangeNotifier {
   Future<void> addWater(int ml) async {
     final userId = AuthService().userId;
     if (userId == null) return;
+    await refreshIfDayChanged();
     _totalWaterMl += ml;
     _lastUpdated = DateTime.now();
     notifyListeners();
@@ -395,7 +425,7 @@ class DailyTracker extends ChangeNotifier {
     return true;
   }
 
-  void resetAll() {
+  void _resetTotals() {
     _totalCalories = 0;
     _totalWaterMl = 0;
     _totalSteps = 0;
@@ -404,6 +434,11 @@ class DailyTracker extends ChangeNotifier {
     _totalCarbs = 0;
     _burnedCalories = 0;
     _mealCalories = {for (final t in MealType.values) t: 0};
+  }
+
+  void resetAll() {
+    _resetTotals();
+    _loadedDay = null;
     _pendingOps = [];
     _lastWeightForGoals = null;
     _lastUpdated = null;

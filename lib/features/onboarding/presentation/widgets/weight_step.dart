@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class WeightStep extends StatefulWidget {
   final double weight;
@@ -43,7 +44,7 @@ class _WeightStepState extends State<WeightStep> {
       children: [
         const SizedBox(height: 40),
         Text(
-          'Сколько ты весишь\nсейчас?',
+          AppLocalizations.of(context)!.onboardingWeightTitle,
           textAlign: TextAlign.center,
           style: GoogleFonts.notoSerif(
             fontSize: 32,
@@ -53,12 +54,16 @@ class _WeightStepState extends State<WeightStep> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Это поможет нам рассчитать твою норму калорий',
+          AppLocalizations.of(context)!.onboardingWeightSubtitle,
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(color: tc.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
-        _buildUnitToggle('кг', 'фунты', tc),
+        _buildUnitToggle(
+          AppLocalizations.of(context)!.kg,
+          AppLocalizations.of(context)!.lbs,
+          tc,
+        ),
         const SizedBox(height: 60),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +80,7 @@ class _WeightStepState extends State<WeightStep> {
             ),
             const SizedBox(width: 4),
             Text(
-              'кг',
+              AppLocalizations.of(context)!.kg,
               style: GoogleFonts.inter(
                 fontSize: 24,
                 color: tc.textSecondary,

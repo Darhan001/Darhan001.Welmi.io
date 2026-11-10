@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Ожидание: AI определяет продукты по распознанному тексту.
 class VoiceFoodProcessingView extends StatelessWidget {
@@ -22,7 +23,7 @@ class VoiceFoodProcessingView extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'AI анализирует продукты...',
+            AppLocalizations.of(context)!.voiceFoodAnalyzing,
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w700,

@@ -4,14 +4,16 @@ import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/core/widgets/app_card.dart';
 import 'package:lumina/features/progress/domain/progress_metrics.dart';
 import 'package:lumina/features/progress/presentation/widgets/progress_common.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
-String bodyFatCategoryLabel(BodyFatCategory c) => switch (c) {
-  BodyFatCategory.extremelyLow => '⚡ Экстремально низкий',
-  BodyFatCategory.athletic => '💪 Спортивный',
-  BodyFatCategory.normal => '✅ Нормальный',
-  BodyFatCategory.aboveNormal => '📈 Выше нормы',
-  BodyFatCategory.high => '⚠️ Высокий',
-};
+String bodyFatCategoryLabel(AppLocalizations loc, BodyFatCategory c) =>
+    switch (c) {
+      BodyFatCategory.extremelyLow => loc.bfCatExtremelyLow,
+      BodyFatCategory.athletic => loc.bfCatAthletic,
+      BodyFatCategory.normal => loc.bfCatNormal,
+      BodyFatCategory.aboveNormal => loc.bfCatAboveNormal,
+      BodyFatCategory.high => loc.bfCatHigh,
+    };
 
 /// Текущий % жира: значение, категория и шкала 5–40 %.
 class BodyFatSummaryCard extends StatelessWidget {
@@ -30,7 +32,7 @@ class BodyFatSummaryCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            '% ЖИРА В ТЕЛЕ',
+            AppLocalizations.of(context)!.bfHeaderCaps,
             style: TextStyle(
               fontSize: 10,
               color: tc.textHint,
@@ -70,7 +72,10 @@ class BodyFatSummaryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              bodyFatCategoryLabel(bodyFatCategory(percent)),
+              bodyFatCategoryLabel(
+                AppLocalizations.of(context)!,
+                bodyFatCategory(percent),
+              ),
               style: const TextStyle(
                 color: ProgressColors.weight,
                 fontWeight: FontWeight.w700,

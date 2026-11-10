@@ -168,7 +168,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (userId == null || userId.isEmpty) {
       showWelmiSnackbar(
         context,
-        '❌ Не удалось определить пользователя',
+        AppLocalizations.of(context)!.profileUserUnknown,
         icon: Icons.error_outline,
       );
       return;
@@ -229,7 +229,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           profile.photoUrl = photoUrl;
         } catch (e) {
           debugPrint('❌ Photo upload error: $e');
-          photoWarning = 'Фото не загрузилось';
+          photoWarning = loc.profilePhotoNotUploaded;
         }
       }
 
@@ -258,8 +258,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         showWelmiSnackbar(
           context,
           photoWarning != null
-              ? '✅ Профиль сохранён. ⚠️ $photoWarning'
-              : '✅ Профиль обновлён!',
+              ? loc.profileSavedWithWarning(photoWarning)
+              : loc.profileUpdated,
           icon: photoWarning != null
               ? Icons.warning_amber_rounded
               : Icons.check_circle,
@@ -271,7 +271,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (mounted) {
         showWelmiSnackbar(
           context,
-          '❌ Ошибка сохранения',
+          loc.saveError,
           icon: Icons.error_outline,
         );
       }
@@ -302,7 +302,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 CircularProgressIndicator(color: tc.primary),
                 const SizedBox(height: 16),
                 Text(
-                  'Загружаем профиль...',
+                  AppLocalizations.of(context)!.profileLoading,
                   style: GoogleFonts.inter(
                     color: tc.textSecondary,
                     fontWeight: FontWeight.w600,
@@ -318,7 +318,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final auth = AuthService();
     final name = _nameCtrl.text.trim().isNotEmpty
         ? _nameCtrl.text.trim()
-        : auth.displayName ?? 'Пользователь';
+        : auth.displayName ?? AppLocalizations.of(context)!.userDefault;
 
     return PopScope(
       canPop: !_hasChanges,

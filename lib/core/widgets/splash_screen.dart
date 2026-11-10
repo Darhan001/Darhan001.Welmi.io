@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/app_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
   final WidgetBuilder? onComplete;
@@ -222,7 +223,7 @@ class _SplashScreenState extends State<SplashScreen>
               const SizedBox(height: 8),
 
               Text(
-                'Твой путь к здоровью',
+                AppLocalizations.of(context)!.splashTagline,
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,

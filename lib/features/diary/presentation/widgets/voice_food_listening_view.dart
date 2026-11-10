@@ -103,7 +103,9 @@ class _VoiceFoodListeningViewState extends State<VoiceFoodListeningView>
         ),
         const SizedBox(height: 18),
         Text(
-          'Слушаю... (${_formatTimer(widget.duration)})',
+          AppLocalizations.of(context)!.voiceFoodListening(
+            _formatTimer(widget.duration),
+          ),
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -119,7 +121,7 @@ class _VoiceFoodListeningViewState extends State<VoiceFoodListeningView>
             return Text(
               live.isNotEmpty
                   ? '«$live»'
-                  : 'Например: «Два яйца, два куска хлеба и банан»',
+                  : AppLocalizations.of(context)!.voiceFoodExample,
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,

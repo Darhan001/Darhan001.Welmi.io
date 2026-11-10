@@ -1,5 +1,29 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+/// Причина ошибки подписки. Текст для пользователя строит экран из
+/// локализации; технические детали уходят только в лог.
+enum SubscriptionIssue {
+  store,
+  storeUnavailableOnDevice,
+  storeUnavailable,
+  productsMissing,
+  productsLoad,
+  entitlement,
+  planNotFound,
+  signInToSubscribe,
+  purchaseNotStarted,
+  purchaseStart,
+  signInToRestore,
+  restore,
+  manageUnsupported,
+  manageOpen,
+  purchaseFailed,
+  verification,
+}
+
+/// Информационное сообщение экрана подписки (не ошибка).
+enum SubscriptionNotice { noActiveSubscription, purchaseCancelled, activated }
+
 enum SubscriptionPhase {
   loading,
   ready,
@@ -21,7 +45,7 @@ class SubscriptionState {
     this.isPremium = false,
     this.productId,
     this.expiresAt,
-    this.errorMessage,
+    this.issue,
     this.notice,
   });
 
@@ -31,8 +55,8 @@ class SubscriptionState {
   final bool isPremium;
   final String? productId;
   final DateTime? expiresAt;
-  final String? errorMessage;
-  final String? notice;
+  final SubscriptionIssue? issue;
+  final SubscriptionNotice? notice;
 
   bool get isBusy =>
       phase == SubscriptionPhase.loading ||
@@ -47,9 +71,9 @@ class SubscriptionState {
     String? productId,
     DateTime? expiresAt,
     bool clearExpiration = false,
-    String? errorMessage,
+    SubscriptionIssue? issue,
     bool clearError = false,
-    String? notice,
+    SubscriptionNotice? notice,
     bool clearNotice = false,
   }) => SubscriptionState(
     phase: phase ?? this.phase,
@@ -58,7 +82,7 @@ class SubscriptionState {
     isPremium: isPremium ?? this.isPremium,
     productId: productId ?? this.productId,
     expiresAt: clearExpiration ? null : expiresAt ?? this.expiresAt,
-    errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+    issue: clearError ? null : issue ?? this.issue,
     notice: clearNotice ? null : notice ?? this.notice,
   );
 }

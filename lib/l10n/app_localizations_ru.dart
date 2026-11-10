@@ -2083,4 +2083,879 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recipeServingInfo => '1 порция · рецепт Welmi';
+
+  @override
+  String get offErrRateLimited =>
+      'Open Food Facts ограничил частоту запросов. Подожди минуту и повтори.';
+
+  @override
+  String get offErrTimeout =>
+      'Open Food Facts не ответил вовремя. Проверь интернет и повтори.';
+
+  @override
+  String get offErrNetwork =>
+      'Нет связи с Open Food Facts. Проверь интернет и повтори.';
+
+  @override
+  String get offErrRequest =>
+      'Не удалось загрузить данные из Open Food Facts. Попробуй ещё раз.';
+
+  @override
+  String offErrUnavailable(Object code) {
+    return 'Open Food Facts временно недоступен (код $code).';
+  }
+
+  @override
+  String get offErrBadResponse =>
+      'Open Food Facts вернул некорректный ответ. Попробуй позже.';
+
+  @override
+  String offErrTooMany(Object seconds) {
+    return 'Слишком много запросов. Повтори через $seconds с.';
+  }
+
+  @override
+  String get foodDbSearchFailed =>
+      'Не удалось выполнить поиск. Проверь интернет и повтори.';
+
+  @override
+  String get foodDbTitle => 'База продуктов';
+
+  @override
+  String get foodDbSubtitle => 'Open Food Facts · значения на 100 г';
+
+  @override
+  String get foodDbSearchHint => 'Название или штрихкод';
+
+  @override
+  String get clearAction => 'Очистить';
+
+  @override
+  String get foodDbScanBarcode => 'Сканировать штрихкод';
+
+  @override
+  String foodDbFound(Object count) {
+    return 'Найдено: $count';
+  }
+
+  @override
+  String get foodDbStartTitle => 'Найди продукт по названию';
+
+  @override
+  String get foodDbStartBody =>
+      'Или отсканируй штрихкод упаковки. Пищевая ценность пересчитается на твою порцию.';
+
+  @override
+  String get foodDbStartFootnote =>
+      'Данные добровольные и могут быть неполными — мы показываем «—», если значения нет в базе.';
+
+  @override
+  String get foodDbNotFoundTitle => 'Продукт не найден';
+
+  @override
+  String get foodDbNothingFoundTitle => 'Ничего не найдено';
+
+  @override
+  String get foodDbNotFoundBarcodeBody =>
+      'Этого штрихкода нет в Open Food Facts. Проверь цифры или добавь продукт вручную.';
+
+  @override
+  String get foodDbNothingFoundBody =>
+      'Проверь название или отсканируй штрихкод. Продукт можно добавить вручную в дневнике.';
+
+  @override
+  String get foodDbSearching => 'Ищем в Open Food Facts...';
+
+  @override
+  String get foodNoNutritionData => 'Нет данных о пищевой ценности';
+
+  @override
+  String get foodCaloriesOnly => 'Калорийность без БЖУ';
+
+  @override
+  String get foodKcalPer100 => 'ккал / 100 г';
+
+  @override
+  String get macroProteinShort => 'Б';
+
+  @override
+  String get macroFatShort => 'Ж';
+
+  @override
+  String get macroCarbsShort => 'У';
+
+  @override
+  String get foodPer100NoData => 'Пищевая ценность: нет данных';
+
+  @override
+  String foodPer100(Object values) {
+    return 'На 100 г: $values';
+  }
+
+  @override
+  String get foodKcalEstimatedNote =>
+      'Калорийность рассчитана из БЖУ: в базе её нет.';
+
+  @override
+  String get foodMacrosIncompleteNote =>
+      'В базе заполнены не все нутриенты — «—» означает «нет данных».';
+
+  @override
+  String get nutrientProtein => 'Белки';
+
+  @override
+  String get nutrientFat => 'Жиры';
+
+  @override
+  String get nutrientCarbs => 'Углеводы';
+
+  @override
+  String get nutrientCalories => 'Калории';
+
+  @override
+  String get foodNoNutritionCard =>
+      'В Open Food Facts у этого продукта нет пищевой ценности. Добавь запись вручную из дневника.';
+
+  @override
+  String foodServingPrefix(Object size) {
+    return 'порция $size';
+  }
+
+  @override
+  String get torchFailed => 'Не удалось включить фонарик';
+
+  @override
+  String barcodeNotFound(Object barcode) {
+    return 'Продукт со штрихкодом $barcode не найден в Open Food Facts. Проверь упаковку или добавь запись вручную.';
+  }
+
+  @override
+  String get barcodeLoadFailed =>
+      'Не удалось загрузить продукт. Проверь интернет и повтори.';
+
+  @override
+  String get back => 'Назад';
+
+  @override
+  String get barcodeTitle => 'Штрихкод';
+
+  @override
+  String get barcodeAimHint => 'Наведи камеру на упаковку';
+
+  @override
+  String get torch => 'Фонарик';
+
+  @override
+  String get barcodeScanAgain => 'Сканировать снова';
+
+  @override
+  String get barcodeFormatsNote =>
+      'Поддерживаются EAN-8, EAN-13, UPC-A, UPC-E и Code 128.\nДанные: Open Food Facts.';
+
+  @override
+  String get barcodeLookingUp => 'Ищем продукт...';
+
+  @override
+  String get cameraUnavailable => 'Камера недоступна';
+
+  @override
+  String get cameraUnavailableHint =>
+      'Разреши доступ к камере в настройках телефона или введи штрихкод в строке поиска.';
+
+  @override
+  String get foodNameEmpty => 'Название не может быть пустым.';
+
+  @override
+  String get foodKcalInvalid => 'Укажи калорийность целым числом.';
+
+  @override
+  String get foodGramsRange => 'Масса порции должна быть от 1 до 5000 г.';
+
+  @override
+  String get foodEditEntry => 'Изменить запись';
+
+  @override
+  String get foodPortionWeightG => 'Масса порции, г';
+
+  @override
+  String get foodRecalcNote =>
+      'При изменении массы калории и БЖУ пересчитываются автоматически.';
+
+  @override
+  String get nutrientProteinG => 'Белки, г';
+
+  @override
+  String get nutrientFatG => 'Жиры, г';
+
+  @override
+  String get nutrientCarbsG => 'Углеводы, г';
+
+  @override
+  String get foodPortionTitle => 'Порция';
+
+  @override
+  String get foodPortionWeight => 'Масса порции';
+
+  @override
+  String get foodEnterGramsRange => 'Укажи массу порции от 1 до 5000 г.';
+
+  @override
+  String get foodNoCaloriesCantSave =>
+      'В базе нет калорийности этого продукта — запись нельзя сохранить.';
+
+  @override
+  String gramsValue(Object value) {
+    return '$value г';
+  }
+
+  @override
+  String get foodEnterGramsToSee => 'Введи массу, чтобы увидеть расчёт.';
+
+  @override
+  String get foodDataSource => 'Данные: Open Food Facts (открытая база)';
+
+  @override
+  String get diaryLoadError => 'Ошибка загрузки данных';
+
+  @override
+  String get diaryEntryUpdated => 'Запись обновлена';
+
+  @override
+  String get diaryEntryUpdateFailed => 'Не удалось обновить запись';
+
+  @override
+  String get diaryDeleteEntryTitle => 'Удалить запись?';
+
+  @override
+  String get diaryDeleteEntryBody => 'Запись будет удалена из дневника.';
+
+  @override
+  String diaryDeleteNamedBody(Object name) {
+    return '«$name» будет удалена из дневника.';
+  }
+
+  @override
+  String get diaryEntryDeleted => 'Запись удалена';
+
+  @override
+  String get diaryEntryDeleteFailed => 'Не удалось удалить запись';
+
+  @override
+  String get diaryAddByVoice => 'Добавить голосом';
+
+  @override
+  String get diaryVoiceShort => 'Голос';
+
+  @override
+  String get diaryFindInDatabase => 'Найти продукт в Open Food Facts';
+
+  @override
+  String get diaryDatabaseShort => 'База';
+
+  @override
+  String get deleteAction => 'Удалить';
+
+  @override
+  String get editAction => 'Изменить';
+
+  @override
+  String get voiceFoodClarifyFirst =>
+      'Уточните количество продукта, чтобы получить примерную оценку.';
+
+  @override
+  String get voiceFoodGenericError => 'Произошла ошибка при распознавании';
+
+  @override
+  String kcalApprox(Object kcal) {
+    return '~$kcal ккал';
+  }
+
+  @override
+  String kcalValue(Object kcal) {
+    return '$kcal ккал';
+  }
+
+  @override
+  String get voiceFoodClarifyHint => 'Например: 150 грамм';
+
+  @override
+  String get voiceFoodClarify => 'Уточнить';
+
+  @override
+  String voiceFoodListening(Object time) {
+    return 'Слушаю... ($time)';
+  }
+
+  @override
+  String get voiceFoodExample =>
+      'Например: «Два яйца, два куска хлеба и банан»';
+
+  @override
+  String get voiceFoodAnalyzing => 'AI анализирует продукты...';
+
+  @override
+  String get voiceFoodRecognized => 'Распознано:';
+
+  @override
+  String get voiceFoodEstimate => 'Примерная оценка:';
+
+  @override
+  String get voiceFoodHideEdit => 'Скрыть правку';
+
+  @override
+  String get voiceFoodEditData => 'Изменить данные';
+
+  @override
+  String voiceFoodTitle(Object meal) {
+    return 'Голосовой ввод: $meal';
+  }
+
+  @override
+  String get voiceFoodSubtitle => 'Назови блюдо и количество';
+
+  @override
+  String homeDiarySummary(Object consumed, Object goal, Object protein) {
+    return '$consumed из $goal ккал · $proteinг белка';
+  }
+
+  @override
+  String get bfEstimateTitle => 'Оценка % жира';
+
+  @override
+  String get bfEstimateNoData =>
+      'Недостаточно данных для расчёта.\n\nНужны: рост и пол в профиле, а также замеры талии и шеи (для женщин — ещё и бёдер). Добавьте замеры и попробуйте снова.';
+
+  @override
+  String get bfEstimateMethodMale =>
+      'Расчёт по методу ВМФ США (Navy) на основе обхватов талии, шеи и роста.\n\nЭто приблизительная оценка, а не измерение. Погрешность метода — несколько процентных пунктов.';
+
+  @override
+  String get bfEstimateMethodFemale =>
+      'Расчёт по методу ВМФ США (Navy) на основе обхватов талии, шеи, бёдер и роста.\n\nЭто приблизительная оценка, а не измерение. Погрешность метода — несколько процентных пунктов.';
+
+  @override
+  String get bfCatExtremelyLow => '⚡ Экстремально низкий';
+
+  @override
+  String get bfCatAthletic => '💪 Спортивный';
+
+  @override
+  String get bfCatNormal => '✅ Нормальный';
+
+  @override
+  String get bfCatAboveNormal => '📈 Выше нормы';
+
+  @override
+  String get bfCatHigh => '⚠️ Высокий';
+
+  @override
+  String get bfHeaderCaps => '% ЖИРА В ТЕЛЕ';
+
+  @override
+  String get progressLast28Days => 'Последние 28 дней';
+
+  @override
+  String get legendHasEntry => 'есть запись';
+
+  @override
+  String get legendToday => 'сегодня';
+
+  @override
+  String get legendTapDay => 'нажмите на день';
+
+  @override
+  String get bfMethodCaliper => 'калипер';
+
+  @override
+  String get bfMethodScale => 'весы';
+
+  @override
+  String get bfMethodEstimated => 'оценка';
+
+  @override
+  String get bfMethodManual => 'вручную';
+
+  @override
+  String get bfEmptyTitle => 'Пока нет данных о % жира';
+
+  @override
+  String get bfEmptySubtitle =>
+      'Запишите процент жира в теле, чтобы отслеживать изменения';
+
+  @override
+  String get bfDynamics => 'Динамика % жира';
+
+  @override
+  String get bfNoEntriesInPeriod => 'За выбранный период нет записей % жира';
+
+  @override
+  String get bfEstimateDisclaimer =>
+      'Оценочный расчёт по замерам — не медицинское измерение.';
+
+  @override
+  String get bfEstimateFromMeasurements => 'Оценить по замерам';
+
+  @override
+  String get historyLabel => 'История';
+
+  @override
+  String get progressNoEntriesDay => 'За этот день записей нет.';
+
+  @override
+  String bfEstimatedSuffix(Object label) {
+    return '$label (оценка)';
+  }
+
+  @override
+  String chartNeedTwoEntries(Object count) {
+    return 'Нужно минимум 2 записи за выбранный период\n($count из 2)';
+  }
+
+  @override
+  String get measEmptyTitle => 'Пока нет замеров';
+
+  @override
+  String get measEmptySubtitle => 'Запишите объёмы груди, талии, бёдер и рук';
+
+  @override
+  String get measLatest => 'Последние замеры';
+
+  @override
+  String get measDynamics => 'Динамика замеров';
+
+  @override
+  String measNoEntriesInPeriod(Object metric) {
+    return 'За выбранный период нет замеров «$metric»';
+  }
+
+  @override
+  String get currentWeightCaps => 'ТЕКУЩИЙ ВЕС';
+
+  @override
+  String get bfChipCaliper => 'Калипер';
+
+  @override
+  String get bfChipScale => 'Весы';
+
+  @override
+  String get bfChipManual => 'Вручную';
+
+  @override
+  String get bfRangeError => 'Введи % жира от 2 до 70';
+
+  @override
+  String get bfEstimateSaved => 'Оценка сохранена как оценочное значение';
+
+  @override
+  String get progressEmptyTitle => 'Нет данных для отображения';
+
+  @override
+  String get progressEmptySubtitle =>
+      'Начните записывать вес, замеры и процент жира,\nчтобы увидеть свой прогресс';
+
+  @override
+  String get progressRecordFirstWeight => 'Записать первый вес';
+
+  @override
+  String daysCount(Object days) {
+    return '$days дней';
+  }
+
+  @override
+  String get progressActivityOfEntries => 'Активность записей';
+
+  @override
+  String get workoutGeneralFocus => 'Общая';
+
+  @override
+  String get premiumGateTitle => 'Эта функция доступна в Welmi Premium';
+
+  @override
+  String get premiumGateSubtitle =>
+      'Статус проверяется по подтверждённой подписке магазина.';
+
+  @override
+  String get premiumGateButton => 'Посмотреть Premium';
+
+  @override
+  String profileBmrTdee(Object bmr, Object tdee) {
+    return 'BMR $bmr ккал · TDEE $tdee ккал';
+  }
+
+  @override
+  String get unsavedChangesBody =>
+      'У вас есть несохранённые изменения. Они будут потеряны.';
+
+  @override
+  String get stayAction => 'Остаться';
+
+  @override
+  String get leaveAction => 'Выйти';
+
+  @override
+  String get profileUserUnknown => 'Не удалось определить пользователя';
+
+  @override
+  String get profilePhotoNotUploaded => 'Фото не загрузилось';
+
+  @override
+  String profileSavedWithWarning(Object warning) {
+    return 'Профиль сохранён. $warning';
+  }
+
+  @override
+  String get profileLoading => 'Загружаем профиль...';
+
+  @override
+  String get profileMyProfile => 'Мой профиль';
+
+  @override
+  String get profileWeightGoal => 'Цель веса';
+
+  @override
+  String get profileCurrent => 'Текущий';
+
+  @override
+  String get profileLeftToLose => 'Осталось сбросить';
+
+  @override
+  String get profileLeftToGain => 'Осталось набрать';
+
+  @override
+  String get profileTarget => 'Целевой';
+
+  @override
+  String get subscriptionActiveShort => 'Активна';
+
+  @override
+  String get subscriptionChoose => 'Выбрать';
+
+  @override
+  String get subManage => 'Управлять подпиской';
+
+  @override
+  String get subActiveMessage => 'Подписка активна.';
+
+  @override
+  String get subOfferUnavailable => 'Предложение недоступно';
+
+  @override
+  String subContinuePrice(Object price) {
+    return 'Продолжить · $price';
+  }
+
+  @override
+  String get subRestore => 'Восстановить покупки';
+
+  @override
+  String get subRefreshOffers => 'Обновить предложения';
+
+  @override
+  String get subTermsNote =>
+      'Оплата и условия подписки показываются магазином перед подтверждением покупки. Управлять автопродлением можно в настройках магазина.';
+
+  @override
+  String get subHeroSubtitle => 'Больше возможностей для заботы о себе';
+
+  @override
+  String get subInPremium => 'В Premium';
+
+  @override
+  String get subFeatureScanner => 'Умный сканер еды';
+
+  @override
+  String get subFeatureWorkouts => 'Планы тренировок от AI';
+
+  @override
+  String get subFeatureAnalytics => 'Подробная аналитика и замеры';
+
+  @override
+  String get subFeatureHealth => 'Синхронизация с Health Connect';
+
+  @override
+  String get subFeatureNoAds => 'Без рекламы';
+
+  @override
+  String get subPlanMonth => 'На месяц';
+
+  @override
+  String get subPlanYear => 'На год';
+
+  @override
+  String get subPremiumActive => 'Premium активен';
+
+  @override
+  String subValidUntil(Object date) {
+    return 'Действует до $date';
+  }
+
+  @override
+  String get subErrStore => 'Ошибка магазина. Попробуйте ещё раз.';
+
+  @override
+  String get subErrStoreUnavailableDevice =>
+      'Магазин покупок недоступен на этом устройстве.';
+
+  @override
+  String get subErrStoreUnavailable => 'Магазин покупок сейчас недоступен.';
+
+  @override
+  String get subErrProductsMissing =>
+      'Тарифы пока недоступны в магазине. Попробуйте позже.';
+
+  @override
+  String get subErrProductsLoad => 'Не удалось загрузить предложения магазина.';
+
+  @override
+  String get subErrEntitlement => 'Не удалось проверить статус Premium.';
+
+  @override
+  String get subErrPlanNotFound => 'Тариф не найден в магазине.';
+
+  @override
+  String get subErrSignInToSubscribe =>
+      'Для оформления подписки войдите в аккаунт Welmi.';
+
+  @override
+  String get subErrPurchaseNotStarted =>
+      'Магазин не запустил покупку. Попробуйте ещё раз.';
+
+  @override
+  String get subErrPurchaseStart => 'Не удалось начать покупку.';
+
+  @override
+  String get subErrSignInToRestore =>
+      'Войдите в Welmi, чтобы восстановить подписку.';
+
+  @override
+  String get subErrRestore => 'Не удалось восстановить покупки.';
+
+  @override
+  String get subErrManageUnsupported =>
+      'Управлять подпиской можно на устройстве с App Store или Google Play.';
+
+  @override
+  String get subErrManageOpen => 'Не удалось открыть управление подпиской.';
+
+  @override
+  String get subErrPurchaseFailed => 'Магазин не завершил покупку.';
+
+  @override
+  String get subErrVerification =>
+      'Покупка получена, но серверная проверка не завершилась. Нажмите «Восстановить покупки» чуть позже.';
+
+  @override
+  String get subNoticeNoActive => 'Активная подписка не найдена.';
+
+  @override
+  String get subNoticeCancelled => 'Покупка отменена.';
+
+  @override
+  String get subNoticeActivated => 'Welmi Premium активирован.';
+
+  @override
+  String get calcStatusAnalyzing => 'Анализируем твои данные...';
+
+  @override
+  String get calcStatusMetabolism => 'Рассчитываем метаболизм...';
+
+  @override
+  String get calcStatusMacros => 'Считаем калории и БЖУ...';
+
+  @override
+  String get calcStatusPersonalReady => 'Персональный план готов! ✅';
+
+  @override
+  String get calcStatusReady => 'План готов! ✅';
+
+  @override
+  String get calcProteinShort => 'белки';
+
+  @override
+  String get calcFatShort => 'жиры';
+
+  @override
+  String get calcCarbsShort => 'углев.';
+
+  @override
+  String get chooseLanguage => 'Выбери язык';
+
+  @override
+  String get languageLabel => 'Язык / Тил';
+
+  @override
+  String get perDaySuffix => '/день';
+
+  @override
+  String get splashTagline => 'Твой путь к здоровью';
+
+  @override
+  String get model3dTimeout => 'Модель не успела загрузиться';
+
+  @override
+  String get model3dRotateHint => 'Вращай модель пальцем';
+
+  @override
+  String get model3dFailed => '3D-модель не загрузилась';
+
+  @override
+  String model3dFailedReason(Object reason) {
+    return '3D-модель: $reason';
+  }
+
+  @override
+  String get tryAgain => 'Попробовать снова';
+
+  @override
+  String rangeLastDaysShort(Object days) {
+    return 'за $days дн.';
+  }
+
+  @override
+  String get filtersTitle => 'Фильтры';
+
+  @override
+  String get recipeSearchHint => 'Найти блюдо или ингредиент';
+
+  @override
+  String get recipePopular => 'Популярные';
+
+  @override
+  String recipeResults(Object count) {
+    return 'Результаты · $count';
+  }
+
+  @override
+  String get resetAction => 'Сбросить';
+
+  @override
+  String get recipeFilterProteinFrom => 'Белок от';
+
+  @override
+  String get recipeFilterTimeUpTo => 'Время до';
+
+  @override
+  String get recipeFilterDiet => 'Питание';
+
+  @override
+  String get recipeDietVegetarian => 'Вегетарианские';
+
+  @override
+  String get recipeDietSugarFree => 'Без сахара';
+
+  @override
+  String get showAction => 'Показать';
+
+  @override
+  String get anyOption => 'Любое';
+
+  @override
+  String filterUpToKcal(Object value) {
+    return 'До $value ккал';
+  }
+
+  @override
+  String filterFromGrams(Object value) {
+    return 'От $value г';
+  }
+
+  @override
+  String filterUpToMinutes(Object value) {
+    return 'До $value мин';
+  }
+
+  @override
+  String recipeMetaWeight(Object grams, Object minutes) {
+    return '$minutes мин · $grams г';
+  }
+
+  @override
+  String recipeMetaProtein(Object minutes, Object protein) {
+    return '$minutes мин · Б $protein г';
+  }
+
+  @override
+  String get favoriteRemove => 'Убрать из избранного';
+
+  @override
+  String get favoriteAdd => 'В избранное';
+
+  @override
+  String get recipeNothingFound =>
+      'Ничего не найдено.\nПопробуйте изменить запрос или фильтры.';
+
+  @override
+  String get recipesComingSoon => 'Рецепты скоро появятся.';
+
+  @override
+  String recipeNoPhotoLabel(Object label) {
+    return 'Нет фото: $label';
+  }
+
+  @override
+  String get recipePhotoSoon => 'Фото скоро появится';
+
+  @override
+  String get recipeAddToMeal => 'Добавить в приём пищи';
+
+  @override
+  String get recipeBonAppetit => 'Приятного аппетита!';
+
+  @override
+  String recipePhotoCredit(Object credit) {
+    return 'Фото: $credit';
+  }
+
+  @override
+  String recipeStep(Object step) {
+    return 'Шаг $step';
+  }
+
+  @override
+  String get recipeCook => 'Готовить';
+
+  @override
+  String get recipeAsk => 'Спросить';
+
+  @override
+  String recipeAskPrompt(
+    Object carbs,
+    Object fat,
+    Object kcal,
+    Object protein,
+    Object title,
+  ) {
+    return 'Я готовлю рецепт «$title» ($kcal ккал, Б $protein г, Ж $fat г, У $carbs г). Подскажи:';
+  }
+
+  @override
+  String get recipeNutritionTitle => 'Калории и нутриенты';
+
+  @override
+  String recipeMicros(Object fiber, Object sodium, Object sugar) {
+    return 'Клетчатка $fiber г · Сахар $sugar г · Натрий $sodium мг';
+  }
+
+  @override
+  String get recipeNutritionDisclaimer =>
+      'КБЖУ — оценочные значения на порцию по составу рецепта. TheMealDB не публикует пищевую ценность.';
+
+  @override
+  String recipeIngredients(Object servings) {
+    return 'Ингредиенты · $servings порция';
+  }
+
+  @override
+  String get recipeCooking => 'Приготовление';
+
+  @override
+  String recipeStepOf(Object step, Object total) {
+    return 'Шаг $step из $total';
+  }
+
+  @override
+  String get recipeFinish => 'Завершить';
+
+  @override
+  String get recipeNextStep => 'Следующий шаг';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/meal_plan/presentation/widgets/recipe_design.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Фото блюда.
 ///
@@ -61,7 +62,7 @@ class _RecipeImagePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
     return Semantics(
-      label: 'Нет фото: $label',
+      label: AppLocalizations.of(context)!.recipeNoPhotoLabel(label),
       image: true,
       child: Container(
         decoration: BoxDecoration(
@@ -85,7 +86,7 @@ class _RecipeImagePlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Фото скоро появится',
+              AppLocalizations.of(context)!.recipePhotoSoon,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10,

@@ -63,13 +63,14 @@ class FoodProduct {
   bool get hasCompleteMacros =>
       proteinPer100g != null && fatPer100g != null && carbsPer100g != null;
 
-  /// Вторая строка для списка: бренд, фасовка и Serving size.
-  String get subtitle {
+  /// Вторая строка для списка: бренд, фасовка и размер порции.
+  /// [servingLabel] оформляет размер порции на языке приложения.
+  String subtitleWith(String Function(String size) servingLabel) {
     final parts = <String>[
       if (brand != null && brand!.trim().isNotEmpty) brand!.trim(),
       if (quantity != null && quantity!.trim().isNotEmpty) quantity!.trim(),
       if (servingSize != null && servingSize!.trim().isNotEmpty)
-        'порция ${servingSize!.trim()}',
+        servingLabel(servingSize!.trim()),
     ];
     return parts.join(' · ');
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class HeightStep extends StatefulWidget {
   final double height;
@@ -43,7 +44,7 @@ class _HeightStepState extends State<HeightStep> {
       children: [
         const SizedBox(height: 40),
         Text(
-          'Какой у тебя рост?',
+          AppLocalizations.of(context)!.onboardingHeightTitle,
           textAlign: TextAlign.center,
           style: GoogleFonts.notoSerif(
             fontSize: 32,
@@ -53,12 +54,16 @@ class _HeightStepState extends State<HeightStep> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Это поможет нам точнее рассчитать твою дневную норму',
+          AppLocalizations.of(context)!.onboardingHeightSubtitle,
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(color: tc.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
-        _buildUnitToggle('см', 'футы', tc),
+        _buildUnitToggle(
+          AppLocalizations.of(context)!.cm,
+          AppLocalizations.of(context)!.ft,
+          tc,
+        ),
         const SizedBox(height: 20),
         Expanded(
           child: Row(
@@ -103,7 +108,7 @@ class _HeightStepState extends State<HeightStep> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'см',
+                        AppLocalizations.of(context)!.cm,
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           color: tc.textSecondary,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class WelcomeStep extends StatelessWidget {
   const WelcomeStep({super.key});
@@ -30,13 +31,13 @@ class WelcomeStep extends StatelessWidget {
           ),
           const SizedBox(height: 48),
           Text(
-            'Добро\nпожаловать!',
+            AppLocalizations.of(context)!.onboardingWelcome,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.displayLarge,
           ),
           const SizedBox(height: 20),
           Text(
-            'Ответь на несколько вопросов, и мы составим твой персональный план питания',
+            AppLocalizations.of(context)!.onboardingWelcomeSubtitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 15,

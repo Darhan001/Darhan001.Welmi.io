@@ -81,7 +81,7 @@ class _DiaryPageState extends State<DiaryPage> {
       await _tracker.loadToday();
     } catch (e) {
       debugPrint('Diary load failed: $e');
-      error = 'Ошибка загрузки данных';
+      error = 'load';
       meals = DiaryMeals.empty();
     }
 
@@ -192,9 +192,9 @@ class _DiaryPageState extends State<DiaryPage> {
 
     await _runAndReload(
       () => _repository.update(item, draft),
-      success: 'Запись обновлена',
+      success: AppLocalizations.of(context)!.diaryEntryUpdated,
       successIcon: Icons.check_circle,
-      failure: 'Не удалось обновить запись',
+      failure: AppLocalizations.of(context)!.diaryEntryUpdateFailed,
     );
   }
 
@@ -202,19 +202,20 @@ class _DiaryPageState extends State<DiaryPage> {
     if (item.id.isEmpty || item.foodEntryId.isEmpty) return;
     final confirmed = await AppDialog.confirm(
       context,
-      title: 'Удалить запись?',
+      title: AppLocalizations.of(context)!.diaryDeleteEntryTitle,
       message: item.name.isEmpty
-          ? 'Запись будет удалена из дневника.'
-          : '«${item.name}» будет удалена из дневника.',
+          ? AppLocalizations.of(context)!.diaryDeleteEntryBody
+          : AppLocalizations.of(context)!.diaryDeleteNamedBody(item.name),
+      confirmLabel: AppLocalizations.of(context)!.deleteAction,
       cancelLabel: AppLocalizations.of(context)!.cancel,
     );
     if (!mounted || confirmed != true) return;
 
     await _runAndReload(
       () => _repository.delete(item),
-      success: 'Запись удалена',
+      success: AppLocalizations.of(context)!.diaryEntryDeleted,
       successIcon: Icons.delete_outline,
-      failure: 'Не удалось удалить запись',
+      failure: AppLocalizations.of(context)!.diaryEntryDeleteFailed,
     );
   }
 
@@ -261,7 +262,10 @@ class _DiaryPageState extends State<DiaryPage> {
         ),
       );
     } else if (_errorMessage != null) {
-      body = AppErrorState(message: _errorMessage!, onRetry: _loadTodayData);
+      body = AppErrorState(
+        message: AppLocalizations.of(context)!.diaryLoadError,
+        onRetry: _loadTodayData,
+      );
     } else {
       body = SingleChildScrollView(
         physics: const BouncingScrollPhysics(),

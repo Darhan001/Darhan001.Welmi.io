@@ -150,7 +150,7 @@ class _ProgressPageState extends State<ProgressPage> {
       return;
     }
     if (mounted) {
-      AppSnackbar.success(context, 'Оценка сохранена как оценочное значение');
+      AppSnackbar.success(context, loc.bfEstimateSaved);
     }
   }
 
@@ -216,12 +216,10 @@ class _ProgressPageState extends State<ProgressPage> {
                   ] else
                     ProgressEmptyCard(
                       icon: Icons.bar_chart_rounded,
-                      title: 'Нет данных для отображения',
-                      subtitle:
-                          'Начните записывать вес, замеры и процент '
-                          'жира,\nчтобы увидеть свой прогресс',
+                      title: loc.progressEmptyTitle,
+                      subtitle: loc.progressEmptySubtitle,
                       action: AppButton(
-                        text: 'Записать первый вес',
+                        text: loc.progressRecordFirstWeight,
                         icon: Icons.add,
                         fullWidth: false,
                         onPressed: _recordWeight,
@@ -267,7 +265,7 @@ class _ProgressPageState extends State<ProgressPage> {
       children: [
         for (final days in progressRangeOptions)
           ProgressPill(
-            label: '$days дней',
+            label: AppLocalizations.of(context)!.daysCount(days),
             selected: _rangeDays == days,
             onTap: () => setState(() => _rangeDays = days),
           ),
@@ -304,7 +302,10 @@ class _ProgressPageState extends State<ProgressPage> {
               onPressed: _recordWeight,
             ),
             const SizedBox(height: 32),
-            const ProgressCardHeader(title: 'Активность записей', fontSize: 16),
+            ProgressCardHeader(
+              title: loc.progressActivityOfEntries,
+              fontSize: 16,
+            ),
             const SizedBox(height: 16),
             ProgressActivityHeatmap(
               activeDays: _userData.activeDays,

@@ -2085,4 +2085,883 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get recipeServingInfo => '1 порция · Welmi рецепти';
+
+  @override
+  String get offErrRateLimited =>
+      'Open Food Facts суроолордун жыштыгын чектеди. Бир мүнөт күтүп, кайра аракет кыл.';
+
+  @override
+  String get offErrTimeout =>
+      'Open Food Facts убагында жооп берген жок. Интернетти текшерип, кайра аракет кыл.';
+
+  @override
+  String get offErrNetwork =>
+      'Open Food Facts менен байланыш жок. Интернетти текшерип, кайра аракет кыл.';
+
+  @override
+  String get offErrRequest =>
+      'Open Food Facts базасынан маалымат жүктөлгөн жок. Кайра аракет кыл.';
+
+  @override
+  String offErrUnavailable(Object code) {
+    return 'Open Food Facts убактылуу жеткиликсиз (код $code).';
+  }
+
+  @override
+  String get offErrBadResponse =>
+      'Open Food Facts туура эмес жооп кайтарды. Кийинчерээк аракет кыл.';
+
+  @override
+  String offErrTooMany(Object seconds) {
+    return 'Суроолор өтө көп. $seconds сек кийин кайталап көр.';
+  }
+
+  @override
+  String get foodDbSearchFailed =>
+      'Издөө ишке ашкан жок. Интернетти текшерип, кайра аракет кыл.';
+
+  @override
+  String get foodDbTitle => 'Азыктар базасы';
+
+  @override
+  String get foodDbSubtitle => 'Open Food Facts · 100 г үчүн маанилер';
+
+  @override
+  String get foodDbSearchHint => 'Аталышы же штрихкод';
+
+  @override
+  String get clearAction => 'Тазалоо';
+
+  @override
+  String get foodDbScanBarcode => 'Штрихкодду сканерлөө';
+
+  @override
+  String foodDbFound(Object count) {
+    return 'Табылды: $count';
+  }
+
+  @override
+  String get foodDbStartTitle => 'Азыкты аталышы боюнча тап';
+
+  @override
+  String get foodDbStartBody =>
+      'Же таңгактагы штрихкодду сканерле. Азык баалуулугу сенин порцияңа эсептелет.';
+
+  @override
+  String get foodDbStartFootnote =>
+      'Маалыматтар ыктыярдуу толтурулат жана толук эмес болушу мүмкүн — базада маани жок болсо, «—» көрсөтөбүз.';
+
+  @override
+  String get foodDbNotFoundTitle => 'Азык табылган жок';
+
+  @override
+  String get foodDbNothingFoundTitle => 'Эч нерсе табылган жок';
+
+  @override
+  String get foodDbNotFoundBarcodeBody =>
+      'Бул штрихкод Open Food Facts базасында жок. Сандарды текшер же азыкты кол менен кош.';
+
+  @override
+  String get foodDbNothingFoundBody =>
+      'Аталышын текшер же штрихкодду сканерле. Азыкты күндөлүккө кол менен кошсо болот.';
+
+  @override
+  String get foodDbSearching => 'Open Food Facts базасынан издеп жатабыз...';
+
+  @override
+  String get foodNoNutritionData => 'Азык баалуулугу тууралуу маалымат жок';
+
+  @override
+  String get foodCaloriesOnly => 'Калориясы гана, БМК жок';
+
+  @override
+  String get foodKcalPer100 => 'ккал / 100 г';
+
+  @override
+  String get macroProteinShort => 'Б';
+
+  @override
+  String get macroFatShort => 'М';
+
+  @override
+  String get macroCarbsShort => 'К';
+
+  @override
+  String get foodPer100NoData => 'Азык баалуулугу: маалымат жок';
+
+  @override
+  String foodPer100(Object values) {
+    return '100 г үчүн: $values';
+  }
+
+  @override
+  String get foodKcalEstimatedNote =>
+      'Калория БМКдан эсептелди: базада ал жок.';
+
+  @override
+  String get foodMacrosIncompleteNote =>
+      'Базада бардык нутриенттер толтурулган эмес — «—» «маалымат жок» дегенди билдирет.';
+
+  @override
+  String get nutrientProtein => 'Белоктор';
+
+  @override
+  String get nutrientFat => 'Майлар';
+
+  @override
+  String get nutrientCarbs => 'Көмүртектер';
+
+  @override
+  String get nutrientCalories => 'Калория';
+
+  @override
+  String get foodNoNutritionCard =>
+      'Open Food Facts базасында бул азыктын азык баалуулугу жок. Жазууну күндөлүктөн кол менен кош.';
+
+  @override
+  String foodServingPrefix(Object size) {
+    return 'порция $size';
+  }
+
+  @override
+  String get torchFailed => 'Фонарды күйгүзүү мүмкүн болгон жок';
+
+  @override
+  String barcodeNotFound(Object barcode) {
+    return '$barcode штрихкоддуу азык Open Food Facts базасында табылган жок. Таңгакты текшер же жазууну кол менен кош.';
+  }
+
+  @override
+  String get barcodeLoadFailed =>
+      'Азык жүктөлгөн жок. Интернетти текшерип, кайра аракет кыл.';
+
+  @override
+  String get back => 'Артка';
+
+  @override
+  String get barcodeTitle => 'Штрихкод';
+
+  @override
+  String get barcodeAimHint => 'Камераны таңгакка багытта';
+
+  @override
+  String get torch => 'Фонарь';
+
+  @override
+  String get barcodeScanAgain => 'Кайра сканерлөө';
+
+  @override
+  String get barcodeFormatsNote =>
+      'EAN-8, EAN-13, UPC-A, UPC-E жана Code 128 колдоого алынат.\nМаалымат: Open Food Facts.';
+
+  @override
+  String get barcodeLookingUp => 'Азыкты издеп жатабыз...';
+
+  @override
+  String get cameraUnavailable => 'Камера жеткиликсиз';
+
+  @override
+  String get cameraUnavailableHint =>
+      'Телефондун жөндөөлөрүнөн камерага уруксат бер же штрихкодду издөө сабына жаз.';
+
+  @override
+  String get foodNameEmpty => 'Аталышы бош болбошу керек.';
+
+  @override
+  String get foodKcalInvalid => 'Калорияны бүтүн сан менен жаз.';
+
+  @override
+  String get foodGramsRange =>
+      'Порциянын салмагы 1ден 5000 г чейин болушу керек.';
+
+  @override
+  String get foodEditEntry => 'Жазууну өзгөртүү';
+
+  @override
+  String get foodPortionWeightG => 'Порциянын салмагы, г';
+
+  @override
+  String get foodRecalcNote =>
+      'Салмак өзгөргөндө калория жана БМК автоматтык түрдө кайра эсептелет.';
+
+  @override
+  String get nutrientProteinG => 'Белоктор, г';
+
+  @override
+  String get nutrientFatG => 'Майлар, г';
+
+  @override
+  String get nutrientCarbsG => 'Көмүртектер, г';
+
+  @override
+  String get foodPortionTitle => 'Порция';
+
+  @override
+  String get foodPortionWeight => 'Порциянын салмагы';
+
+  @override
+  String get foodEnterGramsRange => 'Порциянын салмагын 1ден 5000 г чейин жаз.';
+
+  @override
+  String get foodNoCaloriesCantSave =>
+      'Базада бул азыктын калориясы жок — жазууну сактоого болбойт.';
+
+  @override
+  String gramsValue(Object value) {
+    return '$value г';
+  }
+
+  @override
+  String get foodEnterGramsToSee => 'Эсепти көрүү үчүн салмакты жаз.';
+
+  @override
+  String get foodDataSource => 'Маалымат: Open Food Facts (ачык база)';
+
+  @override
+  String get diaryLoadError => 'Маалыматты жүктөөдө ката кетти';
+
+  @override
+  String get diaryEntryUpdated => 'Жазуу жаңыртылды';
+
+  @override
+  String get diaryEntryUpdateFailed => 'Жазууну жаңыртуу мүмкүн болгон жок';
+
+  @override
+  String get diaryDeleteEntryTitle => 'Жазууну өчүрөсүңбү?';
+
+  @override
+  String get diaryDeleteEntryBody => 'Жазуу күндөлүктөн өчүрүлөт.';
+
+  @override
+  String diaryDeleteNamedBody(Object name) {
+    return '«$name» күндөлүктөн өчүрүлөт.';
+  }
+
+  @override
+  String get diaryEntryDeleted => 'Жазуу өчүрүлдү';
+
+  @override
+  String get diaryEntryDeleteFailed => 'Жазууну өчүрүү мүмкүн болгон жок';
+
+  @override
+  String get diaryAddByVoice => 'Үн менен кошуу';
+
+  @override
+  String get diaryVoiceShort => 'Үн';
+
+  @override
+  String get diaryFindInDatabase => 'Азыкты Open Food Facts базасынан табуу';
+
+  @override
+  String get diaryDatabaseShort => 'База';
+
+  @override
+  String get deleteAction => 'Өчүрүү';
+
+  @override
+  String get editAction => 'Өзгөртүү';
+
+  @override
+  String get voiceFoodClarifyFirst =>
+      'Болжолдуу баа алуу үчүн азыктын көлөмүн тактаңыз.';
+
+  @override
+  String get voiceFoodGenericError => 'Таанууда ката кетти';
+
+  @override
+  String kcalApprox(Object kcal) {
+    return '~$kcal ккал';
+  }
+
+  @override
+  String kcalValue(Object kcal) {
+    return '$kcal ккал';
+  }
+
+  @override
+  String get voiceFoodClarifyHint => 'Мисалы: 150 грамм';
+
+  @override
+  String get voiceFoodClarify => 'Тактоо';
+
+  @override
+  String voiceFoodListening(Object time) {
+    return 'Угуп жатам... ($time)';
+  }
+
+  @override
+  String get voiceFoodExample =>
+      'Мисалы: «Эки жумуртка, эки кесим нан жана банан»';
+
+  @override
+  String get voiceFoodAnalyzing => 'AI азыктарды талдап жатат...';
+
+  @override
+  String get voiceFoodRecognized => 'Таанылды:';
+
+  @override
+  String get voiceFoodEstimate => 'Болжолдуу баа:';
+
+  @override
+  String get voiceFoodHideEdit => 'Оңдоону жашыруу';
+
+  @override
+  String get voiceFoodEditData => 'Маалыматты өзгөртүү';
+
+  @override
+  String voiceFoodTitle(Object meal) {
+    return 'Үн менен киргизүү: $meal';
+  }
+
+  @override
+  String get voiceFoodSubtitle => 'Тамакты жана көлөмүн айт';
+
+  @override
+  String homeDiarySummary(Object consumed, Object goal, Object protein) {
+    return '$goal ккалдан $consumed · $protein г белок';
+  }
+
+  @override
+  String get bfEstimateTitle => 'Май %ин баалоо';
+
+  @override
+  String get bfEstimateNoData =>
+      'Эсептөө үчүн маалымат жетишсиз.\n\nКеректүү: профилдеги бой жана жыныс, ошондой эле бел жана моюн өлчөмдөрү (аялдар үчүн — жамбаш дагы). Өлчөмдөрдү кошуп, кайра аракет кылыңыз.';
+
+  @override
+  String get bfEstimateMethodMale =>
+      'АКШ Аскер-деңиз флотунун (Navy) ыкмасы менен бел, моюн айланасы жана бой боюнча эсептелди.\n\nБул болжолдуу баа, өлчөө эмес. Ыкманын катасы — бир нече пайыздык пункт.';
+
+  @override
+  String get bfEstimateMethodFemale =>
+      'АКШ Аскер-деңиз флотунун (Navy) ыкмасы менен бел, моюн, жамбаш айланасы жана бой боюнча эсептелди.\n\nБул болжолдуу баа, өлчөө эмес. Ыкманын катасы — бир нече пайыздык пункт.';
+
+  @override
+  String get bfCatExtremelyLow => '⚡ Өтө төмөн';
+
+  @override
+  String get bfCatAthletic => '💪 Спорттук';
+
+  @override
+  String get bfCatNormal => '✅ Нормалдуу';
+
+  @override
+  String get bfCatAboveNormal => '📈 Нормадан жогору';
+
+  @override
+  String get bfCatHigh => '⚠️ Жогору';
+
+  @override
+  String get bfHeaderCaps => 'ДЕНЕДЕГИ МАЙ %';
+
+  @override
+  String get progressLast28Days => 'Акыркы 28 күн';
+
+  @override
+  String get legendHasEntry => 'жазуу бар';
+
+  @override
+  String get legendToday => 'бүгүн';
+
+  @override
+  String get legendTapDay => 'күндү басыңыз';
+
+  @override
+  String get bfMethodCaliper => 'калипер';
+
+  @override
+  String get bfMethodScale => 'тараза';
+
+  @override
+  String get bfMethodEstimated => 'баалоо';
+
+  @override
+  String get bfMethodManual => 'кол менен';
+
+  @override
+  String get bfEmptyTitle => 'Май % боюнча маалымат азырынча жок';
+
+  @override
+  String get bfEmptySubtitle =>
+      'Өзгөрүүлөрдү көзөмөлдөө үчүн денедеги май пайызын жазыңыз';
+
+  @override
+  String get bfDynamics => 'Май %инин динамикасы';
+
+  @override
+  String get bfNoEntriesInPeriod => 'Тандалган мезгилде май % жазуулары жок';
+
+  @override
+  String get bfEstimateDisclaimer =>
+      'Өлчөмдөр боюнча болжолдуу эсеп — медициналык өлчөө эмес.';
+
+  @override
+  String get bfEstimateFromMeasurements => 'Өлчөмдөр боюнча баалоо';
+
+  @override
+  String get historyLabel => 'Тарых';
+
+  @override
+  String get progressNoEntriesDay => 'Бул күнгө жазуулар жок.';
+
+  @override
+  String bfEstimatedSuffix(Object label) {
+    return '$label (баалоо)';
+  }
+
+  @override
+  String chartNeedTwoEntries(Object count) {
+    return 'Тандалган мезгилде кеминде 2 жазуу керек\n(2ден $count)';
+  }
+
+  @override
+  String get measEmptyTitle => 'Өлчөмдөр азырынча жок';
+
+  @override
+  String get measEmptySubtitle =>
+      'Көкүрөк, бел, жамбаш жана колдун өлчөмдөрүн жазыңыз';
+
+  @override
+  String get measLatest => 'Акыркы өлчөмдөр';
+
+  @override
+  String get measDynamics => 'Өлчөмдөрдүн динамикасы';
+
+  @override
+  String measNoEntriesInPeriod(Object metric) {
+    return 'Тандалган мезгилде «$metric» өлчөмдөрү жок';
+  }
+
+  @override
+  String get currentWeightCaps => 'УЧУРДАГЫ САЛМАК';
+
+  @override
+  String get bfChipCaliper => 'Калипер';
+
+  @override
+  String get bfChipScale => 'Тараза';
+
+  @override
+  String get bfChipManual => 'Кол менен';
+
+  @override
+  String get bfRangeError => 'Май %ин 2ден 70ке чейин жаз';
+
+  @override
+  String get bfEstimateSaved => 'Баа болжолдуу маани катары сакталды';
+
+  @override
+  String get progressEmptyTitle => 'Көрсөтүүгө маалымат жок';
+
+  @override
+  String get progressEmptySubtitle =>
+      'Прогрессиңизди көрүү үчүн салмакты, өлчөмдөрдү\nжана май пайызын жаза баштаңыз';
+
+  @override
+  String get progressRecordFirstWeight => 'Биринчи салмакты жазуу';
+
+  @override
+  String daysCount(Object days) {
+    return '$days күн';
+  }
+
+  @override
+  String get progressActivityOfEntries => 'Жазуулардын активдүүлүгү';
+
+  @override
+  String get workoutGeneralFocus => 'Жалпы';
+
+  @override
+  String get premiumGateTitle => 'Бул функция Welmi Premium ичинде жеткиликтүү';
+
+  @override
+  String get premiumGateSubtitle =>
+      'Статус дүкөндүн ырасталган жазылуусу боюнча текшерилет.';
+
+  @override
+  String get premiumGateButton => 'Premium менен таанышуу';
+
+  @override
+  String profileBmrTdee(Object bmr, Object tdee) {
+    return 'BMR $bmr ккал · TDEE $tdee ккал';
+  }
+
+  @override
+  String get unsavedChangesBody => 'Сакталбаган өзгөртүүлөр бар. Алар жоголот.';
+
+  @override
+  String get stayAction => 'Калуу';
+
+  @override
+  String get leaveAction => 'Чыгуу';
+
+  @override
+  String get profileUserUnknown => 'Колдонуучуну аныктоо мүмкүн болгон жок';
+
+  @override
+  String get profilePhotoNotUploaded => 'Сүрөт жүктөлгөн жок';
+
+  @override
+  String profileSavedWithWarning(Object warning) {
+    return 'Профиль сакталды. $warning';
+  }
+
+  @override
+  String get profileLoading => 'Профиль жүктөлүүдө...';
+
+  @override
+  String get profileMyProfile => 'Менин профилим';
+
+  @override
+  String get profileWeightGoal => 'Салмак максаты';
+
+  @override
+  String get profileCurrent => 'Учурдагы';
+
+  @override
+  String get profileLeftToLose => 'Арыктоого калды';
+
+  @override
+  String get profileLeftToGain => 'Кошууга калды';
+
+  @override
+  String get profileTarget => 'Максаттуу';
+
+  @override
+  String get subscriptionActiveShort => 'Активдүү';
+
+  @override
+  String get subscriptionChoose => 'Тандоо';
+
+  @override
+  String get subManage => 'Жазылууну башкаруу';
+
+  @override
+  String get subActiveMessage => 'Жазылуу активдүү.';
+
+  @override
+  String get subOfferUnavailable => 'Сунуш жеткиликсиз';
+
+  @override
+  String subContinuePrice(Object price) {
+    return 'Улантуу · $price';
+  }
+
+  @override
+  String get subRestore => 'Сатып алууларды калыбына келтирүү';
+
+  @override
+  String get subRefreshOffers => 'Сунуштарды жаңыртуу';
+
+  @override
+  String get subTermsNote =>
+      'Төлөм жана жазылуу шарттары сатып алууну ырастоодон мурун дүкөн тарабынан көрсөтүлөт. Автоузартууну дүкөндүн жөндөөлөрүнөн башкарса болот.';
+
+  @override
+  String get subHeroSubtitle => 'Өзүңө кам көрүү үчүн көбүрөөк мүмкүнчүлүк';
+
+  @override
+  String get subInPremium => 'Premium ичинде';
+
+  @override
+  String get subFeatureScanner => 'Акылдуу тамак сканери';
+
+  @override
+  String get subFeatureWorkouts => 'AI түзгөн машыгуу пландары';
+
+  @override
+  String get subFeatureAnalytics => 'Кеңири аналитика жана өлчөмдөр';
+
+  @override
+  String get subFeatureHealth => 'Health Connect менен синхрондоштуруу';
+
+  @override
+  String get subFeatureNoAds => 'Жарнамасыз';
+
+  @override
+  String get subPlanMonth => 'Бир айга';
+
+  @override
+  String get subPlanYear => 'Бир жылга';
+
+  @override
+  String get subPremiumActive => 'Premium активдүү';
+
+  @override
+  String subValidUntil(Object date) {
+    return '$date чейин жарактуу';
+  }
+
+  @override
+  String get subErrStore => 'Дүкөндүн катасы. Кайра аракет кылыңыз.';
+
+  @override
+  String get subErrStoreUnavailableDevice =>
+      'Сатып алуулар дүкөнү бул түзмөктө жеткиликсиз.';
+
+  @override
+  String get subErrStoreUnavailable => 'Сатып алуулар дүкөнү азыр жеткиликсиз.';
+
+  @override
+  String get subErrProductsMissing =>
+      'Тарифтер дүкөндө азырынча жеткиликсиз. Кийинчерээк аракет кылыңыз.';
+
+  @override
+  String get subErrProductsLoad =>
+      'Дүкөндүн сунуштарын жүктөө мүмкүн болгон жок.';
+
+  @override
+  String get subErrEntitlement =>
+      'Premium статусун текшерүү мүмкүн болгон жок.';
+
+  @override
+  String get subErrPlanNotFound => 'Тариф дүкөндөн табылган жок.';
+
+  @override
+  String get subErrSignInToSubscribe =>
+      'Жазылуу үчүн Welmi аккаунтуна кириңиз.';
+
+  @override
+  String get subErrPurchaseNotStarted =>
+      'Дүкөн сатып алууну баштаган жок. Кайра аракет кылыңыз.';
+
+  @override
+  String get subErrPurchaseStart => 'Сатып алууну баштоо мүмкүн болгон жок.';
+
+  @override
+  String get subErrSignInToRestore =>
+      'Жазылууну калыбына келтирүү үчүн Welmi аккаунтуна кириңиз.';
+
+  @override
+  String get subErrRestore =>
+      'Сатып алууларды калыбына келтирүү мүмкүн болгон жок.';
+
+  @override
+  String get subErrManageUnsupported =>
+      'Жазылууну App Store же Google Play бар түзмөктөн башкарса болот.';
+
+  @override
+  String get subErrManageOpen => 'Жазылууну башкарууну ачуу мүмкүн болгон жок.';
+
+  @override
+  String get subErrPurchaseFailed => 'Дүкөн сатып алууну аягына чыгарган жок.';
+
+  @override
+  String get subErrVerification =>
+      'Сатып алуу кабыл алынды, бирок сервердик текшерүү аяктаган жок. Бир аздан кийин «Сатып алууларды калыбына келтирүү» баскычын басыңыз.';
+
+  @override
+  String get subNoticeNoActive => 'Активдүү жазылуу табылган жок.';
+
+  @override
+  String get subNoticeCancelled => 'Сатып алуу жокко чыгарылды.';
+
+  @override
+  String get subNoticeActivated => 'Welmi Premium активдештирилди.';
+
+  @override
+  String get calcStatusAnalyzing => 'Маалыматыңды талдап жатабыз...';
+
+  @override
+  String get calcStatusMetabolism => 'Метаболизмди эсептеп жатабыз...';
+
+  @override
+  String get calcStatusMacros => 'Калория жана БМК эсептелүүдө...';
+
+  @override
+  String get calcStatusPersonalReady => 'Жеке планың даяр! ✅';
+
+  @override
+  String get calcStatusReady => 'План даяр! ✅';
+
+  @override
+  String get calcProteinShort => 'белок';
+
+  @override
+  String get calcFatShort => 'май';
+
+  @override
+  String get calcCarbsShort => 'көмүрт.';
+
+  @override
+  String get chooseLanguage => 'Тилди танда';
+
+  @override
+  String get languageLabel => 'Тил / Язык';
+
+  @override
+  String get perDaySuffix => '/күн';
+
+  @override
+  String get splashTagline => 'Ден соолукка карай жолуң';
+
+  @override
+  String get model3dTimeout => 'Модель жүктөлүп үлгүргөн жок';
+
+  @override
+  String get model3dRotateHint => 'Моделди манжаң менен айландыр';
+
+  @override
+  String get model3dFailed => '3D-модель жүктөлгөн жок';
+
+  @override
+  String model3dFailedReason(Object reason) {
+    return '3D-модель: $reason';
+  }
+
+  @override
+  String get tryAgain => 'Кайра аракет кылуу';
+
+  @override
+  String rangeLastDaysShort(Object days) {
+    return 'акыркы $days күн';
+  }
+
+  @override
+  String get filtersTitle => 'Чыпкалар';
+
+  @override
+  String get recipeSearchHint => 'Тамак же ингредиент тап';
+
+  @override
+  String get recipePopular => 'Популярдуу';
+
+  @override
+  String recipeResults(Object count) {
+    return 'Жыйынтыктар · $count';
+  }
+
+  @override
+  String get resetAction => 'Тазалоо';
+
+  @override
+  String get recipeFilterProteinFrom => 'Белок кеминде';
+
+  @override
+  String get recipeFilterTimeUpTo => 'Убакыт чеги';
+
+  @override
+  String get recipeFilterDiet => 'Тамактануу';
+
+  @override
+  String get recipeDietVegetarian => 'Вегетариандык';
+
+  @override
+  String get recipeDietSugarFree => 'Кантсыз';
+
+  @override
+  String get showAction => 'Көрсөтүү';
+
+  @override
+  String get anyOption => 'Каалаганы';
+
+  @override
+  String filterUpToKcal(Object value) {
+    return '$value ккалга чейин';
+  }
+
+  @override
+  String filterFromGrams(Object value) {
+    return '$value г баштап';
+  }
+
+  @override
+  String filterUpToMinutes(Object value) {
+    return '$value мүнөткө чейин';
+  }
+
+  @override
+  String recipeMetaWeight(Object grams, Object minutes) {
+    return '$minutes мүн · $grams г';
+  }
+
+  @override
+  String recipeMetaProtein(Object minutes, Object protein) {
+    return '$minutes мүн · Б $protein г';
+  }
+
+  @override
+  String get favoriteRemove => 'Тандалмалардан алып салуу';
+
+  @override
+  String get favoriteAdd => 'Тандалмаларга кошуу';
+
+  @override
+  String get recipeNothingFound =>
+      'Эч нерсе табылган жок.\nИздөөнү же чыпкаларды өзгөртүп көрүңүз.';
+
+  @override
+  String get recipesComingSoon => 'Рецепттер жакында пайда болот.';
+
+  @override
+  String recipeNoPhotoLabel(Object label) {
+    return 'Сүрөт жок: $label';
+  }
+
+  @override
+  String get recipePhotoSoon => 'Сүрөт жакында чыгат';
+
+  @override
+  String get recipeAddToMeal => 'Тамактанууга кошуу';
+
+  @override
+  String get recipeBonAppetit => 'Тамагыңыз таттуу болсун!';
+
+  @override
+  String recipePhotoCredit(Object credit) {
+    return 'Сүрөт: $credit';
+  }
+
+  @override
+  String recipeStep(Object step) {
+    return '$step-кадам';
+  }
+
+  @override
+  String get recipeCook => 'Бышыруу';
+
+  @override
+  String get recipeAsk => 'Суроо';
+
+  @override
+  String recipeAskPrompt(
+    Object carbs,
+    Object fat,
+    Object kcal,
+    Object protein,
+    Object title,
+  ) {
+    return 'Мен «$title» рецебин даярдап жатам ($kcal ккал, Б $protein г, М $fat г, К $carbs г). Айтып берчи:';
+  }
+
+  @override
+  String get recipeNutritionTitle => 'Калория жана нутриенттер';
+
+  @override
+  String recipeMicros(Object fiber, Object sodium, Object sugar) {
+    return 'Клетчатка $fiber г · Кант $sugar г · Натрий $sodium мг';
+  }
+
+  @override
+  String get recipeNutritionDisclaimer =>
+      'КБМК — рецепттин курамы боюнча бир порцияга болжолдуу маанилер. TheMealDB азык баалуулугун жарыялабайт.';
+
+  @override
+  String recipeIngredients(Object servings) {
+    return 'Ингредиенттер · $servings порция';
+  }
+
+  @override
+  String get recipeCooking => 'Даярдоо';
+
+  @override
+  String recipeStepOf(Object step, Object total) {
+    return '$total кадамдын $step-чиси';
+  }
+
+  @override
+  String get recipeFinish => 'Аяктоо';
+
+  @override
+  String get recipeNextStep => 'Кийинки кадам';
 }

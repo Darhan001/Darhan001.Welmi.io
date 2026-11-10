@@ -51,9 +51,9 @@ class RecordBodyFatSheet extends StatefulWidget {
 
 class _RecordBodyFatSheetState extends State<RecordBodyFatSheet> {
   static const _methods = [
-    ('caliper', 'Калипер', Icons.monitor_weight_outlined),
-    ('scale', 'Весы', Icons.monitor_heart_outlined),
-    ('manual', 'Вручную', Icons.edit),
+    ('caliper', Icons.monitor_weight_outlined),
+    ('scale', Icons.monitor_heart_outlined),
+    ('manual', Icons.edit),
   ];
 
   late final TextEditingController _controller;
@@ -85,7 +85,7 @@ class _RecordBodyFatSheetState extends State<RecordBodyFatSheet> {
     final loc = AppLocalizations.of(context)!;
     final pct = parseDecimalInput(_controller.text);
     if (pct == null || !isPlausibleBodyFat(pct)) {
-      setState(() => _error = 'Введи % жира от 2 до 70');
+      setState(() => _error = AppLocalizations.of(context)!.bfRangeError);
       return;
     }
     setState(() {
@@ -194,9 +194,13 @@ class _RecordBodyFatSheetState extends State<RecordBodyFatSheet> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final (value, label, icon) in _methods)
+              for (final (value, icon) in _methods)
                 _MethodChip(
-                  label: label,
+                  label: switch (value) {
+                    'caliper' => loc.bfChipCaliper,
+                    'scale' => loc.bfChipScale,
+                    _ => loc.bfChipManual,
+                  },
                   icon: icon,
                   selected: _method == value,
                   onTap: () => setState(() => _method = value),

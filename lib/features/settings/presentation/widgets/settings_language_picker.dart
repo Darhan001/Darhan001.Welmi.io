@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/locale_provider.dart';
 import 'package:lumina/features/settings/presentation/widgets/settings_card.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Показывает шторку выбора языка и применяет выбор.
 Future<void> showSettingsLanguagePicker(
@@ -41,7 +42,7 @@ Future<void> showSettingsLanguagePicker(
             ),
             const SizedBox(height: 20),
             Text(
-              'Выбери язык',
+              AppLocalizations.of(context)!.chooseLanguage,
               style: GoogleFonts.notoSerif(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -135,7 +136,7 @@ class SettingsLanguageTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Язык / Тил',
+                    AppLocalizations.of(context)!.languageLabel,
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,

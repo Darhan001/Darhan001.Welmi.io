@@ -3,21 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
-
-/// «На 100 г: 250 ккал · Б 10 г · Ж 5 г · У 30 г».
-String per100Label(FoodProduct product) {
-  if (!product.hasNutrition) return 'Пищевая ценность: нет данных';
-  final parts = <String>[
-    if (product.kcalPer100g != null)
-      '${formatNutrient(product.kcalPer100g)} ккал',
-    if (product.proteinPer100g != null)
-      'Б ${formatNutrient(product.proteinPer100g)} г',
-    if (product.fatPer100g != null) 'Ж ${formatNutrient(product.fatPer100g)} г',
-    if (product.carbsPer100g != null)
-      'У ${formatNutrient(product.carbsPer100g)} г',
-  ];
-  return 'На 100 г: ${parts.join(' · ')}';
-}
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Карточка рассчитанной порции: калории крупно и три макроса.
 class FoodPortionCard extends StatelessWidget {
@@ -33,10 +19,11 @@ class FoodPortionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final note = portion.isCaloriesEstimated
-        ? 'Калорийность рассчитана из БЖУ: в базе её нет.'
+        ? loc.foodKcalEstimatedNote
         : !hasCompleteMacros
-        ? 'В базе заполнены не все нутриенты — «—» означает «нет данных».'
+        ? loc.foodMacrosIncompleteNote
         : null;
 
     return Container(
@@ -61,7 +48,7 @@ class FoodPortionCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'ккал',
+                loc.kcal,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -73,11 +60,11 @@ class FoodPortionCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              _MacroTile(label: 'Белки', value: portion.proteinGrams),
+              _MacroTile(label: loc.nutrientProtein, value: portion.proteinGrams),
               const SizedBox(width: 8),
-              _MacroTile(label: 'Жиры', value: portion.fatGrams),
+              _MacroTile(label: loc.nutrientFat, value: portion.fatGrams),
               const SizedBox(width: 8),
-              _MacroTile(label: 'Углеводы', value: portion.carbsGrams),
+              _MacroTile(label: loc.nutrientCarbs, value: portion.carbsGrams),
             ],
           ),
           if (note != null) ...[
@@ -126,7 +113,11 @@ class _MacroTile extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              value == null ? '—' : '${formatNutrient(value)} г',
+              value == null
+                  ? '—'
+                  : AppLocalizations.of(context)!.gramsValue(
+                      formatNutrient(value),
+                    ),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
@@ -159,8 +150,7 @@ class FoodNoNutritionCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'В Open Food Facts у этого продукта нет пищевой ценности. '
-              'Добавь запись вручную из дневника.',
+              AppLocalizations.of(context)!.foodNoNutritionCard,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

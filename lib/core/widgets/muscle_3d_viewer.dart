@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Интерактивная 3D-модель человека для страницы упражнения.
 ///
@@ -43,6 +44,8 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
   Timer? _timeout;
   bool _loaded = false;
   bool _failed = false;
+  /// Метка «не дождались загрузки» в [_errorMessage].
+  static const _timeoutMarker = 'timeout';
   String _errorMessage = '';
   int _attempt = 0;
 
@@ -66,7 +69,7 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
       if (mounted && !_loaded && !_failed) {
         setState(() {
           _failed = true;
-          _errorMessage = 'Модель не успела загрузиться';
+          _errorMessage = _timeoutMarker;
         });
       }
     });
@@ -140,10 +143,9 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
     if (!mounted) return;
     setState(() {
       _failed = true;
-      // Не показываем сырые длинные JS-ошибки — только короткую понятную.
-      _errorMessage = error == 'Failed to load'
-          ? ''
-          : (error.length > 60 ? error.substring(0, 60) : error);
+      // Сырой текст JS-ошибки пользователю не показываем — только в лог.
+      debugPrint('⚠️ 3D model error: $error');
+      _errorMessage = '';
     });
   }
 
@@ -265,7 +267,7 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      'Вращай модель пальцем',
+                      AppLocalizations.of(context)!.model3dRotateHint,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 11,
@@ -301,9 +303,11 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
           ),
           const SizedBox(height: 10),
           Text(
-            _errorMessage.isNotEmpty
-                ? '3D-модель: $_errorMessage'
-                : '3D-модель не загрузилась',
+            _errorMessage == _timeoutMarker
+                ? AppLocalizations.of(context)!.model3dFailedReason(
+                    AppLocalizations.of(context)!.model3dTimeout,
+                  )
+                : AppLocalizations.of(context)!.model3dFailed,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: tc.textSecondary,
@@ -333,7 +337,7 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Попробовать снова',
+                    AppLocalizations.of(context)!.tryAgain,
                     style: TextStyle(
                       color: widget.highlightColor,
                       fontSize: 12,

@@ -24,8 +24,11 @@ class AppColors {
   static const Color secondary = Color(0xFF9E9E9E);
 
   static const Color textPrimary = Colors.black87;
+  // Контраст на фоне [background]: вторичный текст ≈ 4.6:1 (WCAG AA для
+  // обычного текста), подсказки ≈ 3.5:1 (порог для крупного текста и
+  // значков). Раньше было 2.9:1 и 1.9:1 — мелкие подписи читались с трудом.
   static const Color textSecondary = Colors.black54;
-  static const Color textHint = Colors.black26;
+  static const Color textHint = Colors.black45;
 
   static const Color border = Colors.black12;
   static const Color divider = Colors.black12;

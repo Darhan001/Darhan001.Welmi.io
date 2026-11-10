@@ -66,10 +66,12 @@ Future<void> _startApp() async {
   await _initServices();
 
   final app = WelmiApp(themeMode: themeMode);
-  if (kReleaseMode) {
-    runApp(app);
-  } else {
+  // Рамка устройств — инструмент отладки. В profile-сборке она искажала
+  // замеры производительности, поэтому включается только в debug.
+  if (kDebugMode) {
     runApp(DevicePreview(enabled: true, builder: (context) => app));
+  } else {
+    runApp(app);
   }
 }
 

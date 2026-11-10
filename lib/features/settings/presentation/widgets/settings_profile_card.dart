@@ -54,7 +54,8 @@ class SettingsProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AuthService().displayName ?? 'Пользователь',
+                    AuthService().displayName ??
+                        AppLocalizations.of(context)!.userDefault,
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,

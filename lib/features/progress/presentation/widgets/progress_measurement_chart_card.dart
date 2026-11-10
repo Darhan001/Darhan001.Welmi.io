@@ -44,7 +44,7 @@ class MeasurementChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProgressCardHeader(
-            title: 'Динамика замеров',
+            title: loc.measDynamics,
             trailing: diff == null
                 ? null
                 : Container(
@@ -98,9 +98,9 @@ class MeasurementChartCard extends StatelessWidget {
           const SizedBox(height: 16),
           if (points.isEmpty)
             ProgressChartPlaceholder(
-              text:
-                  'За выбранный период нет замеров '
-                  '«${measureMetricLabel(loc, metric)}»',
+              text: loc.measNoEntriesInPeriod(
+                measureMetricLabel(loc, metric),
+              ),
             )
           else
             ProgressLineChart(

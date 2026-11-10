@@ -8,6 +8,8 @@ import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/food_database/domain/models/food_product.dart';
 import 'package:lumina/features/food_database/presentation/widgets/food_portion_details.dart';
 import 'package:lumina/features/food_database/presentation/widgets/food_sheet_frame.dart';
+import 'package:lumina/l10n/app_localizations.dart';
+import 'package:lumina/features/food_database/presentation/open_food_facts_messages.dart';
 
 /// Нижний шит выбора порции: показывает ценность на 100 г, пересчитывает
 /// её на введённые граммы и возвращает готовую запись для дневника.
@@ -79,16 +81,16 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
   }
 
   void _submit() {
+    final loc = AppLocalizations.of(context)!;
     final grams = _grams;
     if (grams == null) {
-      setState(() => _error = 'Укажи массу порции от 1 до 5000 г.');
+      setState(() => _error = loc.foodEnterGramsRange);
       return;
     }
     final portion = widget.product.portionOf(grams);
     if (portion.calories == null) {
       setState(
-        () => _error =
-            'В базе нет калорийности этого продукта — запись нельзя сохранить.',
+        () => _error = loc.foodNoCaloriesCantSave,
       );
       return;
     }
@@ -100,13 +102,15 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final product = widget.product;
+    final subtitle = productSubtitle(loc, product);
     final grams = _grams;
 
     return FoodSheetFrame(
       children: [
         Text(
-          'Порция',
+          loc.foodPortionTitle,
           style: GoogleFonts.notoSerif(
             fontSize: 22,
             fontWeight: FontWeight.w900,
@@ -122,12 +126,12 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
             color: tc.text,
           ),
         ),
-        if (product.subtitle.isNotEmpty) ...[
+        if (subtitle.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(product.subtitle, style: _secondaryStyle(tc)),
+          Text(subtitle, style: _secondaryStyle(tc)),
         ],
         const SizedBox(height: 6),
-        Text(per100Label(product), style: _secondaryStyle(tc)),
+        Text(per100Label(loc, product), style: _secondaryStyle(tc)),
         const SizedBox(height: 22),
         TextField(
           controller: _gramsController,
@@ -139,8 +143,8 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
             color: tc.text,
           ),
           decoration: InputDecoration(
-            labelText: 'Масса порции',
-            suffixText: 'г',
+            labelText: loc.foodPortionWeight,
+            suffixText: loc.gramsShort,
             filled: true,
             fillColor: tc.card,
             border: OutlineInputBorder(
@@ -165,7 +169,7 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
           children: [
             for (final preset in _presets)
               ChoiceChip(
-                label: Text('$preset г'),
+                label: Text(loc.gramsValue(preset)),
                 selected: grams == preset.toDouble(),
                 onSelected: (_) => _selectPreset(preset),
                 labelStyle: TextStyle(
@@ -185,7 +189,7 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
         if (!product.hasNutrition)
           const FoodNoNutritionCard()
         else if (grams == null)
-          Text('Введи массу, чтобы увидеть расчёт.', style: _secondaryStyle(tc))
+          Text(loc.foodEnterGramsToSee, style: _secondaryStyle(tc))
         else
           FoodPortionCard(
             portion: product.portionOf(grams),
@@ -204,14 +208,14 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
         ],
         const SizedBox(height: 20),
         AppButton(
-          text: 'Добавить в дневник',
+          text: loc.addToDiary,
           size: AppButtonSize.lg,
           onPressed: _submit,
         ),
         const SizedBox(height: 10),
         Center(
           child: Text(
-            'Данные: Open Food Facts (открытая база)',
+            loc.foodDataSource,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,

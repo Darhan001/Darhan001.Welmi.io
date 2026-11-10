@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Ничего не нашлось (или рецептов ещё нет).
 class RecipeEmptyState extends StatelessWidget {
@@ -26,14 +27,14 @@ class RecipeEmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               hasFilters
-                  ? 'Ничего не найдено.\nПопробуйте изменить запрос или фильтры.'
-                  : 'Рецепты скоро появятся.',
+                  ? AppLocalizations.of(context)!.recipeNothingFound
+                  : AppLocalizations.of(context)!.recipesComingSoon,
               textAlign: TextAlign.center,
               style: TextStyle(color: tc.textSecondary, height: 1.4),
             ),
             if (hasFilters) ...[
               const SizedBox(height: 8),
-              TextButton(onPressed: onReset, child: const Text('Сбросить')),
+              TextButton(onPressed: onReset, child: Text(AppLocalizations.of(context)!.resetAction)),
             ],
           ],
         ),

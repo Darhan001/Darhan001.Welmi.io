@@ -109,9 +109,9 @@ class DiaryMealSection extends StatelessWidget {
                 Container(width: 1, height: 16, color: tc.divider),
                 const SizedBox(width: 8),
                 _AccentAction(
-                  tooltip: 'Добавить голосом',
+                  tooltip: loc.diaryAddByVoice,
                   icon: Icons.mic_rounded,
-                  label: 'Голос',
+                  label: loc.diaryVoiceShort,
                   onTap: onAddVoice,
                 ),
                 Container(
@@ -121,9 +121,9 @@ class DiaryMealSection extends StatelessWidget {
                   color: tc.divider,
                 ),
                 _AccentAction(
-                  tooltip: 'Найти продукт в Open Food Facts',
+                  tooltip: loc.diaryFindInDatabase,
                   icon: Icons.travel_explore_rounded,
-                  label: 'База',
+                  label: loc.diaryDatabaseShort,
                   onTap: onAddFromDatabase,
                 ),
               ],

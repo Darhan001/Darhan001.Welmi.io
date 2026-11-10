@@ -8,16 +8,12 @@ import 'package:lumina/l10n/app_localizations.dart';
 class EquipmentOption {
   const EquipmentOption({
     required this.key,
-    required this.label,
-    required this.subtitle,
     required this.aiString,
     required this.icon,
     required this.color,
   });
 
   final String key;
-  final String label;
-  final String subtitle;
 
   /// Формулировка для промпта AI.
   final String aiString;
@@ -28,37 +24,46 @@ class EquipmentOption {
 const equipmentOptions = [
   EquipmentOption(
     key: 'bodyweight',
-    label: 'No equipment',
-    subtitle: 'Только вес тела: отжимания, приседания, планка',
     aiString: 'собственный вес, без инвентаря (отжимания, приседания, планка)',
     icon: Icons.self_improvement_rounded,
     color: Color(0xFF75A47F),
   ),
   EquipmentOption(
     key: 'dumbbells',
-    label: 'Гантели',
-    subtitle: 'Набор гантелей для домашних тренировок',
     aiString: 'гантели (домашняя тренировка)',
     icon: Icons.fitness_center_rounded,
     color: Color(0xFFEF9A9A),
   ),
   EquipmentOption(
     key: 'calisthenics',
-    label: 'Турник и резинки',
-    subtitle: 'Турник, фитнес-резинки, коврик',
     aiString: 'турник, фитнес-резинки и коврик (дома)',
     icon: Icons.sports_gymnastics_rounded,
     color: Color(0xFF64B5F6),
   ),
   EquipmentOption(
     key: 'gym',
-    label: 'Спортзал',
-    subtitle: 'Штанга, гантели, тренажёры — полный зал',
     aiString: 'тренажёрный зал: штанга, гантели, тренажёры',
     icon: Icons.apartment_rounded,
     color: Color(0xFFFFB74D),
   ),
 ];
+
+/// Название и описание варианта на языке приложения.
+extension EquipmentOptionL10n on EquipmentOption {
+  String labelOf(AppLocalizations loc) => switch (key) {
+    'dumbbells' => loc.dumbbells,
+    'calisthenics' => loc.calisthenics,
+    'gym' => loc.gym,
+    _ => loc.noEquipment,
+  };
+
+  String subtitleOf(AppLocalizations loc) => switch (key) {
+    'dumbbells' => loc.dumbbellsSubtitle,
+    'calisthenics' => loc.calisthenicsSubtitle,
+    'gym' => loc.gymSubtitle,
+    _ => loc.noEquipmentSubtitle,
+  };
+}
 
 /// Шторка выбора инвентаря. `null` — закрыли без выбора.
 Future<EquipmentOption?> showEquipmentSheet(
@@ -143,7 +148,7 @@ Future<EquipmentOption?> showEquipmentSheet(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              option.label,
+                              option.labelOf(loc),
                               style: GoogleFonts.inter(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
@@ -151,7 +156,7 @@ Future<EquipmentOption?> showEquipmentSheet(
                               ),
                             ),
                             Text(
-                              option.subtitle,
+                              option.subtitleOf(loc),
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 color: WorkoutDesign.textSecondary,

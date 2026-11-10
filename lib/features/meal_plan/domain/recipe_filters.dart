@@ -1,5 +1,8 @@
 import 'package:lumina/features/meal_plan/domain/models/recipe_model.dart';
 
+/// Тип питания в фильтре каталога.
+enum RecipeDiet { vegetarian, sugarFree }
+
 /// Ограничения каталога рецептов, выбранные в шторке фильтров.
 class RecipeFilters {
   const RecipeFilters({
@@ -13,8 +16,7 @@ class RecipeFilters {
   final int? minProtein;
   final int? maxMinutes;
 
-  /// 'Вегетарианские' или 'Без сахара'.
-  final String? diet;
+  final RecipeDiet? diet;
 
   bool get isEmpty =>
       maxCalories == null &&
@@ -32,8 +34,8 @@ class RecipeFilters {
     if (protein != null && recipe.proteinGrams < protein) return false;
     final minutes = maxMinutes;
     if (minutes != null && recipe.cookingTimeMinutes > minutes) return false;
-    if (diet == 'Вегетарианские' && !recipe.isVegetarian) return false;
-    if (diet == 'Без сахара' && recipe.sugarGrams > 2) return false;
+    if (diet == RecipeDiet.vegetarian && !recipe.isVegetarian) return false;
+    if (diet == RecipeDiet.sugarFree && recipe.sugarGrams > 2) return false;
     return true;
   }
 }

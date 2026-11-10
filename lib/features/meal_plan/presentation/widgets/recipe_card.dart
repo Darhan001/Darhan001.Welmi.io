@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/meal_plan/domain/models/recipe_model.dart';
 import 'package:lumina/features/meal_plan/presentation/widgets/recipe_image.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Карточка рецепта в сетке каталога: фото, избранное и КБЖУ.
 class RecipeCard extends StatelessWidget {
@@ -21,9 +22,16 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     final meta = recipe.servingWeightGrams > 0
-        ? '${recipe.cookingTimeMinutes} мин · ${recipe.servingWeightGrams} г'
-        : '${recipe.cookingTimeMinutes} мин · Б ${recipe.proteinGrams.round()} г';
+        ? loc.recipeMetaWeight(
+            recipe.cookingTimeMinutes,
+            recipe.servingWeightGrams,
+          )
+        : loc.recipeMetaProtein(
+            recipe.cookingTimeMinutes,
+            recipe.proteinGrams.round(),
+          );
 
     return GestureDetector(
       onTap: onTap,
@@ -64,8 +72,8 @@ class RecipeCard extends StatelessWidget {
                       shape: const CircleBorder(),
                       child: IconButton(
                         tooltip: favorite
-                            ? 'Убрать из избранного'
-                            : 'В избранное',
+                            ? loc.favoriteRemove
+                            : loc.favoriteAdd,
                         visualDensity: VisualDensity.compact,
                         onPressed: onFavorite,
                         icon: Icon(
@@ -93,7 +101,7 @@ class RecipeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${recipe.calories} ккал',
+                        loc.kcalValue(recipe.calories),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/models/onboarding_data.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 class ActivityStep extends StatelessWidget {
   final ActivityLevel? selectedActivity;
@@ -16,19 +17,20 @@ class ActivityStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = ThemeColors.of(context);
+    final loc = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
           const SizedBox(height: 40),
           Text(
-            'Насколько ты активен?',
+            loc.onboardingActivityTitle,
             style: Theme.of(context).textTheme.displayMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Это поможет нам точнее рассчитать твою\nнорму калорий',
+            loc.onboardingActivitySubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: tc.textSecondary,
@@ -38,29 +40,29 @@ class ActivityStep extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           _buildActivityCard(
-            'Малоподвижный',
-            'Офисная работа, почти без спорта.',
+            loc.activitySedentary,
+            loc.activitySedentaryDesc,
             Icons.person_outline,
             ActivityLevel.sedentary,
             tc,
           ),
           _buildActivityCard(
-            'Лёгкая активность',
-            '1-2 тренировки в неделю или прогулки.',
+            loc.activityLight,
+            loc.activityLightDesc,
             Icons.directions_walk,
             ActivityLevel.light,
             tc,
           ),
           _buildActivityCard(
-            'Средняя активность',
-            '3-5 тренировок в неделю, активный образ жизни.',
+            loc.activityModerate,
+            loc.activityModerateDesc,
             Icons.directions_run,
             ActivityLevel.moderate,
             tc,
           ),
           _buildActivityCard(
-            'Высокая активность',
-            'Ежедневные интенсивные тренировки.',
+            loc.activityHigh,
+            loc.activityHighDesc,
             Icons.fitness_center,
             ActivityLevel.high,
             tc,

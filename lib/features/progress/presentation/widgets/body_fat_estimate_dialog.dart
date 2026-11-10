@@ -25,7 +25,7 @@ Future<bool> showBodyFatEstimateDialog(
         backgroundColor: tc.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Оценка % жира',
+          AppLocalizations.of(context)!.bfEstimateTitle,
           style: TextStyle(
             fontWeight: FontWeight.w900,
             color: tc.text,
@@ -34,9 +34,7 @@ Future<bool> showBodyFatEstimateDialog(
         ),
         content: estimate == null
             ? Text(
-                'Недостаточно данных для расчёта.\n\n'
-                'Нужны: рост и пол в профиле, а также замеры талии и шеи '
-                '(для женщин — ещё и бёдер). Добавьте замеры и попробуйте снова.',
+                AppLocalizations.of(context)!.bfEstimateNoData,
                 style: bodyStyle,
               )
             : Column(
@@ -67,10 +65,9 @@ Future<bool> showBodyFatEstimateDialog(
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Расчёт по методу ВМФ США (Navy) на основе обхватов '
-                    'талии, шеи${isFemale ? ', бёдер' : ''} и роста.\n\n'
-                    'Это приблизительная оценка, а не измерение. '
-                    'Погрешность метода — несколько процентных пунктов.',
+                    isFemale
+                        ? AppLocalizations.of(context)!.bfEstimateMethodFemale
+                        : AppLocalizations.of(context)!.bfEstimateMethodMale,
                     style: bodyStyle.copyWith(fontSize: 12),
                   ),
                 ],

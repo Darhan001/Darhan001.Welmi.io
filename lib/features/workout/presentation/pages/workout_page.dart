@@ -78,7 +78,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
     if (mounted) {
       showWelmiSnackbar(
         context,
-        AppLocalizations.of(context)!.planGeneratingSnackbar(selected.label),
+        AppLocalizations.of(context)!.planGeneratingSnackbar(
+          selected.labelOf(AppLocalizations.of(context)!),
+        ),
         icon: Icons.fitness_center_rounded,
       );
     }
@@ -189,7 +191,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
       key: ValueKey('day_view_3d_$_selectedDay'),
       highlightColor: visuals.color,
       muscleIcon: visuals.icon,
-      muscleName: day.focus.isNotEmpty ? day.focus : 'Общая',
+      muscleName: day.focus.isNotEmpty ? day.focus : AppLocalizations.of(context)!.workoutGeneralFocus,
       height: 260,
     );
   }

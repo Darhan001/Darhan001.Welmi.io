@@ -157,7 +157,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Фильтры',
+                          tooltip: AppLocalizations.of(context)!.filtersTitle,
                           onPressed: _showFilters,
                           icon: Icon(Icons.tune_rounded, color: tc.text),
                         ),
@@ -170,7 +170,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                           child: TextField(
                             controller: _search,
                             decoration: InputDecoration(
-                              hintText: 'Найти блюдо или ингредиент',
+                              hintText: AppLocalizations.of(context)!.recipeSearchHint,
                               prefixIcon: const Icon(Icons.search_rounded),
                               filled: true,
                               fillColor: tc.card,
@@ -189,7 +189,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                           color: tc.card,
                           borderRadius: BorderRadius.circular(16),
                           child: IconButton(
-                            tooltip: 'Фильтры',
+                            tooltip: AppLocalizations.of(context)!.filtersTitle,
                             onPressed: _showFilters,
                             icon: Icon(
                               Icons.filter_list_rounded,
@@ -253,8 +253,10 @@ class _MealPlanPageState extends State<MealPlanPage> {
                         Expanded(
                           child: Text(
                             !hasQuery && _category == null
-                                ? 'Популярные'
-                                : 'Результаты · ${recipes.length}',
+                                ? AppLocalizations.of(context)!.recipePopular
+                                : AppLocalizations.of(context)!.recipeResults(
+                                    recipes.length,
+                                  ),
                             style: GoogleFonts.notoSerif(
                               fontSize: 21,
                               fontWeight: FontWeight.w900,
@@ -265,7 +267,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                         if (_category != null || _filters.isNotEmpty)
                           TextButton(
                             onPressed: _resetAll,
-                            child: const Text('Сбросить'),
+                            child: Text(AppLocalizations.of(context)!.resetAction),
                           ),
                       ],
                     ),

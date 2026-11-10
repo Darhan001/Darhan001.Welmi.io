@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
 import 'package:lumina/features/progress/domain/progress_metrics.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Серая подложка вместо графика: «нет данных», «нужно больше записей».
 class ProgressChartPlaceholder extends StatelessWidget {
@@ -55,9 +56,7 @@ class ProgressLineChart extends StatelessWidget {
     final tc = ThemeColors.of(context);
     if (points.length < 2) {
       return ProgressChartPlaceholder(
-        text:
-            'Нужно минимум 2 записи за выбранный период\n'
-            '(${points.length} из 2)',
+        text: AppLocalizations.of(context)!.chartNeedTwoEntries(points.length),
       );
     }
 

@@ -63,7 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final auth = AuthService();
     // Приоритет — сохранённому профилю (имя/фото можно менять в редактировании)
     final profile = _userData.profile;
-    final name = profile?.displayName ?? auth.displayName ?? 'Пользователь';
+    final name = profile?.displayName ?? auth.displayName ?? loc.userDefault;
     final email = auth.email;
     final photoUrl = profile?.photoUrl ?? auth.photoUrl;
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
@@ -122,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           Text(
-                            'Мой профиль',
+                            loc.profileMyProfile,
                             style: GoogleFonts.notoSerif(
                               fontWeight: FontWeight.w900,
                               fontSize: 18,
@@ -199,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Цель веса',
+                              loc.profileWeightGoal,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -221,20 +221,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildWeightInfo(
-                                    'Текущий',
+                                    loc.profileCurrent,
                                     loc.formatWeight(currentWeight),
                                     tc,
                                   ),
                                   _buildWeightInfo(
                                     isLosing
-                                        ? 'Осталось сбросить'
-                                        : 'Осталось набрать',
+                                        ? loc.profileLeftToLose
+                                        : loc.profileLeftToGain,
                                     loc.formatWeight(weightDiff),
                                     tc,
                                     isHighlight: true,
                                   ),
                                   _buildWeightInfo(
-                                    'Целевой',
+                                    loc.profileTarget,
                                     loc.formatWeight(targetWeight),
                                     tc,
                                   ),
@@ -247,7 +247,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Settings List
                       _buildProfileItem(
                         Icons.settings_outlined,
-                        'Настройки',
+                        loc.drawerSettings,
                         tc,
                         onTap: () {
                           hapticTap();
@@ -269,11 +269,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         animation: SubscriptionService.instance,
                         builder: (context, _) => _buildProfileItem(
                           Icons.star_outline,
-                          'Подписка',
+                          loc.subscriptionTitle,
                           tc,
                           trailing: SubscriptionService.instance.state.isPremium
-                              ? 'Активна'
-                              : 'Выбрать',
+                              ? loc.subscriptionActiveShort
+                              : loc.subscriptionChoose,
                           onTap: () {
                             hapticTap();
                             Navigator.push(
@@ -285,7 +285,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       _buildProfileItem(
                         Icons.help_outline,
-                        'Поддержка',
+                        loc.supportTitle,
                         tc,
                         onTap: () {
                           hapticTap();

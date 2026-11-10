@@ -82,7 +82,7 @@ class ProgressDayDetailsSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  'За этот день записей нет.',
+                  loc.progressNoEntriesDay,
                   style: TextStyle(fontSize: 13, color: tc.textSecondary),
                 ),
               ),
@@ -112,7 +112,7 @@ class ProgressDayDetailsSheet extends StatelessWidget {
             for (final f in bodyFat)
               _DayRow(
                 label: f.method == 'estimated'
-                    ? '${loc.progressFilterBodyFat} (оценка)'
+                    ? loc.bfEstimatedSuffix(loc.progressFilterBodyFat)
                     : loc.progressFilterBodyFat,
                 value: '${f.bodyFatPercent.toStringAsFixed(1)} %',
                 icon: Icons.monitor_heart_outlined,

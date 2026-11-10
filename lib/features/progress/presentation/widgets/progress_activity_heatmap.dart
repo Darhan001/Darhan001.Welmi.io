@@ -41,7 +41,7 @@ class ProgressActivityHeatmap extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProgressCardHeader(
-            title: 'Последние 28 дней',
+            title: AppLocalizations.of(context)!.progressLast28Days,
             fontSize: 14,
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -50,7 +50,7 @@ class ProgressActivityHeatmap extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '$activeCount записей',
+                AppLocalizations.of(context)!.weightEntries(activeCount),
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -111,18 +111,18 @@ class ProgressActivityHeatmap extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const _LegendItem(
+              _LegendItem(
                 color: ProgressColors.weight,
-                label: 'есть запись',
+                label: AppLocalizations.of(context)!.legendHasEntry,
               ),
               const SizedBox(width: 14),
-              _LegendItem(color: tc.primary, label: 'сегодня'),
+              _LegendItem(color: tc.primary, label: AppLocalizations.of(context)!.legendToday),
               const Spacer(),
               Icon(Icons.touch_app_outlined, size: 12, color: tc.textHint),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  'нажмите на день',
+                  AppLocalizations.of(context)!.legendTapDay,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 10,

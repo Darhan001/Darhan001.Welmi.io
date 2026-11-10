@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 
 /// Рамка голосового ввода еды: «ручка» шторки, шапка и прокручиваемое тело.
 class VoiceFoodSheet extends StatelessWidget {
@@ -72,7 +73,7 @@ class VoiceFoodSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Голосовой ввод: $mealTitle',
+                          AppLocalizations.of(context)!.voiceFoodTitle(mealTitle),
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -80,7 +81,7 @@ class VoiceFoodSheet extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Назови блюдо и количество',
+                          AppLocalizations.of(context)!.voiceFoodSubtitle,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: tc.textSecondary,

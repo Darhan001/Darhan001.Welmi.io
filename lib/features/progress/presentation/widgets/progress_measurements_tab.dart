@@ -50,10 +50,10 @@ class ProgressMeasurementsTab extends StatelessWidget {
             onMetricChanged: onMetricChanged,
           ),
         ] else
-          const ProgressEmptyCard(
+          ProgressEmptyCard(
             icon: Icons.straighten,
-            title: 'Пока нет замеров',
-            subtitle: 'Запишите объёмы груди, талии, бёдер и рук',
+            title: AppLocalizations.of(context)!.measEmptyTitle,
+            subtitle: AppLocalizations.of(context)!.measEmptySubtitle,
           ),
         const SizedBox(height: 24),
         AppButton(
@@ -83,7 +83,7 @@ class _LatestMeasurementsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProgressCardHeader(
-            title: 'Последние замеры',
+            title: AppLocalizations.of(context)!.measLatest,
             trailing: Text(
               '${latest.date.day}.${latest.date.month}',
               style: TextStyle(fontSize: 12, color: tc.textSecondary),

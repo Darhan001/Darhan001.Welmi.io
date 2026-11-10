@@ -98,7 +98,7 @@ class SubscriptionRepository {
       },
     );
     if (response.status < 200 || response.status >= 300) {
-      throw StateError('Проверка покупки не прошла (${response.status}).');
+      throw StateError('Purchase verification failed (${response.status})');
     }
     final data = response.data;
     if (data is! Map || data['verified'] != true) return false;
