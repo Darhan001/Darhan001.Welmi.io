@@ -1,9 +1,8 @@
+import 'package:lumina/l10n/app_localizations.dart';
+
 import 'notification_ids.dart';
 
 /// Содержимое одного напоминания: тексты, канал и маршрут по нажатию.
-///
-/// Раньше эти тексты были продублированы в `rescheduleAll` и
-/// `updateSchedule`; теперь — единый справочник.
 class ReminderContent {
   const ReminderContent({
     required this.title,
@@ -39,77 +38,80 @@ class ReminderChannel {
   final bool high;
 }
 
+/// Справочник напоминаний на языке приложения.
+///
+/// Тексты берутся из локализации: раньше заголовки уведомлений и названия
+/// каналов были только на русском, какой бы язык ни выбрал пользователь.
+/// Уведомление планируется заранее, поэтому после смены языка расписание
+/// нужно перестроить (см. `WelmiApp`).
 abstract final class ReminderCatalog {
-  static const String _waterName = 'Welmi · Вода';
-  static const String _mealsName = 'Welmi · Питание';
-  static const String _activityName = 'Welmi · Активность';
-
-  static const List<ReminderChannel> channels = [
+  static List<ReminderChannel> channels(AppLocalizations loc) => [
     ReminderChannel(
       NotificationChannels.water,
-      _waterName,
-      'Напоминания о воде',
+      loc.notifChannelWater,
+      loc.notifChannelWaterDesc,
     ),
     ReminderChannel(
       NotificationChannels.meals,
-      _mealsName,
-      'Завтрак, обед и ужин',
+      loc.notifChannelMeals,
+      loc.notifChannelMealsDesc,
     ),
     ReminderChannel(
       NotificationChannels.activity,
-      _activityName,
-      'Активность и вечерние напоминания',
+      loc.notifChannelActivity,
+      loc.notifChannelActivityDesc,
       high: false,
     ),
   ];
 
   /// Канал воды — им же пользуется тестовое уведомление.
-  static ReminderChannel get waterChannel => channels.first;
+  static ReminderChannel waterChannel(AppLocalizations loc) =>
+      channels(loc).first;
 
-  static const ReminderContent water = ReminderContent(
-    title: '💧 Пора выпить воды',
-    body: 'Не забывай о дневной цели по воде в Welmi',
+  static ReminderContent water(AppLocalizations loc) => ReminderContent(
+    title: loc.remWaterTitle,
+    body: loc.remWaterBody,
     channelId: NotificationChannels.water,
-    channelName: _waterName,
+    channelName: loc.notifChannelWater,
     payload: 'water',
   );
 
   /// Содержимое напоминания с фиксированным временем; null для воды и
   /// неизвестных id.
-  static ReminderContent? daily(int id) => switch (id) {
-    NotificationIds.breakfast => const ReminderContent(
-      title: '🍳 Завтрак',
-      body: 'Время позавтракать и записать приём пищи в дневник',
+  static ReminderContent? daily(AppLocalizations loc, int id) => switch (id) {
+    NotificationIds.breakfast => ReminderContent(
+      title: loc.remBreakfastTitle,
+      body: loc.remBreakfastBody,
       channelId: NotificationChannels.meals,
-      channelName: _mealsName,
+      channelName: loc.notifChannelMeals,
       payload: 'diary',
     ),
-    NotificationIds.lunch => const ReminderContent(
-      title: '🍽 Обед',
-      body: 'Не забудь пообедать и внести приём пищи в дневник',
+    NotificationIds.lunch => ReminderContent(
+      title: loc.remLunchTitle,
+      body: loc.remLunchBody,
       channelId: NotificationChannels.meals,
-      channelName: _mealsName,
+      channelName: loc.notifChannelMeals,
       payload: 'diary',
     ),
-    NotificationIds.dinner => const ReminderContent(
-      title: '🌙 Ужин',
-      body: 'Время ужина — запиши приём пищи в Welmi',
+    NotificationIds.dinner => ReminderContent(
+      title: loc.remDinnerTitle,
+      body: loc.remDinnerBody,
       channelId: NotificationChannels.meals,
-      channelName: _mealsName,
+      channelName: loc.notifChannelMeals,
       payload: 'diary',
     ),
-    NotificationIds.activity => const ReminderContent(
-      title: '🏃 Время подвигаться',
-      body: 'Немного активности приблизит тебя к цели',
+    NotificationIds.activity => ReminderContent(
+      title: loc.remActivityTitle,
+      body: loc.remActivityBody,
       channelId: NotificationChannels.activity,
-      channelName: _activityName,
+      channelName: loc.notifChannelActivity,
       payload: 'activity',
     ),
-    NotificationIds.evening => const ReminderContent(
-      title: '✨ Подведи итоги дня',
-      body: 'Проверь воду, питание и вес в Welmi перед сном',
+    NotificationIds.evening => ReminderContent(
+      title: loc.remEveningTitle,
+      body: loc.remEveningBody,
       channelId: NotificationChannels.activity,
-      channelName: _activityName,
+      channelName: loc.notifChannelActivity,
       payload: 'progress',
     ),
     _ => null,

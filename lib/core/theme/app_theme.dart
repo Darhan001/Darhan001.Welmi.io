@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'app_palette.dart';
 import 'app_tokens.dart';
@@ -104,6 +105,70 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: p.divider),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _MotionAwareTransitions(
+            FadeForwardsPageTransitionsBuilder(),
+          ),
+          TargetPlatform.iOS: _MotionAwareTransitions(
+            CupertinoPageTransitionsBuilder(),
+          ),
+        },
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: p.green,
+        linearTrackColor: p.text.withValues(alpha: 0.06),
+        circularTrackColor: p.text.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(8),
+        strokeCap: StrokeCap.round,
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: p.isDark ? p.surface : p.text,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        textStyle: TextStyle(
+          color: p.isDark ? p.text : p.background,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Системный переход платформы, который отключается настройкой
+/// «уменьшить движение»: экран тогда появляется без анимации.
+class _MotionAwareTransitions extends PageTransitionsBuilder {
+  const _MotionAwareTransitions(this._platform);
+
+  final PageTransitionsBuilder _platform;
+
+  @override
+  Duration get transitionDuration => _platform.transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration => _platform.reverseTransitionDuration;
+
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition =>
+      _platform.delegatedTransition;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return _platform.buildTransitions(
+      route,
+      context,
+      animation,
+      secondaryAnimation,
+      child,
     );
   }
 }

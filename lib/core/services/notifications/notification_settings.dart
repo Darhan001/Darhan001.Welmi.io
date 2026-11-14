@@ -68,13 +68,4 @@ class NotificationSettings {
 
   static TimeOfDay _time(int minutes) =>
       TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
-
-  /// Описание интервала воды для подзаголовка, например «Каждые 2 ч».
-  String get waterIntervalLabel {
-    if (waterIntervalMin % 60 == 0) {
-      final h = waterIntervalMin ~/ 60;
-      return h == 1 ? 'Каждый час' : 'Каждые $h ч';
-    }
-    return 'Каждые $waterIntervalMin мин';
-  }
 }

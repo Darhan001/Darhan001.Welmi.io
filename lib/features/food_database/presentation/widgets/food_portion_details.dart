@@ -60,7 +60,10 @@ class FoodPortionCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              _MacroTile(label: loc.nutrientProtein, value: portion.proteinGrams),
+              _MacroTile(
+                label: loc.nutrientProtein,
+                value: portion.proteinGrams,
+              ),
               const SizedBox(width: 8),
               _MacroTile(label: loc.nutrientFat, value: portion.fatGrams),
               const SizedBox(width: 8),
@@ -115,9 +118,9 @@ class _MacroTile extends StatelessWidget {
             Text(
               value == null
                   ? '—'
-                  : AppLocalizations.of(context)!.gramsValue(
-                      formatNutrient(value),
-                    ),
+                  : AppLocalizations.of(
+                      context,
+                    )!.gramsValue(formatNutrient(value)),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,

@@ -269,11 +269,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       debugPrint('❌ EditProfile save error: $e');
       if (mounted) {
-        showWelmiSnackbar(
-          context,
-          loc.saveError,
-          icon: Icons.error_outline,
-        );
+        showWelmiSnackbar(context, loc.saveError, icon: Icons.error_outline);
       }
     }
     if (mounted) setState(() => _isSaving = false);

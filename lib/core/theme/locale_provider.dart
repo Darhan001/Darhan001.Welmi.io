@@ -19,8 +19,12 @@ class LocaleProvider extends ChangeNotifier {
   };
 
   LocaleProvider() {
-    _loadSavedLocale();
+    ready = _loadSavedLocale();
   }
+
+  /// Завершается, когда сохранённый язык прочитан. Запуск ждёт его, чтобы
+  /// первый кадр и тексты напоминаний сразу были на выбранном языке.
+  late final Future<void> ready;
 
   Future<void> _loadSavedLocale() async {
     try {

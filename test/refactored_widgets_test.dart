@@ -103,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('1250'), findsOneWidget);
-    expect(find.text('90 / 140г'), findsOneWidget);
+    expect(find.text('90 / 140 г'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

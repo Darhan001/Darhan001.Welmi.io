@@ -14,6 +14,13 @@ class AppColors {
   static const Color brandLight = Color(0xFFE8F3E5);
 
   // ─────────────────────────────────────────────
+  // 🏷 Акценты разделов (одинаковы в светлой и тёмной теме)
+  // ─────────────────────────────────────────────
+  static const Color accentActivity = Color(0xFFF59E42);
+  static const Color accentWater = Color(0xFF5EB5FF);
+  static const Color accentWeight = Color(0xFFC78BFF);
+
+  // ─────────────────────────────────────────────
   // ☀️ LIGHT THEME
   // ─────────────────────────────────────────────
   static const Color background = Color(0xFFF9F7F2);

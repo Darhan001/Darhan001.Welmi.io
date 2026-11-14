@@ -59,6 +59,11 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
-    - assets/images/
+    # Только фото рецептов. Папка assets/images/ целиком сюда не входит:
+    # в ней лежат исходники иконки (WELMI.png, images.png, 2,7 МБ), которые
+    # нужны генератору иконок при разработке, но не самому приложению.
     - assets/images/recipes/
+    # Шрифт Inter (SIL OFL 1.1, github.com/rsms/inter v4.1). Пакет google_fonts
+    # берёт файлы отсюда и не скачивает шрифт из сети при первом запуске.
+    - assets/google_fonts/
     - assets/3d_models/

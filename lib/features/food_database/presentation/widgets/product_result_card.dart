@@ -22,7 +22,8 @@ class ProductResultCard extends StatelessWidget {
     final macros = <String>[
       if (product.proteinPer100g != null)
         '${loc.macroProteinShort} ${formatNutrient(product.proteinPer100g)}',
-      if (product.fatPer100g != null) '${loc.macroFatShort} ${formatNutrient(product.fatPer100g)}',
+      if (product.fatPer100g != null)
+        '${loc.macroFatShort} ${formatNutrient(product.fatPer100g)}',
       if (product.carbsPer100g != null)
         '${loc.macroCarbsShort} ${formatNutrient(product.carbsPer100g)}',
     ];

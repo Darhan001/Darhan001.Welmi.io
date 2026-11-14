@@ -2958,4 +2958,81 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recipeNextStep => 'Следующий шаг';
+
+  @override
+  String get notifChannelWater => 'Welmi · Вода';
+
+  @override
+  String get notifChannelWaterDesc => 'Напоминания о воде';
+
+  @override
+  String get notifChannelMeals => 'Welmi · Питание';
+
+  @override
+  String get notifChannelMealsDesc => 'Завтрак, обед и ужин';
+
+  @override
+  String get notifChannelActivity => 'Welmi · Активность';
+
+  @override
+  String get notifChannelActivityDesc => 'Активность и вечерние напоминания';
+
+  @override
+  String get notifTestBody => 'Локальные уведомления работают!';
+
+  @override
+  String get remWaterTitle => '💧 Пора выпить воды';
+
+  @override
+  String get remWaterBody => 'Не забывай о дневной цели по воде в Welmi';
+
+  @override
+  String get remBreakfastTitle => '🍳 Завтрак';
+
+  @override
+  String get remBreakfastBody =>
+      'Время позавтракать и записать приём пищи в дневник';
+
+  @override
+  String get remLunchTitle => '🍽 Обед';
+
+  @override
+  String get remLunchBody =>
+      'Не забудь пообедать и внести приём пищи в дневник';
+
+  @override
+  String get remDinnerTitle => '🌙 Ужин';
+
+  @override
+  String get remDinnerBody => 'Время ужина — запиши приём пищи в Welmi';
+
+  @override
+  String get remActivityTitle => '🏃 Время подвигаться';
+
+  @override
+  String get remActivityBody => 'Немного активности приблизит тебя к цели';
+
+  @override
+  String get remEveningTitle => '✨ Подведи итоги дня';
+
+  @override
+  String get remEveningBody => 'Проверь воду, питание и вес в Welmi перед сном';
+
+  @override
+  String get waterEveryHour => 'Каждый час';
+
+  @override
+  String waterEveryHours(int hours) {
+    return 'Каждые $hours ч';
+  }
+
+  @override
+  String waterEveryMinutes(int minutes) {
+    return 'Каждые $minutes мин';
+  }
+
+  @override
+  String macroOfGoalGrams(int total, int goal) {
+    return '$total / $goal г';
+  }
 }

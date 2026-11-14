@@ -115,7 +115,9 @@ class VoiceFoodClarifyCard extends StatelessWidget {
                   controller: controller,
                   style: GoogleFonts.inter(fontSize: 13, color: tc.text),
                   decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.voiceFoodClarifyHint,
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.voiceFoodClarifyHint,
                     hintStyle: TextStyle(color: tc.textHint, fontSize: 13),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(

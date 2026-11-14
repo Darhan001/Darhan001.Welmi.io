@@ -44,6 +44,7 @@ class _Muscle3DViewerState extends State<Muscle3DViewer> {
   Timer? _timeout;
   bool _loaded = false;
   bool _failed = false;
+
   /// Метка «не дождались загрузки» в [_errorMessage].
   static const _timeoutMarker = 'timeout';
   String _errorMessage = '';

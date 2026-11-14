@@ -13,12 +13,13 @@ class AiFoodRecognizer {
 
   final AiProviderClient _client;
 
-  /// Актуальные vision-модели. Последняя — бесплатная: сканер продолжает
+  /// Актуальные vision-модели. Последние — бесплатные: сканер продолжает
   /// работать, когда у платных моделей закончились кредиты (HTTP 402).
   static const _visionModels = [
     'google/gemini-2.5-flash',
     'google/gemini-2.5-flash-lite',
     'nvidia/nemotron-3.5-super-vl:free',
+    AiProviderClient.freeRouter,
   ];
 
   /// Общий лимит сканирования: без него перебор ключей и моделей
@@ -59,8 +60,10 @@ class AiFoodRecognizer {
     String base64Image,
     DateTime deadline,
   ) async {
+    var outOfCredits = false;
     for (final model in _visionModels) {
-      final isFree = model.endsWith(':free');
+      final isFree = AiProviderClient.isFreeModel(model);
+      if (outOfCredits && !isFree) continue;
       final timeout = _slot(deadline, Duration(seconds: isFree ? 75 : 35));
       if (timeout == null) return null;
       try {
@@ -88,6 +91,7 @@ class AiFoodRecognizer {
           final res = text == null ? null : _parseFood(text);
           if (res != null) return res;
         } else {
+          if (response.statusCode == 402) outOfCredits = true;
           _client.noteStatus(response.statusCode);
           debugPrint('❌ Scanner HTTP ${response.statusCode} ($model)');
         }

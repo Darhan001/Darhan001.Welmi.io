@@ -73,7 +73,9 @@ class VoiceFoodSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.voiceFoodTitle(mealTitle),
+                          AppLocalizations.of(
+                            context,
+                          )!.voiceFoodTitle(mealTitle),
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,

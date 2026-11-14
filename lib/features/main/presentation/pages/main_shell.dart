@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lumina/core/theme/app_colors.dart';
@@ -20,18 +19,34 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = <Widget>[
-    const HomePage(),
-    const DiaryPage(),
-    const ProgressPage(),
-    const ProfilePage(),
+  static const List<Widget> _pages = <Widget>[
+    HomePage(),
+    DiaryPage(),
+    ProgressPage(),
+    ProfilePage(),
   ];
+
+  /// Вкладки, которые пользователь уже открывал. Остальные не строятся:
+  /// раньше все четыре раздела создавались при запуске и одновременно
+  /// грузили свои данные, хотя виден был только первый.
+  final Set<int> _visited = {0};
+
+  /// Последняя вкладка-раздел: она остаётся выбранной в стеке под сканером.
+  int _lastTab = 0;
+
+  /// Позиция вкладки нижней панели в IndexedStack (сканер в нём не лежит).
+  static int _stackIndex(int navIndex) =>
+      navIndex < 2 ? navIndex : navIndex - 1;
 
   void _onTap(int index) {
     if (_currentIndex != index) {
       HapticFeedback.lightImpact();
       setState(() {
         _currentIndex = index;
+        if (index != 2) {
+          _lastTab = index;
+          _visited.add(_stackIndex(index));
+        }
       });
     }
   }
@@ -41,8 +56,8 @@ class _MainShellState extends State<MainShell> {
     final loc = AppLocalizations.of(context)!;
     final isDark = ThemeProvider.isDark(context);
     final navBg = isDark
-        ? AppColors.darkCard.withValues(alpha: 0.92)
-        : Colors.white.withValues(alpha: 0.85);
+        ? AppColors.darkCard.withValues(alpha: 0.97)
+        : Colors.white.withValues(alpha: 0.96);
     final navBorder = isDark
         ? AppColors.darkBorder.withValues(alpha: 0.3)
         : Colors.white.withValues(alpha: 0.2);
@@ -50,26 +65,64 @@ class _MainShellState extends State<MainShell> {
         ? Colors.transparent
         : Colors.black.withValues(alpha: 0.08);
 
+    // Системная «Назад» с любой вкладки сначала возвращает на главную и
+    // только с неё закрывает приложение — привычное поведение Android.
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onTap(0);
+      },
+      child: _buildScaffold(loc, navBg, navBorder, navShadow),
+    );
+  }
+
+  Widget _buildScaffold(
+    AppLocalizations loc,
+    Color navBg,
+    Color navBorder,
+    Color navShadow,
+  ) {
     return Scaffold(
       extendBody: true,
-      body: _currentIndex == 2
-          // Сканер — вкладка. Пока Premium тестируется, сканер еды открыт
-          // без подписки (PremiumAccessGate вернём, когда подписка заработает).
-          // После добавления в дневник возвращаемся на вкладку «Дневник»
-          // (index 1) через колбэк, а не Navigator.pop.
-          ? ScannerPage(onAddToDiary: () => _onTap(1))
-          : IndexedStack(
-              index: _currentIndex < 2 ? _currentIndex : _currentIndex - 1,
-              children: _pages,
+      // Разделы остаются в дереве и под сканером: раньше при открытии
+      // сканера они уничтожались, а после возврата заново грузили данные и
+      // теряли прокрутку. Offstage не рисует их, TickerMode ставит их
+      // анимации на паузу. Сам сканер живёт только пока открыт (камера).
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Offstage(
+            offstage: _currentIndex == 2,
+            child: TickerMode(
+              enabled: _currentIndex != 2,
+              child: IndexedStack(
+                index: _stackIndex(
+                  _currentIndex == 2 ? _lastTab : _currentIndex,
+                ),
+                children: [
+                  for (var i = 0; i < _pages.length; i++)
+                    _visited.contains(i) ? _pages[i] : const SizedBox.shrink(),
+                ],
+              ),
             ),
+          ),
+          // Пока Premium тестируется, сканер еды открыт без подписки
+          // (PremiumAccessGate вернём, когда подписка заработает). После
+          // добавления в дневник переходим на вкладку «Дневник» колбэком.
+          if (_currentIndex == 2) ScannerPage(onAddToDiary: () => _onTap(1)),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           height: 72,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(35),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          // Раньше под панелью было размытие (BackdropFilter). Оно
+          // пересчитывается на каждом кадре прокрутки и на слабых телефонах
+          // давало рывки; почти непрозрачный фон выглядит так же, а панель
+          // в своём слое не перерисовывается вместе со списком.
+          child: RepaintBoundary(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
               child: Container(
                 decoration: BoxDecoration(
                   color: navBg,
@@ -148,33 +201,33 @@ class _MainShellState extends State<MainShell> {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           customBorder: const CircleBorder(),
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: animate ? 300 : 0),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedScale(
-                  scale: isSelected ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    isSelected ? selectedIcon : unselectedIcon,
-                    color: isSelected ? activeColor : inactiveColor,
-                    size: 28,
-                  ),
+          // Выбранная вкладка — на мягкой подложке: её видно сразу, в том
+          // числе тем, кто плохо различает оттенки иконок.
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: animate ? 260 : 0),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: activeColor.withValues(
+                  alpha: isSelected ? (isDark ? 0.18 : 0.08) : 0,
                 ),
-                const SizedBox(height: 4),
-                AnimatedContainer(
-                  duration: Duration(milliseconds: animate ? 300 : 0),
-                  height: 4,
-                  width: isSelected ? 4 : 0,
-                  decoration: BoxDecoration(
-                    color: activeColor,
-                    shape: BoxShape.circle,
-                  ),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: animate ? 200 : 0),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: Tween<double>(begin: 0.8, end: 1).animate(animation),
+                  child: FadeTransition(opacity: animation, child: child),
                 ),
-              ],
+                child: Icon(
+                  isSelected ? selectedIcon : unselectedIcon,
+                  key: ValueKey(isSelected),
+                  color: isSelected ? activeColor : inactiveColor,
+                  size: 26,
+                ),
+              ),
             ),
           ),
         ),

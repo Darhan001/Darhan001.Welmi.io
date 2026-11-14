@@ -111,9 +111,7 @@ class ProductSearchEmpty extends StatelessWidget {
         decoration: BoxDecoration(color: tc.card, shape: BoxShape.circle),
         child: Icon(Icons.search_off_rounded, size: 36, color: tc.inactive),
       ),
-      title: byBarcode
-          ? loc.foodDbNotFoundTitle
-          : loc.foodDbNothingFoundTitle,
+      title: byBarcode ? loc.foodDbNotFoundTitle : loc.foodDbNothingFoundTitle,
       body: byBarcode
           ? loc.foodDbNotFoundBarcodeBody
           : loc.foodDbNothingFoundBody,

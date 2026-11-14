@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/app_tokens.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/widgets/press_scale.dart';
 
 /// Стандартная карточка приложения (тема-aware: светлая/тёмная).
 class AppCard extends StatelessWidget {
@@ -34,9 +35,13 @@ class AppCard extends StatelessWidget {
     final decoration = BoxDecoration(
       color: color ?? tc.card,
       borderRadius: BorderRadius.circular(radius),
+      // В тёмной теме тень почти не видна — карточку от фона отделяет
+      // тонкая рамка.
       border: bordered
           ? Border.all(color: tc.border.withValues(alpha: 0.5))
-          : null,
+          : (tc.isDark
+                ? Border.all(color: tc.border.withValues(alpha: 0.35))
+                : null),
       boxShadow: shadow
           ? [
               BoxShadow(
@@ -57,16 +62,19 @@ class AppCard extends StatelessWidget {
       return Container(margin: margin, decoration: decoration, child: content);
     }
 
-    return Container(
-      margin: margin,
-      decoration: decoration,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(radius),
-        child: InkWell(
-          onTap: onTap,
+    return PressScale(
+      scale: 0.98,
+      child: Container(
+        margin: margin,
+        decoration: decoration,
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(radius),
-          child: content,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(radius),
+            child: content,
+          ),
         ),
       ),
     );

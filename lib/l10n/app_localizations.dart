@@ -5367,6 +5367,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next step'**
   String get recipeNextStep;
+
+  /// No description provided for @notifChannelWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi · Water'**
+  String get notifChannelWater;
+
+  /// No description provided for @notifChannelWaterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Water reminders'**
+  String get notifChannelWaterDesc;
+
+  /// No description provided for @notifChannelMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi · Meals'**
+  String get notifChannelMeals;
+
+  /// No description provided for @notifChannelMealsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast, lunch and dinner'**
+  String get notifChannelMealsDesc;
+
+  /// No description provided for @notifChannelActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Welmi · Activity'**
+  String get notifChannelActivity;
+
+  /// No description provided for @notifChannelActivityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity and evening reminders'**
+  String get notifChannelActivityDesc;
+
+  /// No description provided for @notifTestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Local notifications are working!'**
+  String get notifTestBody;
+
+  /// No description provided for @remWaterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'💧 Time to drink water'**
+  String get remWaterTitle;
+
+  /// No description provided for @remWaterBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep up with your daily water goal in Welmi'**
+  String get remWaterBody;
+
+  /// No description provided for @remBreakfastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🍳 Breakfast'**
+  String get remBreakfastTitle;
+
+  /// No description provided for @remBreakfastBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Time for breakfast — log your meal in the diary'**
+  String get remBreakfastBody;
+
+  /// No description provided for @remLunchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🍽 Lunch'**
+  String get remLunchTitle;
+
+  /// No description provided for @remLunchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget lunch — add your meal to the diary'**
+  String get remLunchBody;
+
+  /// No description provided for @remDinnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🌙 Dinner'**
+  String get remDinnerTitle;
+
+  /// No description provided for @remDinnerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner time — log your meal in Welmi'**
+  String get remDinnerBody;
+
+  /// No description provided for @remActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🏃 Time to move'**
+  String get remActivityTitle;
+
+  /// No description provided for @remActivityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A little activity brings you closer to your goal'**
+  String get remActivityBody;
+
+  /// No description provided for @remEveningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'✨ Review your day'**
+  String get remEveningTitle;
+
+  /// No description provided for @remEveningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your water, meals and weight in Welmi before bed'**
+  String get remEveningBody;
+
+  /// No description provided for @waterEveryHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get waterEveryHour;
+
+  /// No description provided for @waterEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {hours} h'**
+  String waterEveryHours(int hours);
+
+  /// No description provided for @waterEveryMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {minutes} min'**
+  String waterEveryMinutes(int minutes);
+
+  /// No description provided for @macroOfGoalGrams.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} / {goal} g'**
+  String macroOfGoalGrams(int total, int goal);
 }
 
 class _AppLocalizationsDelegate

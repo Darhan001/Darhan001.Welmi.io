@@ -170,7 +170,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
                           child: TextField(
                             controller: _search,
                             decoration: InputDecoration(
-                              hintText: AppLocalizations.of(context)!.recipeSearchHint,
+                              hintText: AppLocalizations.of(
+                                context,
+                              )!.recipeSearchHint,
                               prefixIcon: const Icon(Icons.search_rounded),
                               filled: true,
                               fillColor: tc.card,
@@ -254,9 +256,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
                           child: Text(
                             !hasQuery && _category == null
                                 ? AppLocalizations.of(context)!.recipePopular
-                                : AppLocalizations.of(context)!.recipeResults(
-                                    recipes.length,
-                                  ),
+                                : AppLocalizations.of(
+                                    context,
+                                  )!.recipeResults(recipes.length),
                             style: GoogleFonts.notoSerif(
                               fontSize: 21,
                               fontWeight: FontWeight.w900,
@@ -267,7 +269,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
                         if (_category != null || _filters.isNotEmpty)
                           TextButton(
                             onPressed: _resetAll,
-                            child: Text(AppLocalizations.of(context)!.resetAction),
+                            child: Text(
+                              AppLocalizations.of(context)!.resetAction,
+                            ),
                           ),
                       ],
                     ),

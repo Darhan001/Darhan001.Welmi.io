@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/app_palette.dart';
 import 'package:lumina/core/theme/app_tokens.dart';
+import 'package:lumina/core/widgets/press_scale.dart';
 
 enum AppButtonVariant { primary, secondary, outline, text }
 
@@ -134,7 +135,7 @@ class AppButton extends StatelessWidget {
     );
 
     final onTap = enabled ? onPressed : null;
-    return switch (variant) {
+    final button = switch (variant) {
       AppButtonVariant.primary || AppButtonVariant.secondary => ElevatedButton(
         onPressed: onTap,
         style: style,
@@ -151,6 +152,7 @@ class AppButton extends StatelessWidget {
         child: content,
       ),
     };
+    return PressScale(enabled: enabled, child: button);
   }
 }
 

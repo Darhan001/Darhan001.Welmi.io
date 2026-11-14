@@ -2952,4 +2952,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeNextStep => 'Next step';
+
+  @override
+  String get notifChannelWater => 'Welmi · Water';
+
+  @override
+  String get notifChannelWaterDesc => 'Water reminders';
+
+  @override
+  String get notifChannelMeals => 'Welmi · Meals';
+
+  @override
+  String get notifChannelMealsDesc => 'Breakfast, lunch and dinner';
+
+  @override
+  String get notifChannelActivity => 'Welmi · Activity';
+
+  @override
+  String get notifChannelActivityDesc => 'Activity and evening reminders';
+
+  @override
+  String get notifTestBody => 'Local notifications are working!';
+
+  @override
+  String get remWaterTitle => '💧 Time to drink water';
+
+  @override
+  String get remWaterBody => 'Keep up with your daily water goal in Welmi';
+
+  @override
+  String get remBreakfastTitle => '🍳 Breakfast';
+
+  @override
+  String get remBreakfastBody =>
+      'Time for breakfast — log your meal in the diary';
+
+  @override
+  String get remLunchTitle => '🍽 Lunch';
+
+  @override
+  String get remLunchBody => 'Don\'t forget lunch — add your meal to the diary';
+
+  @override
+  String get remDinnerTitle => '🌙 Dinner';
+
+  @override
+  String get remDinnerBody => 'Dinner time — log your meal in Welmi';
+
+  @override
+  String get remActivityTitle => '🏃 Time to move';
+
+  @override
+  String get remActivityBody =>
+      'A little activity brings you closer to your goal';
+
+  @override
+  String get remEveningTitle => '✨ Review your day';
+
+  @override
+  String get remEveningBody =>
+      'Check your water, meals and weight in Welmi before bed';
+
+  @override
+  String get waterEveryHour => 'Every hour';
+
+  @override
+  String waterEveryHours(int hours) {
+    return 'Every $hours h';
+  }
+
+  @override
+  String waterEveryMinutes(int minutes) {
+    return 'Every $minutes min';
+  }
+
+  @override
+  String macroOfGoalGrams(int total, int goal) {
+    return '$total / $goal g';
+  }
 }

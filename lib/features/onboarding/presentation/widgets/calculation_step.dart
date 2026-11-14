@@ -207,10 +207,26 @@ class _CalculationStepState extends State<CalculationStep>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildResultStat('${lastAiPlan!.dailyCalories}', AppLocalizations.of(context)!.kcal, tc),
-                  _buildResultStat('${lastAiPlan!.proteinGrams}', AppLocalizations.of(context)!.calcProteinShort, tc),
-                  _buildResultStat('${lastAiPlan!.fatGrams}', AppLocalizations.of(context)!.calcFatShort, tc),
-                  _buildResultStat('${lastAiPlan!.carbGrams}', AppLocalizations.of(context)!.calcCarbsShort, tc),
+                  _buildResultStat(
+                    '${lastAiPlan!.dailyCalories}',
+                    AppLocalizations.of(context)!.kcal,
+                    tc,
+                  ),
+                  _buildResultStat(
+                    '${lastAiPlan!.proteinGrams}',
+                    AppLocalizations.of(context)!.calcProteinShort,
+                    tc,
+                  ),
+                  _buildResultStat(
+                    '${lastAiPlan!.fatGrams}',
+                    AppLocalizations.of(context)!.calcFatShort,
+                    tc,
+                  ),
+                  _buildResultStat(
+                    '${lastAiPlan!.carbGrams}',
+                    AppLocalizations.of(context)!.calcCarbsShort,
+                    tc,
+                  ),
                 ],
               ),
             ),

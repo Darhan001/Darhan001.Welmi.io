@@ -47,12 +47,14 @@ class _ProgressPageState extends State<ProgressPage> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool refresh = false}) async {
     setState(() {
       _isLoading = true;
       _loadFailed = false;
     });
-    await _userData.loadAll();
+    // Свежие данные (после запуска или другой вкладки) при первом открытии
+    // не перезапрашиваем; кнопки «Обновить» и «Повторить» грузят всегда.
+    await (refresh ? _userData.loadAll() : _userData.ensureLoaded());
     if (!mounted) return;
     setState(() {
       _isLoading = false;
@@ -179,7 +181,7 @@ class _ProgressPageState extends State<ProgressPage> {
             if (_loadFailed) {
               return AppErrorState(
                 message: loc.progressLoadError,
-                onRetry: _loadData,
+                onRetry: () => _loadData(refresh: true),
               );
             }
             return SingleChildScrollView(
@@ -202,7 +204,7 @@ class _ProgressPageState extends State<ProgressPage> {
                         tooltip: MaterialLocalizations.of(
                           context,
                         ).refreshIndicatorSemanticLabel,
-                        onTap: _loadData,
+                        onTap: () => _loadData(refresh: true),
                       ),
                     ],
                   ),

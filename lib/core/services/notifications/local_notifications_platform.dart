@@ -3,6 +3,8 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:lumina/core/theme/locale_provider.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'reminder_catalog.dart';
@@ -72,11 +74,17 @@ class LocalNotificationsPlatform {
     }
   }
 
+  /// Создаёт каналы или обновляет их названия после смены языка.
+  Future<void> refreshChannels() => _createAndroidChannels();
+
   Future<void> _createAndroidChannels() async {
     final android = _android;
     if (android == null) return;
     try {
-      for (final c in ReminderCatalog.channels) {
+      final loc = lookupAppLocalizations(localeProvider.locale);
+      // Повторное создание канала с тем же id обновляет его название и
+      // описание — так они следуют за языком приложения.
+      for (final c in ReminderCatalog.channels(loc)) {
         await android.createNotificationChannel(
           AndroidNotificationChannel(
             c.id,

@@ -55,7 +55,9 @@ class PremiumAccessGate extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.auto_awesome_rounded),
-                    label: Text(AppLocalizations.of(context)!.premiumGateButton),
+                    label: Text(
+                      AppLocalizations.of(context)!.premiumGateButton,
+                    ),
                   ),
                 ],
               ),

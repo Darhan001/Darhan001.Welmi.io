@@ -80,11 +80,20 @@ class FoodItemActionsSheet extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              _MacroLabel(label: AppLocalizations.of(context)!.macroProteinShort, value: item.proteinGrams),
+              _MacroLabel(
+                label: AppLocalizations.of(context)!.macroProteinShort,
+                value: item.proteinGrams,
+              ),
               const SizedBox(width: 10),
-              _MacroLabel(label: AppLocalizations.of(context)!.macroFatShort, value: item.fatGrams),
+              _MacroLabel(
+                label: AppLocalizations.of(context)!.macroFatShort,
+                value: item.fatGrams,
+              ),
               const SizedBox(width: 10),
-              _MacroLabel(label: AppLocalizations.of(context)!.macroCarbsShort, value: item.carbsGrams),
+              _MacroLabel(
+                label: AppLocalizations.of(context)!.macroCarbsShort,
+                value: item.carbsGrams,
+              ),
             ],
           ),
         ),

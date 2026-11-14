@@ -51,8 +51,40 @@ class UserDataService extends ChangeNotifier {
   bool _isOfflineData = false;
   bool get isOfflineData => _isOfflineData;
 
+  /// Идущая загрузка: параллельные вызовы ждут её, а не дублируют запросы.
+  Future<void>? _loadInFlight;
+
+  /// Когда и для кого данные последний раз успешно пришли с сервера.
+  DateTime? _loadedAt;
+  String? _loadedForUserId;
+
+  /// Данные текущего пользователя получены с сервера не раньше [maxAge] назад.
+  bool isFresh({Duration maxAge = const Duration(minutes: 1)}) {
+    final at = _loadedAt;
+    return at != null &&
+        _error == null &&
+        _loadedForUserId == AuthService().userId &&
+        DateTime.now().difference(at) < maxAge;
+  }
+
+  /// Загружает данные, если свежих нет. Для первого открытия экрана: при
+  /// запуске профиль уже загружен, и каждая вкладка не должна заново
+  /// выполнять те же четыре запроса. Явное обновление — через [loadAll].
+  Future<void> ensureLoaded({
+    Duration maxAge = const Duration(minutes: 1),
+  }) async {
+    if (isFresh(maxAge: maxAge)) return;
+    await loadAll();
+  }
+
   /// Загрузить все данные пользователя
-  Future<void> loadAll() async {
+  Future<void> loadAll() {
+    return _loadInFlight ??= _loadAll().whenComplete(
+      () => _loadInFlight = null,
+    );
+  }
+
+  Future<void> _loadAll() async {
     final userId = AuthService().userId;
     if (userId == null) {
       _error = 'Пользователь не авторизован';
@@ -80,6 +112,8 @@ class UserDataService extends ChangeNotifier {
 
       _buildActiveDays();
       _isOfflineData = false;
+      _loadedAt = DateTime.now();
+      _loadedForUserId = userId;
       _saveCache();
     } catch (e) {
       debugPrint('❌ UserDataService error: $e');
@@ -305,6 +339,8 @@ class UserDataService extends ChangeNotifier {
 
   /// Очистить при выходе
   void reset() {
+    _loadedAt = null;
+    _loadedForUserId = null;
     _profile = null;
     _weightEntries = [];
     _measurements = [];

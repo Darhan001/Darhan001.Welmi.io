@@ -2964,4 +2964,81 @@ class AppLocalizationsKy extends AppLocalizations {
 
   @override
   String get recipeNextStep => 'Кийинки кадам';
+
+  @override
+  String get notifChannelWater => 'Welmi · Суу';
+
+  @override
+  String get notifChannelWaterDesc => 'Суу ичүү эскертмелери';
+
+  @override
+  String get notifChannelMeals => 'Welmi · Тамактануу';
+
+  @override
+  String get notifChannelMealsDesc => 'Эртең мененки, түшкү жана кечки тамак';
+
+  @override
+  String get notifChannelActivity => 'Welmi · Активдүүлүк';
+
+  @override
+  String get notifChannelActivityDesc => 'Активдүүлүк жана кечки эскертмелер';
+
+  @override
+  String get notifTestBody => 'Жергиликтүү эскертмелер иштеп жатат!';
+
+  @override
+  String get remWaterTitle => '💧 Суу ичүүгө убакыт келди';
+
+  @override
+  String get remWaterBody => 'Welmi\'деги күнүмдүк суу максатыңды унутпа';
+
+  @override
+  String get remBreakfastTitle => '🍳 Эртең мененки тамак';
+
+  @override
+  String get remBreakfastBody =>
+      'Эртең мененки тамакты ичип, күндөлүккө жазууга убакыт келди';
+
+  @override
+  String get remLunchTitle => '🍽 Түшкү тамак';
+
+  @override
+  String get remLunchBody => 'Түшкү тамакты унутпа жана аны күндөлүккө жаз';
+
+  @override
+  String get remDinnerTitle => '🌙 Кечки тамак';
+
+  @override
+  String get remDinnerBody => 'Кечки тамак убактысы — тамагыңды Welmi\'ге жаз';
+
+  @override
+  String get remActivityTitle => '🏃 Кыймылдоого убакыт келди';
+
+  @override
+  String get remActivityBody => 'Бир аз активдүүлүк сени максатыңа жакындатат';
+
+  @override
+  String get remEveningTitle => '✨ Күндү жыйынтыкта';
+
+  @override
+  String get remEveningBody =>
+      'Уктаар алдында Welmi\'ден сууну, тамакты жана салмакты текшер';
+
+  @override
+  String get waterEveryHour => 'Саат сайын';
+
+  @override
+  String waterEveryHours(int hours) {
+    return 'Ар $hours саат сайын';
+  }
+
+  @override
+  String waterEveryMinutes(int minutes) {
+    return 'Ар $minutes мүнөт сайын';
+  }
+
+  @override
+  String macroOfGoalGrams(int total, int goal) {
+    return '$total / $goal г';
+  }
 }

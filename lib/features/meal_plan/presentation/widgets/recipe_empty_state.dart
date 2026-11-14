@@ -34,7 +34,10 @@ class RecipeEmptyState extends StatelessWidget {
             ),
             if (hasFilters) ...[
               const SizedBox(height: 8),
-              TextButton(onPressed: onReset, child: Text(AppLocalizations.of(context)!.resetAction)),
+              TextButton(
+                onPressed: onReset,
+                child: Text(AppLocalizations.of(context)!.resetAction),
+              ),
             ],
           ],
         ),

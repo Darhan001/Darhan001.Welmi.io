@@ -13,7 +13,8 @@ String waterIntervalLabel(NotificationSettings s, AppLocalizations loc) {
     90 => loc.notifEvery90Min,
     120 => loc.notifEvery2h,
     180 => loc.notifEvery3h,
-    _ => s.waterIntervalLabel,
+    final m when m % 60 == 0 => loc.waterEveryHours(m ~/ 60),
+    final m => loc.waterEveryMinutes(m),
   };
 }
 

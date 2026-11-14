@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lumina/core/theme/app_colors.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/widgets/animated_count.dart';
 import 'package:lumina/core/widgets/app_card.dart';
 import 'package:lumina/l10n/app_localizations.dart';
 
@@ -66,7 +67,8 @@ class WaterGlassCard extends StatelessWidget {
                         duration: MediaQuery.disableAnimationsOf(context)
                             ? Duration.zero
                             : const Duration(milliseconds: 500),
-                        height: 220 * progress,
+                        curve: Curves.easeOutCubic,
+                        height: 220 * progress.clamp(0.0, 1.0),
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -87,11 +89,14 @@ class WaterGlassCard extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '$currentMl',
+                      // Число растёт вместе с уровнем воды в стакане.
+                      AnimatedCount(
+                        value: currentMl,
+                        duration: const Duration(milliseconds: 500),
                         style: const TextStyle(
                           fontSize: 42,
                           fontWeight: FontWeight.w900,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                       Text(

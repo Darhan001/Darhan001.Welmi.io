@@ -116,7 +116,10 @@ class ProgressActivityHeatmap extends StatelessWidget {
                 label: AppLocalizations.of(context)!.legendHasEntry,
               ),
               const SizedBox(width: 14),
-              _LegendItem(color: tc.primary, label: AppLocalizations.of(context)!.legendToday),
+              _LegendItem(
+                color: tc.primary,
+                label: AppLocalizations.of(context)!.legendToday,
+              ),
               const Spacer(),
               Icon(Icons.touch_app_outlined, size: 12, color: tc.textHint),
               const SizedBox(width: 4),

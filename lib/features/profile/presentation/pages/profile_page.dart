@@ -33,9 +33,9 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool refresh = false}) async {
     setState(() => _isLoading = true);
-    await _userData.loadAll();
+    await (refresh ? _userData.loadAll() : _userData.ensureLoaded());
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 smoothPageRoute(const EditProfilePage()),
                               );
                               if (result == true && mounted) {
-                                _loadData();
+                                _loadData(refresh: true);
                               }
                             },
                             child: Container(

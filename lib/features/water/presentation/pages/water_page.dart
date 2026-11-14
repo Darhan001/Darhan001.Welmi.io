@@ -40,8 +40,10 @@ class _WaterPageState extends State<WaterPage> {
     _loadData();
   }
 
+  /// Индикатор на весь экран — только при первом открытии: при повторном
+  /// обновлении стакан и график остаются на месте и просто получают
+  /// новые значения.
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
     await _tracker.loadToday();
     await _loadWeeklyData();
     if (mounted) setState(() => _isLoading = false);

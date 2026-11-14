@@ -89,9 +89,7 @@ class _FoodPortionSheetState extends State<FoodPortionSheet> {
     }
     final portion = widget.product.portionOf(grams);
     if (portion.calories == null) {
-      setState(
-        () => _error = loc.foodNoCaloriesCantSave,
-      );
+      setState(() => _error = loc.foodNoCaloriesCantSave);
       return;
     }
 

@@ -98,9 +98,7 @@ class MeasurementChartCard extends StatelessWidget {
           const SizedBox(height: 16),
           if (points.isEmpty)
             ProgressChartPlaceholder(
-              text: loc.measNoEntriesInPeriod(
-                measureMetricLabel(loc, metric),
-              ),
+              text: loc.measNoEntriesInPeriod(measureMetricLabel(loc, metric)),
             )
           else
             ProgressLineChart(

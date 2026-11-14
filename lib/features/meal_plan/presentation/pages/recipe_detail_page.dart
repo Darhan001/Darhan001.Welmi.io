@@ -129,7 +129,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         _cooking = false;
         _cookingStep = 0;
       });
-      showWelmiSnackbar(context, AppLocalizations.of(context)!.recipeBonAppetit);
+      showWelmiSnackbar(
+        context,
+        AppLocalizations.of(context)!.recipeBonAppetit,
+      );
       return;
     }
     setState(() => _cookingStep++);

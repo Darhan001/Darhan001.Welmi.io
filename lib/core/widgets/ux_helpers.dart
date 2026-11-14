@@ -19,29 +19,13 @@ void hapticHeavy() => HapticFeedback.heavyImpact();
 // 🎬 ПЛАВНЫЙ ПЕРЕХОД МЕЖДУ СТРАНИЦАМИ
 // ═══════════════════════════════════════════════════════════════
 
-/// SlideTransition + FadeTransition для красивого перехода
+/// Переход на экран раздела.
+///
+/// Обычный [MaterialPageRoute]: анимацию задаёт тема (`AppTheme`), поэтому
+/// она одна на всё приложение. Прежний самодельный переход отключал
+/// системные жесты — на iOS экран нельзя было закрыть свайпом от края.
 Route<T> smoothPageRoute<T>(Widget page) {
-  return PageRouteBuilder<T>(
-    pageBuilder: (context, animation, secondaryAnimation) => page,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      if (MediaQuery.disableAnimationsOf(context)) return child;
-      const begin = Offset(0.15, 0.0);
-      const end = Offset.zero;
-      const curve = Curves.easeInOutCubic;
-
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-      var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
-
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: child,
-        ),
-      );
-    },
-    transitionDuration: const Duration(milliseconds: 350),
-  );
+  return MaterialPageRoute<T>(builder: (context) => page);
 }
 
 /// ScaleTransition — для модальных карточек (Hero-like)

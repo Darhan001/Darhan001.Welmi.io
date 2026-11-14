@@ -19,7 +19,11 @@ class AppTypography {
         : AppColors.textSecondary;
     final Color hint = dark ? AppColors.darkTextHint : AppColors.textHint;
 
-    return GoogleFonts.notoSerifTextTheme().copyWith(
+    // База — Inter: любой текст без явного шрифта рисуется тем же
+    // гротеском, что и остальной интерфейс. Раньше базой был Noto Serif, и
+    // подписи без стиля выходили с засечками вперемешку с Inter. Засечки
+    // остались только у крупных display-заголовков ниже.
+    return GoogleFonts.interTextTheme().copyWith(
       // ── Display (крупные заголовки) ──
       displayLarge: GoogleFonts.notoSerif(
         fontSize: 32,

@@ -103,9 +103,9 @@ class _VoiceFoodListeningViewState extends State<VoiceFoodListeningView>
         ),
         const SizedBox(height: 18),
         Text(
-          AppLocalizations.of(context)!.voiceFoodListening(
-            _formatTimer(widget.duration),
-          ),
+          AppLocalizations.of(
+            context,
+          )!.voiceFoodListening(_formatTimer(widget.duration)),
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w700,

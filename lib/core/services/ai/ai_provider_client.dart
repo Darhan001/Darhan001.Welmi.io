@@ -20,12 +20,24 @@ class AiProviderClient {
   static const _geminiBase =
       'https://generativelanguage.googleapis.com/v1beta/models';
 
-  /// Модели OpenRouter для текста. Последняя бесплатная: даже с нулевым
-  /// балансом чат отвечает, когда платные вернули 402.
+  /// Маршрутизатор OpenRouter: сам выбирает доступную сейчас бесплатную
+  /// модель (текст и изображения). Конкретные бесплатные модели провайдер
+  /// регулярно снимает — именно так чат перестал отвечать, когда прежняя
+  /// запасная модель исчезла (HTTP 404), а на платные не было кредитов.
+  /// Маршрутизатор стоит последним во всех списках как страховка.
+  static const freeRouter = 'openrouter/free';
+
+  /// Модель не тратит кредиты аккаунта.
+  static bool isFreeModel(String model) =>
+      model.endsWith(':free') || model == freeRouter;
+
+  /// Модели OpenRouter для текста: платные (качественнее), затем
+  /// бесплатные — с нулевым балансом чат продолжает отвечать.
   static const openRouterTextModels = [
     'google/gemini-2.5-flash',
     'google/gemini-2.5-flash-lite',
-    'nvidia/nemotron-3-super-120b-a12b:free',
+    'nvidia/nemotron-3.5-lightning:free',
+    freeRouter,
   ];
   static const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
@@ -149,8 +161,12 @@ class AiProviderClient {
 
     // 1) OpenRouter — все валидные ключи и актуальные модели.
     for (final key in openRouterKeys) {
+      // Кредиты на ключе закончились (402): остальные платные модели
+      // ответят тем же — сразу переходим к бесплатным.
+      var outOfCredits = false;
       for (final model in openRouterTextModels) {
-        final timeout = slot(25);
+        if (outOfCredits && !isFreeModel(model)) continue;
+        final timeout = slot(isFreeModel(model) ? 40 : 25);
         if (timeout == null) return null;
         try {
           final response = await postOpenRouter('chat/completions', key, {
@@ -167,6 +183,7 @@ class AiProviderClient {
             if (text != null && text.isNotEmpty) return text;
             lastIssue = 'AI-провайдер вернул пустой ответ';
           } else {
+            if (response.statusCode == 402) outOfCredits = true;
             noteStatus(response.statusCode);
             debugPrint('⚠️ AI HTTP ${response.statusCode} ($model)');
           }
@@ -177,9 +194,13 @@ class AiProviderClient {
       }
     }
 
-    // 2) Gemini REST напрямую — только ключи Google AI Studio
-    // (начинаются с 'AIza'). OpenRouter-ключи здесь не работают.
-    final geminiKeys = _textKeys.where((k) => k.startsWith('AIza'));
+    // 2) Gemini REST напрямую — ключи Google AI Studio. Раньше сюда не
+    // попадал GEMINI_NUTRITION_API_KEY, и запасной путь чата фактически
+    // не работал. OpenRouter-ключи (sk-or-) здесь не подходят.
+    final geminiKeys = <String?>{
+      geminiKey,
+      ..._textKeys,
+    }.whereType<String>().where((k) => !k.startsWith('sk-or-'));
     final historyText = history == null
         ? ''
         : '\n\n${history.map((m) => '${m['role']}: ${m['content']}').join('\n')}';

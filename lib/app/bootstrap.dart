@@ -13,6 +13,7 @@ import 'package:lumina/core/services/ai_service.dart';
 import 'package:lumina/core/services/supabase_service.dart';
 import 'package:lumina/core/services/push_notification_service.dart';
 import 'package:lumina/core/services/units_service.dart';
+import 'package:lumina/core/theme/locale_provider.dart';
 import 'package:lumina/core/theme/theme_mode_controller.dart';
 import 'package:lumina/features/profile/domain/services/subscription_service.dart';
 import 'package:lumina/core/services/notifications/notification_service.dart';
@@ -21,9 +22,20 @@ import 'package:lumina/core/services/notifications/notification_service.dart';
 // `lib/core/config/app_config.dart`. Ключи в коде не хранятся,
 // а подставляются флагом --dart-define-from-file=env.json.
 
+/// В release-сборке [debugPrint] по умолчанию продолжает писать в системный
+/// журнал (logcat / Console), который читается с любого компьютера по USB.
+/// В сообщениях об ошибках бывают идентификаторы пользователя и ответы
+/// сервера, поэтому в release вывод отключается. Необработанные сбои
+/// по-прежнему уходят в Sentry, если он настроен.
+@visibleForTesting
+void silenceLogsInRelease({bool isRelease = kReleaseMode}) {
+  if (isRelease) debugPrint = (String? message, {int? wrapWidth}) {};
+}
+
 /// Точка входа: проверка конфигурации, Sentry, инициализация сервисов.
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  silenceLogsInRelease();
   await initializeDateFormatting();
 
   // Обязательна только конфигурация Supabase. Отсутствие AI/Sentry-ключей
@@ -62,7 +74,11 @@ Future<void> _startApp() async {
   // Локальные настройки: загружаем до первого кадра, чтобы вес сразу
   // показывался в выбранных единицах, а тема не мигала при запуске.
   final themeMode = ThemeModeController();
-  await Future.wait([UnitsService.instance.load(), themeMode.load()]);
+  await Future.wait([
+    UnitsService.instance.load(),
+    themeMode.load(),
+    localeProvider.ready,
+  ]);
   await _initServices();
 
   final app = WelmiApp(themeMode: themeMode);

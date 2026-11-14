@@ -7,8 +7,11 @@ import 'package:lumina/core/services/daily_tracker.dart';
 import 'package:lumina/core/services/health_sync_service.dart';
 import 'package:lumina/core/services/user_data_service.dart';
 import 'package:lumina/core/services/widget_service.dart';
+import 'package:lumina/core/theme/app_colors.dart';
 import 'package:lumina/core/theme/theme_colors.dart';
+import 'package:lumina/core/widgets/app_skeleton.dart';
 import 'package:lumina/core/widgets/logout_flow.dart';
+import 'package:lumina/core/widgets/units_format.dart';
 import 'package:lumina/core/widgets/ux_helpers.dart';
 import 'package:lumina/features/activity/presentation/pages/activity_page.dart';
 import 'package:lumina/features/chat/presentation/pages/ai_chat_page.dart';
@@ -66,9 +69,13 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await _userData.loadAll();
+  /// Индикатор на весь экран — только при первой загрузке. При обновлении
+  /// жестом прежние данные остаются на месте (у RefreshIndicator свой
+  /// индикатор), а не сменяются пустым экраном.
+  Future<void> _loadData({bool refresh = false}) async {
+    // При запуске профиль уже загружен корневым виджетом — повторные
+    // запросы нужны только по явному обновлению жестом.
+    await (refresh ? _userData.loadAll() : _userData.ensureLoaded());
     if (_userData.profile != null) {
       _tracker.loadGoalsFromProfile();
     } else {
@@ -131,7 +138,7 @@ class _HomePageState extends State<HomePage> {
       drawer: _buildDrawer(context),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadData,
+          onRefresh: () => _loadData(refresh: true),
           color: tc.primary,
           backgroundColor: tc.card,
           child: SingleChildScrollView(
@@ -139,31 +146,52 @@ class _HomePageState extends State<HomePage> {
               parent: AlwaysScrollableScrollPhysics(),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _isLoading ? _buildLoading(tc) : _buildContent(tc),
+            // Показатели дня меняются на других экранах (вода, дневник, вес):
+            // слушаем трекер и профиль, чтобы главная не показывала
+            // устаревшие цифры до следующего ручного обновления.
+            child: _isLoading
+                ? _buildLoading(tc)
+                : ListenableBuilder(
+                    listenable: Listenable.merge([_tracker, _userData]),
+                    builder: (context, _) => _buildContent(tc),
+                  ),
           ),
         ),
       ),
     );
   }
 
+  /// Заглушки повторяют раскладку экрана: когда данные приходят, блоки
+  /// появляются на своих местах и содержимое не «прыгает».
   Widget _buildLoading(ThemeColors tc) {
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.7,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: tc.primary),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.loadingData,
-              style: TextStyle(
-                color: tc.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+    return Semantics(
+      label: AppLocalizations.of(context)!.loadingData,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 68),
+          AppSkeleton(width: 220, height: 24, radius: 8),
+          SizedBox(height: 10),
+          AppSkeleton(width: 280, height: 14, radius: 6),
+          SizedBox(height: 24),
+          AppSkeleton(height: 340),
+          SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(child: AppSkeleton(height: 104)),
+              SizedBox(width: 16),
+              Expanded(child: AppSkeleton(height: 104)),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: AppSkeleton(height: 104)),
+              SizedBox(width: 16),
+              Expanded(child: AppSkeleton(height: 104)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -190,83 +218,99 @@ class _HomePageState extends State<HomePage> {
         Text(
           '${_greeting()}, $firstName!',
           style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
+            fontSize: 24,
+            height: 1.15,
+            letterSpacing: -0.5,
+            fontWeight: FontWeight.w800,
             color: tc.text,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           _dailyTip(progress, consumed, goal, remaining),
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 14,
+            height: 1.35,
             color: tc.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 24),
-        HomeCalorieRingCard(
-          remaining: remaining,
-          goal: goal,
-          progress: progress,
-          macros: [
-            HomeMacroValue(
-              label: loc.protein,
-              total: _tracker.totalProtein,
-              goal: _tracker.goalProtein,
-            ),
-            HomeMacroValue(
-              label: loc.fat,
-              total: _tracker.totalFat,
-              goal: _tracker.goalFat,
-            ),
-            HomeMacroValue(
-              label: loc.carbs,
-              total: _tracker.totalCarbs,
-              goal: _tracker.goalCarbs,
-            ),
-          ],
+        FadeSlideIn(
+          child: HomeCalorieRingCard(
+            remaining: remaining,
+            goal: goal,
+            progress: progress,
+            macros: [
+              HomeMacroValue(
+                label: loc.protein,
+                total: _tracker.totalProtein,
+                goal: _tracker.goalProtein,
+              ),
+              HomeMacroValue(
+                label: loc.fat,
+                total: _tracker.totalFat,
+                goal: _tracker.goalFat,
+              ),
+              HomeMacroValue(
+                label: loc.carbs,
+                total: _tracker.totalCarbs,
+                goal: _tracker.goalCarbs,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.3,
-          children: [
-            HomeStatTile(
-              label: loc.steps,
-              value: _tracker.totalSteps > 0 ? '${_tracker.totalSteps}' : '—',
-              icon: Icons.directions_run,
-              color: Colors.orange,
-              onTap: () => _open(const ActivityPage()),
+        FadeSlideIn(
+          index: 1,
+          child: GridView(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            // Высота плитки растёт вместе с системным размером шрифта: при
+            // фиксированной пропорции крупный текст не помещался.
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              mainAxisExtent:
+                  104 *
+                  MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
             ),
-            HomeStatTile(
-              label: loc.water,
-              value: _formatWater(_tracker.totalWaterMl),
-              icon: Icons.water_drop,
-              color: const Color(0xFF5EB5FF),
-              onTap: () => _open(const WaterPage()),
-            ),
-            HomeStatTile(
-              label: loc.weight,
-              value: _userData.latestWeight != null
-                  ? _userData.latestWeight!.toStringAsFixed(1)
-                  : '—',
-              icon: Icons.monitor_weight_outlined,
-              color: const Color(0xFFC78BFF),
-              onTap: () => _open(const WeightPage()),
-            ),
-            HomeStatTile(
-              label: loc.goal,
-              value: '${(progress * 100).clamp(0, 100).toInt()}%',
-              icon: Icons.flag_rounded,
-              color: tc.green,
-              onTap: () => _open(const GoalPage()),
-            ),
-          ],
+            children: [
+              HomeStatTile(
+                label: loc.steps,
+                value: _tracker.totalSteps > 0 ? '${_tracker.totalSteps}' : '—',
+                icon: Icons.directions_run,
+                color: AppColors.accentActivity,
+                onTap: () => _open(const ActivityPage()),
+              ),
+              HomeStatTile(
+                label: loc.water,
+                value: _formatWater(_tracker.totalWaterMl),
+                icon: Icons.water_drop,
+                color: AppColors.accentWater,
+                onTap: () => _open(const WaterPage()),
+              ),
+              HomeStatTile(
+                label: loc.weight,
+                // Вес хранится в кг; показываем в единицах пользователя.
+                value: _userData.latestWeight != null
+                    ? loc.formatWeight(_userData.latestWeight!)
+                    : '—',
+                icon: Icons.monitor_weight_outlined,
+                color: AppColors.accentWeight,
+                onTap: () => _open(const WeightPage()),
+              ),
+              HomeStatTile(
+                label: loc.goal,
+                value: '${(progress * 100).clamp(0, 100).toInt()}%',
+                icon: Icons.flag_rounded,
+                color: tc.green,
+                onTap: () => _open(const GoalPage()),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 32),
         Text(
@@ -278,14 +322,20 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         const SizedBox(height: 16),
-        HomeDiaryCard(
-          consumed: consumed,
-          goal: goal,
-          protein: _tracker.totalProtein,
-          onTap: () => _open(const DiaryPage()),
+        FadeSlideIn(
+          index: 2,
+          child: HomeDiaryCard(
+            consumed: consumed,
+            goal: goal,
+            protein: _tracker.totalProtein,
+            onTap: () => _open(const DiaryPage()),
+          ),
         ),
         const SizedBox(height: 24),
-        HomeAiBanner(onTap: () => _open(const AiChatPage())),
+        FadeSlideIn(
+          index: 3,
+          child: HomeAiBanner(onTap: () => _open(const AiChatPage())),
+        ),
         const SizedBox(height: 100),
       ],
     );

@@ -191,7 +191,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
       key: ValueKey('day_view_3d_$_selectedDay'),
       highlightColor: visuals.color,
       muscleIcon: visuals.icon,
-      muscleName: day.focus.isNotEmpty ? day.focus : AppLocalizations.of(context)!.workoutGeneralFocus,
+      muscleName: day.focus.isNotEmpty
+          ? day.focus
+          : AppLocalizations.of(context)!.workoutGeneralFocus,
       height: 260,
     );
   }

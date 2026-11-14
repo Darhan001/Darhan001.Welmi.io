@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:lumina/core/theme/locale_provider.dart';
+import 'package:lumina/l10n/app_localizations.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'local_notifications_platform.dart';
@@ -29,6 +31,9 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  /// Тексты на текущем языке приложения (контекста у сервиса нет).
+  AppLocalizations get _loc => lookupAppLocalizations(localeProvider.locale);
 
   final LocalNotificationsPlatform _platform = LocalNotificationsPlatform();
 
@@ -158,16 +163,16 @@ class NotificationService {
 
   Future<void> showTestNotification({
     String title = 'Welmi 🔔',
-    String body = 'Локальные уведомления работают!',
+    String? body,
   }) async {
     if (!_isInitialized && !kIsWeb) await initialize();
     if (kIsWeb || !await checkPermissions()) return;
-    final channel = ReminderCatalog.waterChannel;
+    final channel = ReminderCatalog.waterChannel(_loc);
     try {
       await _platform.show(
         idTest,
         title,
-        body,
+        body ?? _loc.notifTestBody,
         NotificationDetails(
           android: AndroidNotificationDetails(
             channel.id,
@@ -318,7 +323,7 @@ class NotificationService {
       debugPrint('💧 Water goal reached — reminders paused until tomorrow');
       return;
     }
-    const c = ReminderCatalog.water;
+    final c = ReminderCatalog.water(_loc);
     await scheduleInterval(
       id: idWater,
       title: c.title,
@@ -344,12 +349,26 @@ class NotificationService {
     await scheduleWater(waterGoalReached: waterGoalReached);
     for (final id in NotificationIds.daily) {
       if (s.isEnabled(id)) {
-        await _scheduleContent(ReminderCatalog.daily(id)!, id, s.minutesOf(id));
+        await _scheduleContent(
+          ReminderCatalog.daily(_loc, id)!,
+          id,
+          s.minutesOf(id),
+        );
       } else {
         await cancel(id);
       }
     }
     debugPrint('🔔 All Welmi notifications rescheduled');
+  }
+
+  /// Язык приложения сменился: уже запланированные уведомления хранят
+  /// старый текст, поэтому обновляем названия каналов и расписание.
+  Future<void> onLocaleChanged({bool waterGoalReached = false}) async {
+    if (kIsWeb || !_isInitialized) return;
+    await _platform.refreshChannels();
+    if (await checkPermissions()) {
+      await rescheduleAll(waterGoalReached: waterGoalReached);
+    }
   }
 
   /// Изменение расписания одного напоминания.
@@ -377,7 +396,7 @@ class NotificationService {
     final hasNewTime = newHour != null && newMinute != null;
     if (hasNewTime) await NotificationPrefs.setTime(id, newHour, newMinute);
 
-    final content = ReminderCatalog.daily(id);
+    final content = ReminderCatalog.daily(_loc, id);
     if (content == null) return;
     final minutes = hasNewTime ? newHour * 60 + newMinute : s.minutesOf(id);
     await _scheduleContent(content, id, minutes);

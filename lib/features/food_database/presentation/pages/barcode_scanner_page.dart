@@ -332,7 +332,9 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                     OutlinedButton.icon(
                       onPressed: _retry,
                       icon: const Icon(Icons.qr_code_scanner, size: 18),
-                      label: Text(AppLocalizations.of(context)!.barcodeScanAgain),
+                      label: Text(
+                        AppLocalizations.of(context)!.barcodeScanAgain,
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(

@@ -176,9 +176,7 @@ class _BodyFatHistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProgressCardHeader(
-            title: AppLocalizations.of(context)!.historyLabel,
-          ),
+          ProgressCardHeader(title: AppLocalizations.of(context)!.historyLabel),
           const SizedBox(height: 16),
           for (final e in entries)
             Padding(

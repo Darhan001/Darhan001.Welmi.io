@@ -55,6 +55,7 @@ class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _checkAuthState();
     PushNotificationService().onRouteTap = openPushRoute;
+    localeProvider.addListener(_onLocaleChanged);
 
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       if (!mounted) return;
@@ -82,8 +83,26 @@ class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     _authSub?.cancel();
+    localeProvider.removeListener(_onLocaleChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  bool get _waterGoalReached {
+    final tracker = DailyTracker();
+    return tracker.goalWaterMl > 0 &&
+        tracker.totalWaterMl >= tracker.goalWaterMl;
+  }
+
+  /// Тексты запланированных напоминаний фиксируются в момент планирования,
+  /// поэтому после смены языка расписание перестраивается.
+  void _onLocaleChanged() {
+    if (kIsWeb) return;
+    unawaited(
+      NotificationService().onLocaleChanged(
+        waterGoalReached: _waterGoalReached,
+      ),
+    );
   }
 
   /// Возвращаясь в приложение, заново ставим напоминания в AlarmManager:
@@ -100,10 +119,7 @@ class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
     // На холодном старте инициализация ещё может идти — расписание
     // восстановит сама bootstrap(), повторно инициализировать не нужно.
     if (!NotificationService().isInitialized) return;
-    final tracker = DailyTracker();
-    final reached =
-        tracker.goalWaterMl > 0 && tracker.totalWaterMl >= tracker.goalWaterMl;
-    NotificationService().rescheduleAll(waterGoalReached: reached);
+    NotificationService().rescheduleAll(waterGoalReached: _waterGoalReached);
   }
 
   Future<void> _checkAuthState() async {
@@ -226,7 +242,9 @@ class _WelmiAppState extends State<WelmiApp> with WidgetsBindingObserver {
               }
               return const Locale('ru');
             },
-            builder: DevicePreview.appBuilder,
+            // Рамка устройств нужна только при отладке; вне debug ссылка на
+            // пакет не остаётся в сборке и не оборачивает каждый экран.
+            builder: kDebugMode ? DevicePreview.appBuilder : null,
             debugShowCheckedModeBanner: false,
             title: 'Welmi',
             theme: AppTheme.lightTheme,
